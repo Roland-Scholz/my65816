@@ -1,0 +1,42 @@
+;------------------------------------------------------------------
+;
+;------------------------------------------------------------------
+
+		.org $e000
+
+kernel:		cld
+		sei
+;		ldx #time-routine
+;kernel1:	lda routine,x
+;		sta $200,x
+;		dex
+;		bpl kernel1
+;		jmp $200
+
+routine:	clc
+		xce
+
+		ldx #0
+		ldy #0
+@loop1:		dex
+		bne @loop1
+		dey
+		bne @loop1
+
+		sec
+		xce
+		ldx #0
+		ldy #0
+@loop2:		dex
+		bne @loop2
+		dey
+		bne @loop2
+		bra routine
+
+time:		ldx #0
+		ldy #0
+@loop:		dex
+		bne @loop
+		dey
+		bne @loop
+		rts

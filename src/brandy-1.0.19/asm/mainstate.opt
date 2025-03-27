@@ -1,0 +1,14406 @@
+;:ts=8
+R0	equ	1
+R1	equ	5
+R2	equ	9
+R3	equ	13
+	code
+	xdef	~~exec_assembler
+	func
+~~exec_assembler:
+	longa	on
+	longi	on
+	pea	#<$1
+	pea	#4
+	jsl	~~error
+	rtl
+L2	equ	0
+L3	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_asmend
+	func
+~~exec_asmend:
+	longa	on
+	longi	on
+	pea	#<$1
+	pea	#4
+	jsl	~~error
+	rtl
+L5	equ	0
+L6	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_oscmd
+	func
+~~exec_oscmd:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L8
+	tcs
+	phd
+	tcd
+p_1	set	0
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_srcaddr
+	sta	<L9+p_1
+	stx	<L9+p_1+2
+	pea	#^$0
+	pea	#<$0
+	pei	<L9+p_1+2
+	pei	<L9+p_1
+	jsl	~~emulate_oscli
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L11
+	inc	|~~basicvars+62+2
+L11:
+	pld
+	tsc
+	clc
+	adc	#L8
+	tcs
+	rtl
+L8	equ	4
+L9	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_call
+	func
+~~exec_call:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L12
+	tcs
+	phd
+	tcd
+address_1	set	0
+parmcount_1	set	2
+parameters_1	set	4
+	inc	|~~basicvars+62
+	bne	L14
+	inc	|~~basicvars+62+2
+L14:
+	stz	<L13+parmcount_1
+	jsl	~~eval_integer
+	sta	<L13+address_1
+	jsl	~~check_ateol
+	pea	#0
+	clc
+	tdc
+	adc	#<L13+parameters_1
+	pha
+	pei	<L13+parmcount_1
+	pei	<L13+address_1
+	jsl	~~emulate_call
+	pld
+	tsc
+	clc
+	adc	#L12
+	tcs
+	rtl
+L12	equ	6
+L13	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_case
+	func
+~~exec_case:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L16
+	tcs
+	phd
+	tcd
+casetype_1	set	0
+whentype_1	set	2
+n_1	set	4
+intcase_1	set	6
+casestring_1	set	8
+whenstring_1	set	14
+cp_1	set	20
+found_1	set	24
+here_1	set	25
+	lda	|~~basicvars+62
+	sta	<L17+here_1
+	lda	|~~basicvars+62+2
+	sta	<L17+here_1+2
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L18
+	dey
+L18:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L17+cp_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L17+cp_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L19
+	inc	|~~basicvars+62+2
+L19:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L17+casetype_1
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	2
+	dw	4
+	dw	L10008-1
+	dw	L10004-1
+	dw	L10005-1
+	dw	L10007-1
+	dw	L10007-1
+L10004:
+	jsl	~~pop_int
+	sta	<L17+intcase_1
+L10003:
+	sep	#$20
+	longa	off
+	stz	<L17+found_1
+	rep	#$20
+	longa	on
+	stz	<L17+n_1
+	brl	L10012
+L10005:
+	phy
+	phy
+	jsl	~~pop_float
+	pla
+	sta	|L10001
+	pla
+	sta	|L10001+2
+	bra	L10003
+L10007:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L17+casestring_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	bra	L10003
+L10008:
+	pea	#<$45
+	pea	#4
+	jsl	~~error
+	bra	L10003
+L10011:
+	ldy	#$0
+	lda	<L17+n_1
+	bpl	L20
+	dey
+L20:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	lda	#$6
+	clc
+	adc	<L17+cp_1
+	sta	<R2
+	lda	#$0
+	adc	<L17+cp_1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	lda	[<R3]
+	sta	|~~basicvars+62
+	ldy	#$2
+	lda	[<R3],Y
+	sta	|~~basicvars+62+2
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10014
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~find_linestart
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10014:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L17+whentype_1
+	lda	<L17+casetype_1
+	cmp	#<$2
+	bne	L10016
+	lda	<L17+whentype_1
+	cmp	#<$2
+	bne	L10017
+	stz	<R0
+	jsl	~~pop_int
+	cmp	<L17+intcase_1
+	bne	L24
+	inc	<R0
+L24:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+	brl	L10021
+L10017:
+	lda	<L17+whentype_1
+	cmp	#<$3
+	bne	L10019
+	stz	<R0
+	ldy	#$0
+	lda	<L17+intcase_1
+	bpl	L28
+	dey
+L28:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bne	L27
+	inc	<R0
+L27:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+	brl	L10021
+L10019:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+	brl	L10021
+L10016:
+	lda	<L17+casetype_1
+	cmp	#<$3
+	bne	L10022
+	lda	<L17+whentype_1
+	cmp	#<$2
+	bne	L10023
+	stz	<R0
+	lda	|L10001+2
+	pha
+	lda	|L10001
+	pha
+	jsl	~~pop_int
+	sta	<R1
+	ldy	#$0
+	lda	<R1
+	bpl	L33
+	dey
+L33:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bne	L32
+	inc	<R0
+L32:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+	brl	L10021
+L10023:
+	lda	<L17+whentype_1
+	cmp	#<$3
+	bne	L10019
+	stz	<R0
+	lda	|L10001+2
+	pha
+	lda	|L10001
+	pha
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bne	L36
+	inc	<R0
+L36:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+	brl	L10021
+L10022:
+	lda	<L17+whentype_1
+	cmp	#<$4
+	beq	L10028
+	lda	<L17+whentype_1
+	cmp	#<$5
+	beq	L10028
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10028:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L17+whenstring_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	lda	<L17+whenstring_1
+	cmp	<L17+casestring_1
+	beq	L10029
+	sep	#$20
+	longa	off
+	stz	<L17+found_1
+	rep	#$20
+	longa	on
+	bra	L10030
+L10029:
+	lda	<L17+whenstring_1
+	bne	L10031
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+	bra	L10030
+L10031:
+	stz	<R0
+	ldy	#$0
+	lda	<L17+whenstring_1
+	bpl	L43
+	dey
+L43:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	pei	<L17+casestring_1+4
+	pei	<L17+casestring_1+2
+	pei	<L17+whenstring_1+4
+	pei	<L17+whenstring_1+2
+	jsl	~~memcmp
+	tax
+	bne	L42
+	inc	<R0
+L42:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L17+found_1
+	rep	#$20
+	longa	on
+L10030:
+	lda	<L17+whentype_1
+	cmp	#<$5
+	bne	L10021
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L17+whenstring_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10021:
+	lda	<L17+found_1
+	and	#$ff
+	bne	L10015
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	beq	L10015
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	beq	L10015
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10034
+	inc	|~~basicvars+62
+	beq	*+5
+	brl	L10014
+	inc	|~~basicvars+62+2
+	brl	L10014
+L10034:
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+	brl	L10014
+L10015:
+	lda	<L17+found_1
+	and	#$ff
+	bne	L10010
+	inc	<L17+n_1
+L10012:
+	sec
+	lda	<L17+n_1
+	sbc	[<L17+cp_1]
+	bvs	L52
+	eor	#$8000
+L52:
+	bmi	*+5
+	brl	L10011
+L10010:
+	lda	<L17+casetype_1
+	cmp	#<$5
+	bne	L10036
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L17+casestring_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10036:
+	lda	<L17+found_1
+	and	#$ff
+	bne	*+5
+	brl	L10037
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10038
+	ldy	#$0
+	lda	<L17+n_1
+	bpl	L57
+	dey
+L57:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	lda	#$a
+	clc
+	adc	<L17+cp_1
+	sta	<R2
+	lda	#$0
+	adc	<L17+cp_1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	ldy	#$2
+	lda	[<R3],Y
+	pha
+	lda	[<R3]
+	pha
+	pei	<L17+here_1+2
+	pei	<L17+here_1
+	jsl	~~trace_branch
+L10038:
+	ldy	#$0
+	lda	<L17+n_1
+	bpl	L58
+	dey
+L58:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	lda	#$a
+	clc
+	adc	<L17+cp_1
+	sta	<R2
+	lda	#$0
+	adc	<L17+cp_1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	lda	[<R3]
+	sta	|~~basicvars+62
+	ldy	#$2
+	lda	[<R3],Y
+	bra	L20000
+L10037:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10040
+	ldy	#$4
+	lda	[<L17+cp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L17+cp_1],Y
+	pha
+	pei	<L17+here_1+2
+	pei	<L17+here_1
+	jsl	~~trace_branch
+L10040:
+	ldy	#$2
+	lda	[<L17+cp_1],Y
+	sta	|~~basicvars+62
+	iny
+	iny
+	lda	[<L17+cp_1],Y
+L20000:
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L16
+	tcs
+	rtl
+L16	equ	45
+L17	equ	17
+	ends
+	efunc
+	udata
+L10001:
+	ds	4
+	ends
+	code
+	xdef	~~exec_xcase
+	func
+~~exec_xcase:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L61
+	tcs
+	phd
+	tcd
+tp_1	set	0
+lp_1	set	4
+defaultaddr_1	set	8
+whencount_1	set	12
+depth_1	set	14
+n_1	set	16
+cp_1	set	18
+whentable_1	set	22
+	lda	|~~basicvars+62
+	sta	<L62+lp_1
+	lda	|~~basicvars+62+2
+	sta	<L62+lp_1+2
+L10043:
+	lda	<L62+lp_1
+	sta	<L62+tp_1
+	lda	<L62+lp_1+2
+	sta	<L62+tp_1+2
+	pei	<L62+lp_1+2
+	pei	<L62+lp_1
+	jsl	~~skip_token
+	sta	<L62+lp_1
+	stx	<L62+lp_1+2
+	lda	[<L62+lp_1]
+	and	#$ff
+	bne	L10043
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$c0
+	rep	#$20
+	longa	on
+	beq	L10044
+	pea	#<$30
+	pea	#4
+	jsl	~~error
+L10044:
+	inc	<L62+lp_1
+	bne	L65
+	inc	<L62+lp_1+2
+L65:
+	stz	<L62+whencount_1
+	stz	<L62+defaultaddr_1
+	stz	<L62+defaultaddr_1+2
+	lda	#$1
+	sta	<L62+depth_1
+	brl	L10045
+L20009:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L62+lp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10047
+	pea	#<$2f
+	pea	#4
+	jsl	~~error
+L10047:
+	ldy	#$5
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L69
+	dey
+L69:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L62+lp_1
+	clc
+	adc	<R2
+	sta	<L62+tp_1
+	lda	<L62+lp_1+2
+	adc	<R2+2
+	sta	<L62+tp_1+2
+	lda	[<L62+tp_1]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	164
+	dw	L10064-1
+	dw	197
+	dw	L10059-1
+	dw	198
+	dw	L10059-1
+	dw	233
+	dw	L10051-1
+	dw	234
+	dw	L10051-1
+	dw	L10049-1
+L10051:
+	lda	#$3
+	clc
+	adc	<L62+tp_1
+	sta	<L62+tp_1
+	bcc	L70
+	inc	<L62+tp_1+2
+L70:
+	lda	<L62+depth_1
+	cmp	#<$1
+	beq	*+5
+	brl	L10049
+	lda	<L62+whencount_1
+	cmp	#<$a
+	bne	L10053
+	pea	#<$5a
+	pea	#4
+	jsl	~~error
+L10053:
+	ldy	#$0
+	lda	<L62+whencount_1
+	bpl	L73
+	dey
+L73:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L62+whentable_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	lda	<L62+tp_1
+	sta	[<R3]
+	lda	<L62+tp_1+2
+	ldy	#$2
+	sta	[<R3],Y
+	bra	L10054
+L20004:
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	beq	L10055
+	pei	<L62+tp_1+2
+	pei	<L62+tp_1
+	jsl	~~skip_token
+	sta	<L62+tp_1
+	stx	<L62+tp_1+2
+L10054:
+	lda	[<L62+tp_1]
+	and	#$ff
+	bne	L20004
+L10055:
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10056
+	inc	<L62+tp_1
+	bne	L10056
+	inc	<L62+tp_1+2
+L10056:
+	lda	[<L62+tp_1]
+	and	#$ff
+	bne	L10057
+	inc	<L62+tp_1
+	bne	L79
+	inc	<L62+tp_1+2
+L79:
+	ldy	#$5
+	lda	[<L62+tp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L80
+	dey
+L80:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L62+tp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L62+tp_1
+	clc
+	adc	<R2
+	sta	<L62+tp_1
+	lda	<L62+tp_1+2
+	adc	<R2+2
+	sta	<L62+tp_1+2
+L10057:
+	ldy	#$0
+	lda	<L62+whencount_1
+	bpl	L81
+	dey
+L81:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L62+whentable_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	#$4
+	clc
+	adc	<R2
+	sta	<R3
+	lda	#$0
+	adc	<R2+2
+	sta	<R3+2
+	lda	<R3
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R3+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L62+tp_1
+	sta	[<R2]
+	lda	<L62+tp_1+2
+	ldy	#$2
+	sta	[<R2],Y
+	inc	<L62+whencount_1
+	brl	L10049
+L10059:
+	lda	<L62+depth_1
+	cmp	#<$1
+	beq	*+5
+	brl	L10049
+	lda	#$3
+	clc
+	adc	<L62+tp_1
+	sta	<L62+tp_1
+	bcc	L83
+	inc	<L62+tp_1+2
+L83:
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10061
+	inc	<L62+tp_1
+	bne	L10061
+	inc	<L62+tp_1+2
+L10061:
+	lda	[<L62+tp_1]
+	and	#$ff
+	bne	L10062
+	inc	<L62+tp_1
+	bne	L87
+	inc	<L62+tp_1+2
+L87:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L62+tp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10063
+	pea	#<$2f
+	pea	#4
+	jsl	~~error
+L10063:
+	ldy	#$5
+	lda	[<L62+tp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L89
+	dey
+L89:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L62+tp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L62+tp_1
+	clc
+	adc	<R2
+	sta	<L62+tp_1
+	lda	<L62+tp_1+2
+	adc	<R2+2
+	sta	<L62+tp_1+2
+L10062:
+	lda	<L62+tp_1
+	sta	<L62+defaultaddr_1
+	lda	<L62+tp_1+2
+	bra	L20010
+L10064:
+	dec	<L62+depth_1
+	lda	<L62+depth_1
+	bne	L10049
+	lda	<L62+defaultaddr_1
+	ora	<L62+defaultaddr_1+2
+	bne	L10049
+	lda	#$1
+	clc
+	adc	<L62+tp_1
+	sta	<L62+defaultaddr_1
+	lda	#$0
+	adc	<L62+tp_1+2
+L20010:
+	sta	<L62+defaultaddr_1+2
+L10049:
+	sec
+	lda	#$0
+	sbc	<L62+depth_1
+	bvs	L92
+	eor	#$8000
+L92:
+	bpl	*+5
+	brl	L10045
+	ldy	#$5
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L94
+	dey
+L94:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L62+lp_1
+	clc
+	adc	<R2
+	sta	<L62+tp_1
+	lda	<L62+lp_1+2
+	adc	<R2+2
+	sta	<L62+tp_1+2
+	bra	L10067
+L20007:
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$90
+	rep	#$20
+	longa	on
+	beq	L10068
+	pei	<L62+tp_1+2
+	pei	<L62+tp_1
+	jsl	~~skip_token
+	sta	<L62+tp_1
+	stx	<L62+tp_1+2
+L10067:
+	lda	[<L62+tp_1]
+	and	#$ff
+	bne	L20007
+L10068:
+	sep	#$20
+	longa	off
+	lda	[<L62+tp_1]
+	cmp	#<$90
+	rep	#$20
+	longa	on
+	bne	L10069
+	inc	<L62+depth_1
+L10069:
+	ldy	#$2
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L62+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L98
+	dey
+L98:
+	sta	<R0
+	sty	<R0+2
+	lda	<L62+lp_1
+	clc
+	adc	<R0
+	sta	<L62+lp_1
+	lda	<L62+lp_1+2
+	adc	<R0+2
+	sta	<L62+lp_1+2
+L10045:
+	sec
+	lda	#$0
+	sbc	<L62+depth_1
+	bvs	L66
+	eor	#$8000
+L66:
+	bmi	*+5
+	brl	L20009
+	ldy	#$0
+	lda	<L62+whencount_1
+	bpl	L99
+	dey
+L99:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	lda	#$e
+	clc
+	adc	<R0
+	sta	<R2
+	lda	#$0
+	adc	<R0+2
+	sta	<R2+2
+	pei	<R2
+	jsl	~~allocmem
+	sta	<L62+cp_1
+	stx	<L62+cp_1+2
+	lda	<L62+whencount_1
+	sta	[<L62+cp_1]
+	lda	<L62+defaultaddr_1
+	ldy	#$2
+	sta	[<L62+cp_1],Y
+	lda	<L62+defaultaddr_1+2
+	iny
+	iny
+	sta	[<L62+cp_1],Y
+	stz	<L62+n_1
+	bra	L10073
+L10072:
+	ldy	#$0
+	lda	<L62+n_1
+	bpl	L100
+	dey
+L100:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L62+whentable_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	pha
+	pei	<R3
+	ldy	#$0
+	lda	<L62+n_1
+	bpl	L101
+	dey
+L101:
+	sta	<R2
+	sty	<R2+2
+	pei	<R2+2
+	pei	<R2
+	lda	#$3
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	lda	#$6
+	clc
+	adc	<R0
+	sta	<R3
+	lda	#$0
+	adc	<R0+2
+	sta	<R3+2
+	lda	<L62+cp_1
+	clc
+	adc	<R3
+	sta	<R0
+	lda	<L62+cp_1+2
+	adc	<R3+2
+	pha
+	pei	<R0
+	lda	#$8
+	xref	~~~fmov
+	jsl	~~~fmov
+	inc	<L62+n_1
+L10073:
+	sec
+	lda	<L62+n_1
+	sbc	<L62+whencount_1
+	bvs	L102
+	eor	#$8000
+L102:
+	bmi	*+5
+	brl	L10072
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$91
+	sta	[<R0]
+	rep	#$20
+	longa	on
+	pei	<L62+cp_1+2
+	pei	<L62+cp_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_address
+	jsl	~~exec_case
+	pld
+	tsc
+	clc
+	adc	#L61
+	tcs
+	rtl
+L61	equ	118
+L62	equ	17
+	ends
+	efunc
+	code
+	xdef	~~exec_chain
+	func
+~~exec_chain:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L105
+	tcs
+	phd
+	tcd
+namedesc_1	set	0
+stringtype_1	set	6
+filename_1	set	8
+	inc	|~~basicvars+62
+	bne	L107
+	inc	|~~basicvars+62+2
+L107:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L106+stringtype_1
+	cmp	#<$4
+	beq	L10074
+	lda	<L106+stringtype_1
+	cmp	#<$5
+	beq	L10074
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10074:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L106+namedesc_1
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L106+namedesc_1
+	pei	<L106+namedesc_1+4
+	pei	<L106+namedesc_1+2
+	jsl	~~tocstring
+	sta	<L106+filename_1
+	stx	<L106+filename_1+2
+	lda	<L106+stringtype_1
+	cmp	#<$5
+	bne	L10075
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L106+namedesc_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10075:
+	jsl	~~check_ateol
+	jsl	~~clear_error
+	pei	<L106+filename_1+2
+	pei	<L106+filename_1
+	jsl	~~read_basic
+	jsl	~~init_expressions
+	stz	|~~basicvars+407
+	stz	|~~basicvars+407+2
+	stz	|~~basicvars+447
+	lda	#$10
+	trb	~~basicvars+423
+	lda	|~~basicvars+22
+	sta	<R1
+	lda	|~~basicvars+22+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L111
+	dey
+L111:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+22
+	sta	<R1
+	lda	|~~basicvars+22+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+22
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+22+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L105
+	tcs
+	rtl
+L105	equ	24
+L106	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_clear
+	func
+~~exec_clear:
+	longa	on
+	longi	on
+	inc	|~~basicvars+62
+	bne	L115
+	inc	|~~basicvars+62+2
+L115:
+	jsl	~~check_ateol
+	jsl	~~clear_varptrs
+	jsl	~~clear_varlists
+	jsl	~~clear_strings
+	jsl	~~clear_heap
+	jsl	~~clear_stack
+	jsl	~~init_expressions
+	rtl
+L113	equ	0
+L114	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_data
+	func
+~~exec_data:
+	longa	on
+	longi	on
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	rtl
+L117	equ	0
+L118	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_def
+	func
+~~exec_def:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L120
+	tcs
+	phd
+	tcd
+tp_1	set	0
+base_1	set	4
+	inc	|~~basicvars+62
+	bne	L122
+	inc	|~~basicvars+62+2
+L122:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$c
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10077
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_srcaddr
+	sta	<L121+tp_1
+	stx	<L121+tp_1+2
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$cd
+	rep	#$20
+	longa	on
+	bne	L10079
+	pea	#<$16
+	pea	#4
+	jsl	~~error
+L10079:
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	<L121+tp_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L121+tp_1+2
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10080
+L20017:
+	inc	<L121+tp_1
+	bne	L10081
+	inc	<L121+tp_1+2
+L10081:
+	lda	[<L121+tp_1]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L20015
+L10082:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$29
+	rep	#$20
+	longa	on
+	bne	L10080
+	inc	<L121+tp_1
+	bne	L10080
+	inc	<L121+tp_1+2
+L10080:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$3d
+	rep	#$20
+	longa	on
+	beq	L10095
+	pea	#<$16
+	pea	#4
+	jsl	~~error
+L10095:
+	pei	<L121+tp_1+2
+	pei	<L121+tp_1
+	jsl	~~skip_token
+	sta	<L121+tp_1
+	stx	<L121+tp_1+2
+	lda	[<L121+tp_1]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10095
+	lda	<L121+tp_1
+	sta	|~~basicvars+62
+	lda	<L121+tp_1+2
+	sta	|~~basicvars+62+2
+	bra	L125
+L20012:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10077:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L20012
+L125:
+	pld
+	tsc
+	clc
+	adc	#L120
+	tcs
+	rtl
+L20015:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$d5
+	rep	#$20
+	longa	on
+	bne	L10083
+	inc	<L121+tp_1
+	bne	L10083
+	inc	<L121+tp_1+2
+L10083:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$1
+	rep	#$20
+	longa	on
+	bne	L10084
+	lda	<L121+tp_1
+	sta	<L121+base_1
+	lda	<L121+tp_1+2
+	sta	<L121+base_1+2
+	lda	#$5
+	clc
+	adc	<L121+tp_1
+	sta	<L121+tp_1
+	bcc	L133
+	inc	<L121+tp_1+2
+L133:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$29
+	rep	#$20
+	longa	on
+	bne	L10087
+	pei	<L121+base_1+2
+	pei	<L121+base_1
+	jsl	~~get_srcaddr
+	sta	<L121+base_1
+	stx	<L121+base_1+2
+	pei	<L121+base_1+2
+	pei	<L121+base_1
+	jsl	~~skip_name
+	sta	<R0
+	stx	<R0+2
+	lda	#$ffff
+	clc
+	adc	<R0
+	sta	<R1
+	lda	#$ffff
+	adc	<R0+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10087
+	inc	<L121+tp_1
+	beq	L20018
+	bra	L10087
+L20020:
+	lda	#$2
+	clc
+	adc	<L121+tp_1
+	sta	<L121+tp_1
+	bcc	L10087
+L20018:
+	inc	<L121+tp_1+2
+	bra	L10087
+L10084:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$2
+	rep	#$20
+	longa	on
+	beq	L20020
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10087:
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$29
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10082
+	sep	#$20
+	longa	off
+	lda	[<L121+tp_1]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L20017
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+	brl	L20017
+L120	equ	16
+L121	equ	9
+	ends
+	efunc
+	code
+	func
+~~define_byte_array:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L146
+	tcs
+	phd
+	tcd
+vp_0	set	4
+isindref_1	set	0
+islocal_1	set	1
+offset_1	set	2
+highindex_1	set	4
+ep_1	set	6
+	ldy	#$4
+	lda	[<L146+vp_0],Y
+	cmp	#<$2
+	beq	L10096
+	lda	[<L146+vp_0],Y
+	cmp	#<$3
+	beq	L10096
+	pea	#<$43
+	pea	#4
+	jsl	~~error
+L10096:
+	stz	<R0
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$21
+	rep	#$20
+	longa	on
+	bne	L150
+	inc	<R0
+L150:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L147+isindref_1
+	rep	#$20
+	longa	on
+	lda	<L147+isindref_1
+	and	#$ff
+	beq	L10097
+	inc	|~~basicvars+62
+	bne	L153
+	inc	|~~basicvars+62+2
+L153:
+	ldy	#$4
+	lda	[<L146+vp_0],Y
+	cmp	#<$2
+	bne	L10098
+	jsl	~~eval_intfactor
+	clc
+	ldy	#$10
+	adc	[<L146+vp_0],Y
+	bra	L20021
+L10098:
+	ldy	#$12
+	lda	[<L146+vp_0],Y
+	pha
+	dey
+	dey
+	lda	[<L146+vp_0],Y
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	jsl	~~eval_intfactor
+	clc
+	adc	<R0
+L20021:
+	sta	<L147+offset_1
+L10097:
+	stz	<R0
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$b9
+	rep	#$20
+	longa	on
+	bne	L155
+	inc	<R0
+L155:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L147+islocal_1
+	rep	#$20
+	longa	on
+	lda	<L147+islocal_1
+	and	#$ff
+	beq	L10100
+	lda	|~~basicvars+399
+	ora	|~~basicvars+399+2
+	bne	L10101
+	pea	#<$57
+	pea	#4
+	jsl	~~error
+L10101:
+	inc	|~~basicvars+62
+	bne	L159
+	inc	|~~basicvars+62+2
+L159:
+	jsl	~~eval_integer
+	sta	<L147+highindex_1
+	lda	<L147+highindex_1
+	bpl	L10102
+	ldy	#$8
+	lda	[<L146+vp_0],Y
+	pha
+	dey
+	dey
+	lda	[<L146+vp_0],Y
+	pha
+	pea	#<$19
+	pea	#8
+	jsl	~~error
+L10102:
+	lda	<L147+highindex_1
+	ina
+	pha
+	jsl	~~alloc_stackmem
+	bra	L20036
+L10100:
+	jsl	~~eval_integer
+	sta	<L147+highindex_1
+	sec
+	sbc	#<$ffffffff
+	bvs	L162
+	eor	#$8000
+L162:
+	bmi	L10105
+	ldy	#$8
+	lda	[<L146+vp_0],Y
+	pha
+	dey
+	dey
+	lda	[<L146+vp_0],Y
+	pha
+	pea	#<$19
+	pea	#8
+	jsl	~~error
+L10105:
+	lda	<L147+highindex_1
+	cmp	#<$ffffffff
+	bne	L10106
+	lda	|~~basicvars+34
+	sta	<L147+ep_1
+	lda	|~~basicvars+34+2
+	sta	<L147+ep_1+2
+	bra	L10104
+L10106:
+	lda	<L147+highindex_1
+	ina
+	pha
+	jsl	~~condalloc
+L20036:
+	sta	<L147+ep_1
+	stx	<L147+ep_1+2
+	ora	<L147+ep_1+2
+	bne	L10104
+	ldy	#$8
+	lda	[<L146+vp_0],Y
+	pha
+	dey
+	dey
+	lda	[<L146+vp_0],Y
+	pha
+	pea	#<$18
+	pea	#8
+	jsl	~~error
+L10104:
+	lda	<L147+isindref_1
+	and	#$ff
+	beq	L10109
+	sec
+	lda	<L147+ep_1
+	sbc	|~~basicvars+6
+	sta	<R0
+	lda	<L147+ep_1+2
+	sbc	|~~basicvars+6+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L147+offset_1
+	jsl	~~store_integer
+	bra	L168
+L10109:
+	ldy	#$4
+	lda	[<L146+vp_0],Y
+	cmp	#<$2
+	bne	L10111
+	sec
+	lda	<L147+ep_1
+	sbc	|~~basicvars+6
+	sta	<R0
+	lda	<L147+ep_1+2
+	sbc	|~~basicvars+6+2
+	sta	<R0+2
+	lda	<R0
+	ldy	#$10
+	bra	L20022
+L10111:
+	sec
+	lda	<L147+ep_1
+	sbc	|~~basicvars+6
+	sta	<R0
+	lda	<L147+ep_1+2
+	sbc	|~~basicvars+6+2
+	pha
+	pei	<R0
+	xref	~~~fflt
+	jsl	~~~fflt
+	pla
+	ldy	#$10
+	sta	[<L146+vp_0],Y
+	pla
+	iny
+	iny
+L20022:
+	sta	[<L146+vp_0],Y
+L168:
+	lda	<L146+2
+	sta	<L146+2+4
+	lda	<L146+1
+	sta	<L146+1+4
+	pld
+	tsc
+	clc
+	adc	#L146+4
+	tcs
+	rtl
+L146	equ	18
+L147	equ	9
+	ends
+	efunc
+	code
+	xdef	~~exec_dim
+	func
+~~exec_dim:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L169
+	tcs
+	phd
+	tcd
+base_1	set	0
+ep_1	set	4
+vp_1	set	8
+blockdef_1	set	12
+islocal_1	set	13
+L10115:
+	inc	|~~basicvars+62
+	bne	L171
+	inc	|~~basicvars+62+2
+L171:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2
+	rep	#$20
+	longa	on
+	beq	L10116
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1
+	rep	#$20
+	longa	on
+	beq	L10116
+	pea	#<$25
+	pea	#4
+	jsl	~~error
+L10116:
+	sep	#$20
+	longa	off
+	stz	<L170+islocal_1
+	rep	#$20
+	longa	on
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2
+	rep	#$20
+	longa	on
+	bne	L10117
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	ldx	#<$16
+	xref	~~~mul
+	jsl	~~~mul
+	clc
+	adc	#<~~basicvars+504
+	sta	<L170+vp_1
+	xref	_BEG_DATA
+	lda	#_BEG_DATA>>16
+	sta	<L170+vp_1+2
+	lda	|~~basicvars+62
+	sta	<L170+base_1
+	lda	|~~basicvars+62+2
+	sta	<L170+base_1+2
+	lda	#$2
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L175
+	inc	|~~basicvars+62+2
+L175:
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L170+blockdef_1
+	rep	#$20
+	longa	on
+	brl	L10118
+L10117:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_srcaddr
+	sta	<L170+base_1
+	stx	<L170+base_1+2
+	pei	<L170+base_1+2
+	pei	<L170+base_1
+	jsl	~~skip_name
+	sta	<L170+ep_1
+	stx	<L170+ep_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L176
+	inc	|~~basicvars+62+2
+L176:
+	stz	<R0
+	lda	#$ffff
+	clc
+	adc	<L170+ep_1
+	sta	<R1
+	lda	#$ffff
+	adc	<L170+ep_1+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	beq	L177
+	lda	#$ffff
+	clc
+	adc	<L170+ep_1
+	sta	<R1
+	lda	#$ffff
+	adc	<L170+ep_1+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$5b
+	rep	#$20
+	longa	on
+	beq	L177
+	inc	<R0
+L177:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L170+blockdef_1
+	rep	#$20
+	longa	on
+	sec
+	lda	<L170+ep_1
+	sbc	<L170+base_1
+	sta	<R0
+	lda	<L170+ep_1+2
+	sbc	<L170+base_1+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L170+base_1+2
+	pei	<L170+base_1
+	jsl	~~find_variable
+	sta	<L170+vp_1
+	stx	<L170+vp_1+2
+	lda	<L170+blockdef_1
+	and	#$ff
+	beq	L10119
+	lda	<L170+vp_1
+	ora	<L170+vp_1+2
+	beq	*+5
+	brl	L10118
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$21
+	rep	#$20
+	longa	on
+	bne	L10121
+	sec
+	lda	<L170+ep_1
+	sbc	<L170+base_1
+	sta	<R0
+	lda	<L170+ep_1+2
+	sbc	<L170+base_1+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L170+base_1+2
+	pei	<L170+base_1
+	jsl	~~tocstring
+	sta	<R1
+	stx	<R1+2
+	phx
+	pha
+	pea	#<$d
+	pea	#8
+	jsl	~~error
+	bra	L10118
+L10121:
+	pea	#^$0
+	pea	#<$0
+	sec
+	lda	<L170+ep_1
+	sbc	<L170+base_1
+	sta	<R0
+	lda	<L170+ep_1+2
+	sbc	<L170+base_1+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L170+base_1+2
+	pei	<L170+base_1
+	jsl	~~create_variable
+	sta	<L170+vp_1
+	stx	<L170+vp_1+2
+	bra	L10118
+L10119:
+	lda	<L170+vp_1
+	ora	<L170+vp_1+2
+	beq	L10121
+	ldy	#$10
+	lda	[<L170+vp_1],Y
+	iny
+	iny
+	ora	[<L170+vp_1],Y
+	beq	L10126
+	ldy	#$8
+	lda	[<L170+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L170+vp_1],Y
+	pha
+	pea	#<$1b
+	pea	#8
+	jsl	~~error
+L10126:
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L170+islocal_1
+	rep	#$20
+	longa	on
+L10118:
+	lda	<L170+blockdef_1
+	and	#$ff
+	beq	L10127
+	pei	<L170+vp_1+2
+	pei	<L170+vp_1
+	jsl	~~define_byte_array
+	bra	L10113
+L10127:
+	pei	<L170+islocal_1
+	pei	<L170+vp_1+2
+	pei	<L170+vp_1
+	jsl	~~define_array
+L10113:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10115
+	jsl	~~check_ateol
+	pld
+	tsc
+	clc
+	adc	#L169
+	tcs
+	rtl
+L169	equ	22
+L170	equ	9
+	ends
+	efunc
+	code
+	func
+~~start_blockif:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L188
+	tcs
+	phd
+	tcd
+tp_0	set	4
+	bra	L10129
+L20052:
+	sep	#$20
+	longa	off
+	lda	[<L188+tp_0]
+	cmp	#<$df
+	rep	#$20
+	longa	on
+	bne	L10131
+	ldy	#$1
+	lda	[<L188+tp_0],Y
+	and	#$ff
+	bne	L10131
+	tya
+L193:
+	tay
+	lda	<L188+2
+	sta	<L188+2+4
+	lda	<L188+1
+	sta	<L188+1+4
+	pld
+	tsc
+	clc
+	adc	#L188+4
+	tcs
+	tya
+	rtl
+L10131:
+	pei	<L188+tp_0+2
+	pei	<L188+tp_0
+	jsl	~~skip_token
+	sta	<L188+tp_0
+	stx	<L188+tp_0+2
+L10129:
+	lda	[<L188+tp_0]
+	and	#$ff
+	bne	L20052
+	lda	#$0
+	bra	L193
+L188	equ	0
+L189	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_elsewhen
+	func
+~~exec_elsewhen:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L194
+	tcs
+	phd
+	tcd
+p_1	set	0
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<L195+p_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L195+p_1+2
+	lda	[<L195+p_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L195+p_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L196
+	dey
+L196:
+	sta	<R0
+	sty	<R0+2
+	lda	<L195+p_1
+	clc
+	adc	<R0
+	sta	<L195+p_1
+	lda	<L195+p_1+2
+	adc	<R0+2
+	sta	<L195+p_1+2
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10132
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10133
+	pei	<L195+p_1+2
+	pei	<L195+p_1
+	jsl	~~find_linestart
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10133:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10132
+	pei	<L195+p_1+2
+	pei	<L195+p_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10132:
+	lda	<L195+p_1
+	sta	|~~basicvars+62
+	lda	<L195+p_1+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L194
+	tcs
+	rtl
+L194	equ	16
+L195	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_xelse
+	func
+~~exec_xelse:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L201
+	tcs
+	phd
+	tcd
+p_1	set	0
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$a0
+	sta	[<R0]
+	rep	#$20
+	longa	on
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	<L202+p_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L202+p_1+2
+L10137:
+	pei	<L202+p_1+2
+	pei	<L202+p_1
+	jsl	~~skip_token
+	sta	<L202+p_1
+	stx	<L202+p_1+2
+	lda	[<L202+p_1]
+	and	#$ff
+	bne	L10137
+	inc	<L202+p_1
+	bne	L204
+	inc	<L202+p_1+2
+L204:
+	ldy	#$5
+	lda	[<L202+p_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L205
+	dey
+L205:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L202+p_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L202+p_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L202+p_1+2
+	adc	<R2+2
+	pha
+	pei	<R0
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<R1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	pha
+	pei	<R1
+	jsl	~~set_dest
+	jsl	~~exec_elsewhen
+	pld
+	tsc
+	clc
+	adc	#L201
+	tcs
+	rtl
+L201	equ	16
+L202	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_xlhelse
+	func
+~~exec_xlhelse:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L207
+	tcs
+	phd
+	tcd
+depth_1	set	0
+lp_1	set	2
+lp2_1	set	6
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~find_linestart
+	sta	<L208+lp_1
+	stx	<L208+lp_1+2
+	lda	|~~basicvars+62
+	sta	<L208+lp2_1
+	lda	|~~basicvars+62+2
+	sta	<L208+lp2_1+2
+	lda	#$1
+	sta	<L208+depth_1
+L10140:
+	sep	#$20
+	longa	off
+	lda	[<L208+lp2_1]
+	cmp	#<$a5
+	rep	#$20
+	longa	on
+	bne	L10141
+	dec	<L208+depth_1
+L10141:
+	pei	<L208+lp2_1+2
+	pei	<L208+lp2_1
+	jsl	~~start_blockif
+	and	#$ff
+	beq	L10142
+	inc	<L208+depth_1
+L10142:
+	lda	<L208+depth_1
+	bne	*+5
+	brl	L10139
+	ldy	#$2
+	lda	[<L208+lp_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L208+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L212
+	dey
+L212:
+	sta	<R0
+	sty	<R0+2
+	lda	<L208+lp_1
+	clc
+	adc	<R0
+	sta	<L208+lp_1
+	lda	<L208+lp_1+2
+	adc	<R0+2
+	sta	<L208+lp_1+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L208+lp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10143
+	pea	#<$2d
+	pea	#4
+	jsl	~~error
+L10143:
+	ldy	#$5
+	lda	[<L208+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L214
+	dey
+L214:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L208+lp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L208+lp_1
+	clc
+	adc	<R2
+	sta	<L208+lp2_1
+	lda	<L208+lp_1+2
+	adc	<R2+2
+	sta	<L208+lp2_1+2
+	brl	L10140
+L10139:
+	inc	<L208+lp2_1
+	bne	L215
+	inc	<L208+lp2_1+2
+L215:
+	lda	[<L208+lp2_1]
+	and	#$ff
+	bne	L10144
+	inc	<L208+lp2_1
+	bne	L217
+	inc	<L208+lp2_1+2
+L217:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10145
+	pei	<L208+lp2_1+2
+	pei	<L208+lp2_1
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10145:
+	ldy	#$5
+	lda	[<L208+lp2_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L219
+	dey
+L219:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L208+lp2_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L208+lp2_1
+	clc
+	adc	<R2
+	sta	<L208+lp2_1
+	lda	<L208+lp2_1+2
+	adc	<R2+2
+	sta	<L208+lp2_1+2
+L10144:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$a2
+	sta	[<R0]
+	rep	#$20
+	longa	on
+	pei	<L208+lp2_1+2
+	pei	<L208+lp2_1
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<R0
+	lda	#$0
+	adc	|~~basicvars+62+2
+	pha
+	pei	<R0
+	jsl	~~set_dest
+	jsl	~~exec_elsewhen
+	pld
+	tsc
+	clc
+	adc	#L207
+	tcs
+	rtl
+L207	equ	22
+L208	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_end
+	func
+~~exec_end:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L221
+	tcs
+	phd
+	tcd
+newend_1	set	0
+	inc	|~~basicvars+62
+	bne	L223
+	inc	|~~basicvars+62+2
+L223:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3d
+	rep	#$20
+	longa	on
+	bne	L10146
+	inc	|~~basicvars+62
+	bne	L225
+	inc	|~~basicvars+62+2
+L225:
+	jsl	~~expression
+	jsl	~~check_ateol
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10149-1
+	dw	3
+	dw	L10150-1
+	dw	L10151-1
+L10149:
+	jsl	~~pop_int
+L20053:
+	sta	<L222+newend_1
+L10148:
+	pei	<L222+newend_1
+	jsl	~~emulate_endeq
+	bra	L226
+L10150:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20053
+L10151:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+	bra	L10148
+L10146:
+	jsl	~~check_ateol
+	jsl	~~end_run
+L226:
+	pld
+	tsc
+	clc
+	adc	#L221
+	tcs
+	rtl
+L221	equ	6
+L222	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_endifcase
+	func
+~~exec_endifcase:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L227
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L229
+	inc	|~~basicvars+62+2
+L229:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10153
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10153:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10154
+	inc	|~~basicvars+62
+	bne	L10154
+	inc	|~~basicvars+62+2
+L10154:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L237
+	inc	|~~basicvars+62
+	bne	L234
+	inc	|~~basicvars+62+2
+L234:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10156
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10156:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L236
+	dey
+L236:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L237:
+	pld
+	tsc
+	clc
+	adc	#L227
+	tcs
+	rtl
+L227	equ	12
+L228	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_endproc
+	func
+~~exec_endproc:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L238
+	tcs
+	phd
+	tcd
+returnblock_1	set	0
+	lda	|~~basicvars+399
+	ora	|~~basicvars+399+2
+	bne	L10157
+	pea	#<$55
+	pea	#4
+	jsl	~~error
+L10157:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$f
+	beq	L10158
+	pea	#<$f
+	jsl	~~empty_stack
+L10158:
+	jsl	~~pop_proc
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L239+returnblock_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$e
+	xref	~~~fmov
+	jsl	~~~fmov
+	lda	<L239+returnblock_1+8
+	beq	L10159
+	pei	<L239+returnblock_1+8
+	jsl	~~restore_parameters
+L10159:
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10160
+	lda	|~~basicvars+425
+	bit	#$4
+	beq	L10161
+	pea	#<$0
+	pei	<L239+returnblock_1+12
+	pei	<L239+returnblock_1+10
+	jsl	~~trace_proc
+L10161:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10160
+	pei	<L239+returnblock_1+6
+	pei	<L239+returnblock_1+4
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10160:
+	lda	<L239+returnblock_1+4
+	sta	|~~basicvars+62
+	lda	<L239+returnblock_1+6
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L238
+	tcs
+	rtl
+L238	equ	18
+L239	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_fnreturn
+	func
+~~exec_fnreturn:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L247
+	tcs
+	phd
+	tcd
+resultype_1	set	0
+intresult_1	set	2
+stresult_1	set	4
+sp_1	set	10
+returnblock_1	set	14
+	lda	|~~basicvars+399
+	ora	|~~basicvars+399+2
+	bne	L10164
+	pea	#<$56
+	pea	#4
+	jsl	~~error
+L10164:
+	inc	|~~basicvars+62
+	bne	L250
+	inc	|~~basicvars+62+2
+L250:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L248+resultype_1
+	cmp	#<$2
+	bne	L10165
+	jsl	~~pop_int
+	sta	<L248+intresult_1
+	brl	L10166
+L10165:
+	lda	<L248+resultype_1
+	cmp	#<$3
+	bne	L10167
+	phy
+	phy
+	jsl	~~pop_float
+	pla
+	sta	|L10163
+	pla
+	sta	|L10163+2
+	brl	L10166
+L10167:
+	lda	<L248+resultype_1
+	cmp	#<$4
+	bne	L10169
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L248+stresult_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L248+stresult_1
+	jsl	~~alloc_string
+	sta	<L248+sp_1
+	stx	<L248+sp_1+2
+	lda	<L248+stresult_1
+	beq	L10170
+	ldy	#$0
+	lda	<L248+stresult_1
+	bpl	L255
+	dey
+L255:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L248+stresult_1+4
+	pei	<L248+stresult_1+2
+	pei	<L248+sp_1+2
+	pei	<L248+sp_1
+	jsl	~~memmove
+L10170:
+	lda	<L248+sp_1
+	sta	<L248+stresult_1+2
+	lda	<L248+sp_1+2
+	sta	<L248+stresult_1+4
+	lda	#$5
+	sta	<L248+resultype_1
+	bra	L10166
+L10169:
+	lda	<L248+resultype_1
+	cmp	#<$5
+	bne	L10172
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L248+stresult_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	bra	L10166
+L10172:
+	pea	#<$45
+	pea	#4
+	jsl	~~error
+L10166:
+	pea	#<$10
+	jsl	~~empty_stack
+	jsl	~~pop_fn
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L248+returnblock_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$e
+	xref	~~~fmov
+	jsl	~~~fmov
+	lda	<L248+returnblock_1+8
+	beq	L10174
+	pei	<L248+returnblock_1+8
+	jsl	~~restore_parameters
+L10174:
+	lda	<L248+resultype_1
+	cmp	#<$2
+	bne	L10175
+	lda	#$fffc
+	clc
+	adc	|~~basicvars+42
+	sta	|~~basicvars+42
+	lda	#$ffff
+	adc	|~~basicvars+42+2
+	sta	|~~basicvars+42+2
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	#$2
+	sta	[<R0]
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	<L248+intresult_1
+	ldy	#$2
+	bra	L20054
+L20056:
+	lda	#$fffa
+	clc
+	adc	|~~basicvars+42
+	sta	|~~basicvars+42
+	lda	#$ffff
+	adc	|~~basicvars+42+2
+	sta	|~~basicvars+42+2
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	#$3
+	sta	[<R0]
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	|L10163
+	ldy	#$2
+	sta	[<R0],Y
+	lda	|L10163+2
+	iny
+	iny
+L20054:
+	sta	[<R0],Y
+	bra	L10176
+L10175:
+	lda	<L248+resultype_1
+	cmp	#<$3
+	beq	L20056
+	lda	<L248+resultype_1
+	cmp	#<$4
+	bne	L10179
+	lda	#$fff8
+	clc
+	adc	|~~basicvars+42
+	sta	|~~basicvars+42
+	lda	#$ffff
+	adc	|~~basicvars+42+2
+	sta	|~~basicvars+42+2
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	#$4
+	sta	[<R0]
+	clc
+	tdc
+	adc	#<L248+stresult_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	ina
+	ina
+	clc
+	adc	|~~basicvars+42
+	sta	<R0
+	lda	#$0
+	adc	|~~basicvars+42+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	bra	L10176
+L10179:
+	lda	<L248+resultype_1
+	cmp	#<$5
+	bne	L10176
+	pei	<L248+stresult_1+4
+	pei	<L248+stresult_1+2
+	pei	<L248+stresult_1
+	jsl	~~push_strtemp
+L10176:
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10182
+	lda	|~~basicvars+425
+	bit	#$4
+	beq	L10183
+	pea	#<$0
+	pei	<L248+returnblock_1+12
+	pei	<L248+returnblock_1+10
+	jsl	~~trace_proc
+L10183:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10182
+	pei	<L248+returnblock_1+6
+	pei	<L248+returnblock_1+4
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10182:
+	lda	<L248+returnblock_1+4
+	sta	|~~basicvars+62
+	lda	<L248+returnblock_1+6
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L247
+	tcs
+	rtl
+L247	equ	32
+L248	equ	5
+	ends
+	efunc
+	udata
+L10163:
+	ds	4
+	ends
+	code
+	xdef	~~exec_endwhile
+	func
+~~exec_endwhile:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L266
+	tcs
+	phd
+	tcd
+tp_1	set	0
+wp_1	set	4
+result_1	set	8
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<L267+tp_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L267+tp_1+2
+	lda	[<L267+tp_1]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10185
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10185:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$13
+	bne	L10186
+	lda	|~~basicvars+42
+	sta	<L267+wp_1
+	lda	|~~basicvars+42+2
+	sta	<L267+wp_1+2
+	bra	L10187
+L10186:
+	jsl	~~get_while
+	sta	<L267+wp_1
+	stx	<L267+wp_1+2
+L10187:
+	lda	<L267+wp_1
+	ora	<L267+wp_1+2
+	bne	L10188
+	pea	#<$33
+	pea	#4
+	jsl	~~error
+L10188:
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10189
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10189:
+	ldy	#$2
+	lda	[<L267+wp_1],Y
+	sta	|~~basicvars+62
+	iny
+	iny
+	lda	[<L267+wp_1],Y
+	sta	|~~basicvars+62+2
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10190
+	jsl	~~pop_int
+	bra	L20058
+L20060:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20058:
+	sta	<L267+result_1
+	bra	L10191
+L10190:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20060
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10191:
+	lda	<L267+result_1
+	beq	L10194
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10195
+	ldy	#$8
+	lda	[<L267+wp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L267+wp_1],Y
+	pha
+	pei	<L267+tp_1+2
+	pei	<L267+tp_1
+	jsl	~~trace_branch
+L10195:
+	ldy	#$6
+	lda	[<L267+wp_1],Y
+	sta	|~~basicvars+62
+	iny
+	iny
+	lda	[<L267+wp_1],Y
+	bra	L20057
+L10194:
+	jsl	~~pop_while
+	sep	#$20
+	longa	off
+	lda	[<L267+tp_1]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10197
+	inc	<L267+tp_1
+	bne	L10197
+	inc	<L267+tp_1+2
+L10197:
+	lda	[<L267+tp_1]
+	and	#$ff
+	bne	L10198
+	inc	<L267+tp_1
+	bne	L279
+	inc	<L267+tp_1+2
+L279:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10199
+	pei	<L267+tp_1+2
+	pei	<L267+tp_1
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10199:
+	ldy	#$5
+	lda	[<L267+tp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L281
+	dey
+L281:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L267+tp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L267+tp_1
+	clc
+	adc	<R2
+	sta	<L267+tp_1
+	lda	<L267+tp_1+2
+	adc	<R2+2
+	sta	<L267+tp_1+2
+L10198:
+	lda	<L267+tp_1
+	sta	|~~basicvars+62
+	lda	<L267+tp_1+2
+L20057:
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L266
+	tcs
+	rtl
+L266	equ	22
+L267	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_error
+	func
+~~exec_error:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L283
+	tcs
+	phd
+	tcd
+errnumber_1	set	0
+stringtype_1	set	2
+descriptor_1	set	4
+errtext_1	set	10
+	inc	|~~basicvars+62
+	bne	L285
+	inc	|~~basicvars+62+2
+L285:
+	jsl	~~eval_integer
+	sta	<L284+errnumber_1
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10200
+	pea	#<$27
+	pea	#4
+	jsl	~~error
+L10200:
+	inc	|~~basicvars+62
+	bne	L287
+	inc	|~~basicvars+62+2
+L287:
+	jsl	~~expression
+	jsl	~~check_ateol
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L284+stringtype_1
+	cmp	#<$4
+	beq	L10201
+	lda	<L284+stringtype_1
+	cmp	#<$5
+	beq	L10201
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10201:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L284+descriptor_1
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L284+descriptor_1
+	pei	<L284+descriptor_1+4
+	pei	<L284+descriptor_1+2
+	jsl	~~tocstring
+	sta	<L284+errtext_1
+	stx	<L284+errtext_1+2
+	lda	<L284+stringtype_1
+	cmp	#<$5
+	bne	L10202
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L284+descriptor_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10202:
+	pei	<L284+errtext_1+2
+	pei	<L284+errtext_1
+	pei	<L284+errnumber_1
+	jsl	~~show_error
+	pld
+	tsc
+	clc
+	adc	#L283
+	tcs
+	rtl
+L283	equ	22
+L284	equ	9
+	ends
+	efunc
+	code
+	xdef	~~exec_for
+	func
+~~exec_for:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L292
+	tcs
+	phd
+	tcd
+isinteger_1	set	0
+forvar_1	set	1
+intlimit_1	set	7
+intstep_1	set	9
+	inc	|~~basicvars+62
+	bne	L294
+	inc	|~~basicvars+62+2
+L294:
+	pea	#0
+	clc
+	tdc
+	adc	#<L293+forvar_1
+	pha
+	jsl	~~get_lvalue
+	lda	<L293+forvar_1
+	and	#<$8
+	bne	L295
+	lda	<L293+forvar_1
+	and	#<$7
+	sta	<R0
+	sec
+	lda	#$3
+	sbc	<R0
+	bvs	L297
+	eor	#$8000
+L297:
+	bmi	L10205
+L295:
+	pea	#<$43
+	pea	#4
+	jsl	~~error
+L10205:
+	stz	<R0
+	lda	<L293+forvar_1
+	and	#<$7
+	sta	<R1
+	lda	<R1
+	bmi	L300
+	dea
+	dea
+	dea
+	bpl	L299
+L300:
+	inc	<R0
+L299:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L293+isinteger_1
+	rep	#$20
+	longa	on
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3d
+	rep	#$20
+	longa	on
+	beq	L10206
+	pea	#<$26
+	pea	#4
+	jsl	~~error
+L10206:
+	inc	|~~basicvars+62
+	bne	L302
+	inc	|~~basicvars+62+2
+L302:
+	jsl	~~expression
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$e1
+	rep	#$20
+	longa	on
+	beq	L10207
+	pea	#<$31
+	pea	#4
+	jsl	~~error
+L10207:
+	inc	|~~basicvars+62
+	bne	L304
+	inc	|~~basicvars+62+2
+L304:
+	lda	<L293+forvar_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10210-1
+	dw	3
+	dw	L10216-1
+	dw	17
+	dw	L10222-1
+	dw	18
+	dw	L10228-1
+	dw	19
+	dw	L10234-1
+	dw	L10240-1
+L10210:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10213-1
+	dw	3
+	dw	L10214-1
+	dw	L10215-1
+L10213:
+	jsl	~~pop_int
+L20061:
+	sta	[<L293+forvar_1+2]
+	brl	L10209
+L20063:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	*+5
+	brl	L310
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	bne	*+5
+	brl	L312
+L20072:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+	brl	L10246
+L20066:
+	lda	<L293+isinteger_1
+	and	#$ff
+	beq	*+5
+	brl	L323
+	lda	#$0
+	sta	|L10204
+	lda	#$3f80
+	sta	|L10204+2
+	brl	L10264
+L10214:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20061
+L10215:
+	pea	#<$3f
+	pea	#4
+	brl	L20069
+L10216:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10219-1
+	dw	3
+	dw	L10220-1
+	dw	L10215-1
+L10219:
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L305
+	dey
+L305:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+L20084:
+	pla
+	sta	[<L293+forvar_1+2]
+	pla
+	ldy	#$2
+	sta	[<L293+forvar_1+2],Y
+	brl	L10209
+L10220:
+	phy
+	phy
+	jsl	~~pop_float
+	bra	L20084
+L10222:
+	pea	#<$1
+	pei	<L293+forvar_1+2
+	jsl	~~check_write
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10225-1
+	dw	3
+	dw	L10226-1
+	dw	L10215-1
+L10225:
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	jsl	~~pop_int
+	sep	#$20
+	longa	off
+	ldy	<L293+forvar_1+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L10209
+L10226:
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R1
+	pla
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	<R1
+	ldy	<L293+forvar_1+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L10209
+L10228:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10231-1
+	dw	3
+	dw	L10232-1
+	dw	L10215-1
+L10231:
+	jsl	~~pop_int
+	pha
+L20086:
+	pei	<L293+forvar_1+2
+	jsl	~~store_integer
+	bra	L10209
+L10232:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	pei	<R0
+	bra	L20086
+L10234:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10237-1
+	dw	3
+	dw	L10238-1
+	dw	L10215-1
+L10237:
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L306
+	dey
+L306:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+L20088:
+	pei	<L293+forvar_1+2
+	jsl	~~store_float
+	bra	L10209
+L10238:
+	phy
+	phy
+	jsl	~~pop_float
+	bra	L20088
+L10240:
+	pea	#^L1
+	pea	#<L1
+	pea	#<$351
+	pea	#<$82
+	pea	#10
+L20069:
+	jsl	~~error
+L10209:
+	jsl	~~expression
+	lda	<L293+isinteger_1
+	and	#$ff
+	bne	*+5
+	brl	L20063
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10242
+	jsl	~~pop_int
+L20089:
+	sta	<L293+intlimit_1
+	bra	L10246
+L10242:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	*+5
+	brl	L20072
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20089
+L310:
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L311
+	dey
+L311:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L20075
+L312:
+	phy
+	phy
+	jsl	~~pop_float
+L20075:
+	pla
+	sta	|L10203
+	pla
+	sta	|L10203+2
+L10246:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$d9
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L20066
+	inc	|~~basicvars+62
+	bne	L314
+	inc	|~~basicvars+62+2
+L314:
+	jsl	~~expression
+	lda	<L293+isinteger_1
+	and	#$ff
+	beq	L10252
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10253
+	jsl	~~pop_int
+	bra	L20090
+L20100:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20090:
+	sta	<L293+intstep_1
+	bra	L10254
+L10253:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20100
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10254:
+	lda	<L293+intstep_1
+L20094:
+	bne	L10264
+	pea	#<$6
+	pea	#4
+	jsl	~~error
+	bra	L10264
+L10252:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10259
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L320
+	dey
+L320:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L20098
+L20102:
+	phy
+	phy
+	jsl	~~pop_float
+L20098:
+	pla
+	sta	|L10204
+	pla
+	sta	|L10204+2
+	bra	L10260
+L10259:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20102
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10260:
+	lda	|L10204+2
+	pha
+	lda	|L10204
+	pha
+	xref	~~~ftod
+	jsl	~~~ftod
+	xref	~~~dtst
+	jsl	~~~dtst
+	bra	L20094
+L323:
+	lda	#$1
+	sta	<L293+intstep_1
+L10264:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10267
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10267:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10268
+	inc	|~~basicvars+62
+	bne	L10268
+	inc	|~~basicvars+62+2
+L10268:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L10269
+	inc	|~~basicvars+62
+	bne	L328
+	inc	|~~basicvars+62+2
+L328:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10270
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10270:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L330
+	dey
+L330:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L10269:
+	lda	<L293+isinteger_1
+	and	#$ff
+	beq	L10271
+simple_2	set	11
+	stz	<R0
+	lda	<L293+forvar_1
+	cmp	#<$2
+	bne	L332
+	lda	<L293+intstep_1
+	cmp	#<$1
+	bne	L332
+	inc	<R0
+L332:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L293+simple_2
+	rep	#$20
+	longa	on
+	pei	<L293+simple_2
+	pei	<L293+intstep_1
+	pei	<L293+intlimit_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L293+forvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~push_intfor
+	bra	L335
+L10271:
+	pea	#<$0
+	lda	|L10204+2
+	pha
+	lda	|L10204
+	pha
+	lda	|L10203+2
+	pha
+	lda	|L10203
+	pha
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L293+forvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~push_floatfor
+L335:
+	pld
+	tsc
+	clc
+	adc	#L292
+	tcs
+	rtl
+L292	equ	24
+L293	equ	13
+	ends
+	efunc
+	udata
+L10203:
+	ds	4
+	ends
+	udata
+L10204:
+	ds	4
+	ends
+	data
+L1:
+	db	$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00
+	ends
+	code
+	func
+~~set_linedest:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L337
+	tcs
+	phd
+	tcd
+tp_0	set	4
+line_1	set	0
+dest_1	set	2
+	pei	<L337+tp_0+2
+	pei	<L337+tp_0
+	jsl	~~get_linenum
+	sta	<L338+line_1
+	pha
+	jsl	~~find_line
+	sta	<L338+dest_1
+	stx	<L338+dest_1+2
+	pei	<L338+dest_1+2
+	pei	<L338+dest_1
+	jsl	~~get_lineno
+	cmp	<L338+line_1
+	beq	L10273
+	pei	<L338+line_1
+	pea	#<$c
+	pea	#6
+	jsl	~~error
+L10273:
+	ldy	#$5
+	lda	[<L338+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L340
+	dey
+L340:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L338+dest_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L338+dest_1
+	clc
+	adc	<R2
+	sta	<L338+dest_1
+	lda	<L338+dest_1+2
+	adc	<R2+2
+	sta	<L338+dest_1+2
+	sep	#$20
+	longa	off
+	lda	#$1f
+	sta	[<L337+tp_0]
+	rep	#$20
+	longa	on
+	pei	<L338+dest_1+2
+	pei	<L338+dest_1
+	pei	<L337+tp_0+2
+	pei	<L337+tp_0
+	jsl	~~set_address
+	ldx	<L338+dest_1+2
+	lda	<L338+dest_1
+	tay
+	lda	<L337+2
+	sta	<L337+2+4
+	lda	<L337+1
+	sta	<L337+1+4
+	pld
+	tsc
+	clc
+	adc	#L337+4
+	tcs
+	tya
+	rtl
+L337	equ	18
+L338	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_gosub
+	func
+~~exec_gosub:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L342
+	tcs
+	phd
+	tcd
+dest_1	set	0
+line_1	set	4
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10274
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10274:
+	inc	|~~basicvars+62
+	bne	L345
+	inc	|~~basicvars+62+2
+L345:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1f
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10275
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L347
+	dey
+L347:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L343+dest_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L343+dest_1+2
+L20108:
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcs	*+5
+	brl	L10276
+	inc	|~~basicvars+62+2
+	brl	L10276
+L10275:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	bne	L10277
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_linedest
+	sta	<L343+dest_1
+	stx	<L343+dest_1+2
+	bra	L20108
+L10277:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10279
+	jsl	~~eval_intfactor
+	sta	<L343+line_1
+	pha
+	jsl	~~find_line
+	sta	<L343+dest_1
+	stx	<L343+dest_1+2
+	pei	<L343+dest_1+2
+	pei	<L343+dest_1
+	jsl	~~get_lineno
+	cmp	<L343+line_1
+	beq	L10280
+	pei	<L343+line_1
+	pea	#<$c
+	pea	#6
+	jsl	~~error
+L10280:
+	ldy	#$5
+	lda	[<L343+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L353
+	dey
+L353:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L343+dest_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L343+dest_1
+	clc
+	adc	<R2
+	sta	<L343+dest_1
+	lda	<L343+dest_1+2
+	adc	<R2+2
+	sta	<L343+dest_1+2
+	bra	L10276
+L10279:
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10276:
+	jsl	~~check_ateol
+	jsl	~~push_gosub
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10282
+	pei	<L343+dest_1+2
+	pei	<L343+dest_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10282:
+	lda	<L343+dest_1
+	sta	|~~basicvars+62
+	lda	<L343+dest_1+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L342
+	tcs
+	rtl
+L342	equ	18
+L343	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_goto
+	func
+~~exec_goto:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L356
+	tcs
+	phd
+	tcd
+dest_1	set	0
+line_1	set	4
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10283
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10283:
+	inc	|~~basicvars+62
+	bne	L359
+	inc	|~~basicvars+62+2
+L359:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1f
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10284
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L361
+	dey
+L361:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L357+dest_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L357+dest_1+2
+L20114:
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcs	*+5
+	brl	L10285
+	inc	|~~basicvars+62+2
+	brl	L10285
+L10284:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	bne	L10286
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_linedest
+	sta	<L357+dest_1
+	stx	<L357+dest_1+2
+	bra	L20114
+L10286:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10288
+	jsl	~~eval_intfactor
+	sta	<L357+line_1
+	lda	<L357+line_1
+	bmi	L366
+	ldy	#$0
+	lda	<L357+line_1
+	bpl	L368
+	dey
+L368:
+	sta	<R0
+	sty	<R0+2
+	sec
+	lda	#$feff
+	sbc	<R0
+	lda	#$0
+	sbc	<R0+2
+	bvs	L369
+	eor	#$8000
+L369:
+	bmi	L10289
+L366:
+	pea	#<$b
+	pea	#4
+	jsl	~~error
+L10289:
+	pei	<L357+line_1
+	jsl	~~find_line
+	sta	<L357+dest_1
+	stx	<L357+dest_1+2
+	pei	<L357+dest_1+2
+	pei	<L357+dest_1
+	jsl	~~get_lineno
+	cmp	<L357+line_1
+	beq	L10290
+	pei	<L357+line_1
+	pea	#<$c
+	pea	#6
+	jsl	~~error
+L10290:
+	ldy	#$5
+	lda	[<L357+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L372
+	dey
+L372:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L357+dest_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L357+dest_1
+	clc
+	adc	<R2
+	sta	<L357+dest_1
+	lda	<L357+dest_1+2
+	adc	<R2+2
+	sta	<L357+dest_1+2
+	bra	L10285
+L10288:
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10285:
+	jsl	~~check_ateol
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10292
+	pei	<L357+dest_1+2
+	pei	<L357+dest_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10292:
+	lda	<L357+dest_1
+	sta	|~~basicvars+62
+	lda	<L357+dest_1+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L356
+	tcs
+	rtl
+L356	equ	18
+L357	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_blockif
+	func
+~~exec_blockif:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L375
+	tcs
+	phd
+	tcd
+dest_1	set	0
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<L376+dest_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L376+dest_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L377
+	inc	|~~basicvars+62+2
+L377:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10293
+	jsl	~~pop_int
+	tax
+L20121:
+	bne	L10295
+	lda	#$2
+	clc
+	adc	<L376+dest_1
+	sta	<L376+dest_1
+	bcc	L10295
+	inc	<L376+dest_1+2
+	bra	L10295
+L10293:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	bne	L10296
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20121
+L10296:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10295:
+	lda	|~~basicvars+425
+	bit	#$1
+	bne	*+5
+	brl	L10299
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10300
+	lda	[<L376+dest_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L376+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L386
+	dey
+L386:
+	sta	<R0
+	sty	<R0+2
+	lda	<L376+dest_1
+	clc
+	adc	<R0
+	sta	<R1
+	lda	<L376+dest_1+2
+	adc	<R0+2
+	pha
+	pei	<R1
+	jsl	~~find_linestart
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10300:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10299
+	lda	[<L376+dest_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L376+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L388
+	dey
+L388:
+	sta	<R0
+	sty	<R0+2
+	lda	<L376+dest_1
+	clc
+	adc	<R0
+	sta	<R1
+	lda	<L376+dest_1+2
+	adc	<R0+2
+	pha
+	pei	<R1
+	pei	<L376+dest_1+2
+	pei	<L376+dest_1
+	jsl	~~trace_branch
+L10299:
+	lda	[<L376+dest_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L376+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L389
+	dey
+L389:
+	sta	<R0
+	sty	<R0+2
+	lda	<L376+dest_1
+	clc
+	adc	<R0
+	sta	|~~basicvars+62
+	lda	<L376+dest_1+2
+	adc	<R0+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L375
+	tcs
+	rtl
+L375	equ	16
+L376	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_singlif
+	func
+~~exec_singlif:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L391
+	tcs
+	phd
+	tcd
+dest_1	set	0
+here_1	set	4
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<L392+dest_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L392+dest_1+2
+	lda	<L392+dest_1
+	sta	<L392+here_1
+	lda	<L392+dest_1+2
+	sta	<L392+here_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L393
+	inc	|~~basicvars+62+2
+L393:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10302
+	jsl	~~pop_int
+	tax
+L20128:
+	bne	L10304
+	lda	#$2
+	clc
+	adc	<L392+dest_1
+	sta	<L392+dest_1
+	bcc	L10304
+	inc	<L392+dest_1+2
+	bra	L10304
+L10302:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	bne	L10305
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20128
+L10305:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10304:
+	lda	[<L392+dest_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L392+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L400
+	dey
+L400:
+	sta	<R0
+	sty	<R0+2
+	lda	<L392+dest_1
+	clc
+	adc	<R0
+	sta	<L392+dest_1
+	lda	<L392+dest_1+2
+	adc	<R0+2
+	sta	<L392+dest_1+2
+	sep	#$20
+	longa	off
+	lda	[<L392+dest_1]
+	cmp	#<$1f
+	rep	#$20
+	longa	on
+	bne	L10308
+	ldy	#$1
+	lda	[<L392+dest_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L392+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	iny
+	lda	[<L392+dest_1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	ldy	#$4
+	lda	[<L392+dest_1],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L402
+	dey
+L402:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L392+dest_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L392+dest_1+2
+	bra	L10309
+L10308:
+	sep	#$20
+	longa	off
+	lda	[<L392+dest_1]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	bne	L10309
+	pei	<L392+dest_1+2
+	pei	<L392+dest_1
+	jsl	~~set_linedest
+	sta	<L392+dest_1
+	stx	<L392+dest_1+2
+L10309:
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10311
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10312
+destline_2	set	8
+	pei	<L392+dest_1+2
+	pei	<L392+dest_1
+	jsl	~~find_linestart
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	jsl	~~get_lineno
+	sta	<L392+destline_2
+	pei	<L392+here_1+2
+	pei	<L392+here_1
+	jsl	~~get_lineno
+	cmp	<L392+destline_2
+	beq	L10312
+	pei	<L392+destline_2
+	jsl	~~trace_line
+L10312:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10311
+	pei	<L392+dest_1+2
+	pei	<L392+dest_1
+	pei	<L392+here_1+2
+	pei	<L392+here_1
+	jsl	~~trace_branch
+L10311:
+	lda	<L392+dest_1
+	sta	|~~basicvars+62
+	lda	<L392+dest_1+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L391
+	tcs
+	rtl
+L391	equ	22
+L392	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_xif
+	func
+~~exec_xif:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L409
+	tcs
+	phd
+	tcd
+lp2_1	set	0
+dest_1	set	4
+ifplace_1	set	8
+thenplace_1	set	12
+elseplace_1	set	16
+result_1	set	20
+single_1	set	22
+	lda	|~~basicvars+62
+	sta	<L410+ifplace_1
+	lda	|~~basicvars+62+2
+	sta	<L410+ifplace_1+2
+	lda	#$1
+	clc
+	adc	<L410+ifplace_1
+	sta	<L410+thenplace_1
+	lda	#$0
+	adc	<L410+ifplace_1+2
+	sta	<L410+thenplace_1+2
+	lda	#$3
+	clc
+	adc	<L410+ifplace_1
+	sta	<L410+elseplace_1
+	lda	#$0
+	adc	<L410+ifplace_1+2
+	sta	<L410+elseplace_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L411
+	inc	|~~basicvars+62+2
+L411:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10315
+	jsl	~~pop_int
+	bra	L20179
+L20186:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20179:
+	sta	<L410+result_1
+	bra	L10316
+L10315:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20186
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10316:
+	stz	<R0
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$df
+	rep	#$20
+	longa	on
+	beq	L414
+	inc	<R0
+L414:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L410+single_1
+	rep	#$20
+	longa	on
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$df
+	rep	#$20
+	longa	on
+	bne	L10319
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<L410+lp2_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L410+lp2_1+2
+	stz	<R0
+	lda	[<L410+lp2_1]
+	and	#$ff
+	beq	L417
+	inc	<R0
+L417:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L410+single_1
+	rep	#$20
+	longa	on
+L10319:
+	lda	<L410+single_1
+	and	#$ff
+	bne	*+5
+	brl	L10320
+	sep	#$20
+	longa	off
+	lda	#$b4
+	sta	[<L410+ifplace_1]
+	rep	#$20
+	longa	on
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	L10321
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	<L410+lp2_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L410+lp2_1+2
+	pha
+	pei	<L410+lp2_1
+	pei	<L410+elseplace_1+2
+	pei	<L410+elseplace_1
+	jsl	~~set_dest
+	bra	L10322
+L20130:
+	pei	<L410+lp2_1+2
+	pei	<L410+lp2_1
+	jsl	~~skip_token
+	sta	<L410+lp2_1
+	stx	<L410+lp2_1+2
+L10322:
+	lda	[<L410+lp2_1]
+	and	#$ff
+	bne	L20130
+	inc	<L410+lp2_1
+	bne	L422
+	inc	<L410+lp2_1+2
+L422:
+	ldy	#$5
+	lda	[<L410+lp2_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L423
+	dey
+L423:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L410+lp2_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L410+lp2_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L410+lp2_1+2
+	adc	<R2+2
+	pha
+	pei	<R0
+	pei	<L410+thenplace_1+2
+	pei	<L410+thenplace_1
+	brl	L20131
+L10321:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$df
+	rep	#$20
+	longa	on
+	beq	L10325
+	lda	|~~basicvars+62
+	sta	<L410+lp2_1
+	lda	|~~basicvars+62+2
+	sta	<L410+lp2_1+2
+L10325:
+	pei	<L410+lp2_1+2
+	pei	<L410+lp2_1
+	pei	<L410+thenplace_1+2
+	pei	<L410+thenplace_1
+	jsl	~~set_dest
+	bra	L10326
+L20133:
+	sep	#$20
+	longa	off
+	lda	[<L410+lp2_1]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	beq	L10327
+	pei	<L410+lp2_1+2
+	pei	<L410+lp2_1
+	jsl	~~skip_token
+	sta	<L410+lp2_1
+	stx	<L410+lp2_1+2
+L10326:
+	lda	[<L410+lp2_1]
+	and	#$ff
+	bne	L20133
+L10327:
+	sep	#$20
+	longa	off
+	lda	[<L410+lp2_1]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10346
+L20184:
+	lda	#$3
+	clc
+	adc	<L410+lp2_1
+	sta	<L410+lp2_1
+	bcc	*+5
+	brl	L20135
+	brl	L10346
+L10320:
+depth_2	set	23
+	sep	#$20
+	longa	off
+	lda	#$b3
+	sta	[<L410+ifplace_1]
+	rep	#$20
+	longa	on
+	lda	#$1
+	clc
+	adc	<L410+lp2_1
+	sta	|~~basicvars+62
+	lda	#$0
+	adc	<L410+lp2_1+2
+	sta	|~~basicvars+62+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L432
+	dey
+L432:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	<R0
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	pha
+	pei	<R0
+	pei	<L410+thenplace_1+2
+	pei	<L410+thenplace_1
+	jsl	~~set_dest
+	lda	#$1
+	sta	<L410+depth_2
+L10331:
+	sec
+	lda	#$0
+	sbc	<L410+depth_2
+	bvs	L433
+	eor	#$8000
+L433:
+	bpl	*+5
+	brl	L10332
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<R0],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10333
+	lda	<L410+result_1
+	beq	*+5
+	brl	L10332
+	pea	#<$2d
+	pea	#4
+	jsl	~~error
+L10333:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L437
+	dey
+L437:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	<L410+lp2_1
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	<L410+lp2_1+2
+	sep	#$20
+	longa	off
+	lda	[<L410+lp2_1]
+	cmp	#<$a5
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L438
+	sep	#$20
+	longa	off
+	lda	[<L410+lp2_1]
+	cmp	#<$a1
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L439
+	pei	<L410+lp2_1+2
+	pei	<L410+lp2_1
+	jsl	~~start_blockif
+	and	#$ff
+	beq	*+5
+	brl	L441
+	brl	L10337
+L10332:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<R0],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L445
+	sep	#$20
+	longa	off
+	lda	[<L410+lp2_1]
+	cmp	#<$a1
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L20184
+	inc	<L410+lp2_1
+	bne	L10346
+L20135:
+	inc	<L410+lp2_1+2
+L10346:
+	lda	[<L410+lp2_1]
+	and	#$ff
+	beq	*+5
+	brl	L10344
+	inc	<L410+lp2_1
+	bne	L451
+	inc	<L410+lp2_1+2
+L451:
+	ldy	#$5
+	lda	[<L410+lp2_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L452
+	dey
+L452:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L410+lp2_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L410+lp2_1
+	clc
+	adc	<R2
+	sta	<L410+lp2_1
+	lda	<L410+lp2_1+2
+	brl	L20141
+L20188:
+	lda	[<L410+thenplace_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L410+thenplace_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L454
+	dey
+L454:
+	sta	<R0
+	sty	<R0+2
+	lda	<L410+thenplace_1
+	clc
+	adc	<R0
+	sta	<L410+dest_1
+	lda	<L410+thenplace_1+2
+	brl	L20140
+L438:
+	dec	<L410+depth_2
+	bra	L10337
+L439:
+	lda	<L410+depth_2
+	cmp	#<$1
+	bne	L10337
+	stz	<L410+depth_2
+	bra	L10337
+L441:
+	inc	<L410+depth_2
+L10337:
+	sec
+	lda	#$0
+	sbc	<L410+depth_2
+	bvs	L442
+	eor	#$8000
+L442:
+	bpl	*+5
+	brl	L10331
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$2
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L444
+	dey
+L444:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R0
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R0+2
+	sta	|~~basicvars+62+2
+	brl	L10331
+L445:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L446
+	dey
+L446:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	<L410+lp2_1
+	lda	|~~basicvars+62+2
+L20141:
+	adc	<R2+2
+	sta	<L410+lp2_1+2
+L10344:
+	pei	<L410+lp2_1+2
+	pei	<L410+lp2_1
+	pei	<L410+elseplace_1+2
+	pei	<L410+elseplace_1
+L20131:
+	jsl	~~set_dest
+	lda	<L410+result_1
+	beq	*+5
+	brl	L20188
+	lda	[<L410+elseplace_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L410+elseplace_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L455
+	dey
+L455:
+	sta	<R0
+	sty	<R0+2
+	lda	<L410+elseplace_1
+	clc
+	adc	<R0
+	sta	<L410+dest_1
+	lda	<L410+elseplace_1+2
+L20140:
+	adc	<R0+2
+	sta	<L410+dest_1+2
+	lda	<L410+single_1
+	and	#$ff
+	beq	L10350
+	sep	#$20
+	longa	off
+	lda	[<L410+dest_1]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	bne	L10351
+	pei	<L410+dest_1+2
+	pei	<L410+dest_1
+	jsl	~~set_linedest
+	sta	<L410+dest_1
+	stx	<L410+dest_1+2
+	bra	L10350
+L10351:
+	sep	#$20
+	longa	off
+	lda	[<L410+dest_1]
+	cmp	#<$1f
+	rep	#$20
+	longa	on
+	bne	L10350
+	ldy	#$1
+	lda	[<L410+dest_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L410+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	iny
+	lda	[<L410+dest_1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	ldy	#$4
+	lda	[<L410+dest_1],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L459
+	dey
+L459:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L410+dest_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L410+dest_1+2
+L10350:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10354
+destline_3	set	23
+	pei	<L410+dest_1+2
+	pei	<L410+dest_1
+	jsl	~~find_linestart
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	jsl	~~get_lineno
+	sta	<L410+destline_3
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	cmp	<L410+destline_3
+	beq	L10354
+	pei	<L410+destline_3
+	jsl	~~trace_line
+L10354:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10356
+	pei	<L410+dest_1+2
+	pei	<L410+dest_1
+	pei	<L410+ifplace_1+2
+	pei	<L410+ifplace_1
+	jsl	~~trace_branch
+L10356:
+	lda	<L410+dest_1
+	sta	|~~basicvars+62
+	lda	<L410+dest_1+2
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L409
+	tcs
+	rtl
+L409	equ	37
+L410	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_library
+	func
+~~exec_library:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L464
+	tcs
+	phd
+	tcd
+stringtype_1	set	0
+name_1	set	2
+libname_1	set	8
+	inc	|~~basicvars+62
+	bne	L466
+	inc	|~~basicvars+62+2
+L466:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$b9
+	rep	#$20
+	longa	on
+	bne	L10360
+	pea	#<$6c
+	pea	#4
+	jsl	~~error
+L10360:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L465+stringtype_1
+	cmp	#<$4
+	beq	L10361
+	lda	<L465+stringtype_1
+	cmp	#<$5
+	beq	L10361
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10361:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L465+name_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	sec
+	lda	#$0
+	sbc	<L465+name_1
+	bvs	L470
+	eor	#$8000
+L470:
+	bmi	L10362
+	pei	<L465+name_1
+	pei	<L465+name_1+4
+	pei	<L465+name_1+2
+	jsl	~~tocstring
+	sta	<L465+libname_1
+	stx	<L465+libname_1+2
+	lda	<L465+stringtype_1
+	cmp	#<$5
+	bne	L10363
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L465+name_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10363:
+	pea	#<$1
+	pei	<L465+libname_1+2
+	pei	<L465+libname_1
+	jsl	~~read_library
+L10362:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10359
+	inc	|~~basicvars+62
+	beq	*+5
+	brl	L10360
+	inc	|~~basicvars+62+2
+	brl	L10360
+L10359:
+	jsl	~~check_ateol
+	pld
+	tsc
+	clc
+	adc	#L464
+	tcs
+	rtl
+L464	equ	20
+L465	equ	9
+	ends
+	efunc
+	code
+	func
+~~def_locvar:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L476
+	tcs
+	phd
+	tcd
+descriptor_1	set	0
+locvar_1	set	6
+	lda	|~~basicvars+399
+	ora	|~~basicvars+399+2
+	bne	L10364
+	pea	#<$57
+	pea	#4
+	jsl	~~error
+L10364:
+	lda	#$80
+	tsb	~~basicvars+423
+L10367:
+	pea	#0
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	pha
+	jsl	~~get_lvalue
+	lda	<L477+locvar_1
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	2
+	dw	20
+	dw	L10380-1
+	dw	L10370-1
+	dw	L10371-1
+	dw	L10372-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10379-1
+	dw	L10379-1
+	dw	L10379-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10380-1
+	dw	L10373-1
+	dw	L10374-1
+	dw	L10375-1
+	dw	L10380-1
+	dw	L10376-1
+L10370:
+	lda	[<L477+locvar_1+2]
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_int
+	lda	#$0
+	sta	[<L477+locvar_1+2]
+	brl	L10369
+L20190:
+	lda	#$80
+	trb	~~basicvars+423
+	jsl	~~check_ateol
+	pld
+	tsc
+	clc
+	adc	#L476
+	tcs
+	rtl
+L10371:
+	ldy	#$2
+	lda	[<L477+locvar_1+2],Y
+	pha
+	lda	[<L477+locvar_1+2]
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_float
+L20195:
+	lda	#$0
+	sta	[<L477+locvar_1+2]
+	ldy	#$2
+L20191:
+	sta	[<L477+locvar_1+2],Y
+	brl	L10369
+L10372:
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	pei	<L477+locvar_1+4
+	pei	<L477+locvar_1+2
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_string
+	lda	#$0
+	sta	[<L477+locvar_1+2]
+	lda	|~~nullstring
+	ldy	#$2
+	sta	[<L477+locvar_1+2],Y
+	lda	|~~nullstring+2
+	iny
+	iny
+	bra	L20191
+L10373:
+	pea	#<$1
+	pei	<L477+locvar_1+2
+	jsl	~~check_write
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	ldy	<L477+locvar_1+2
+	lda	[<R0],Y
+	and	#$ff
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_int
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldy	<L477+locvar_1+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L10369
+L10374:
+	pei	<L477+locvar_1+2
+	jsl	~~get_integer
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_int
+	pea	#<$0
+	pei	<L477+locvar_1+2
+	jsl	~~store_integer
+	brl	L10369
+L10375:
+	phy
+	phy
+	pei	<L477+locvar_1+2
+	jsl	~~get_float
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_float
+	pea	#$0000
+	pea	#$0000
+	pei	<L477+locvar_1+2
+	jsl	~~store_float
+	brl	L10369
+L10376:
+	pea	#<$1
+	pei	<L477+locvar_1+2
+	jsl	~~check_write
+	pei	<L477+locvar_1+2
+	jsl	~~get_stringlen
+	ina
+	sta	<L477+descriptor_1
+	pha
+	jsl	~~alloc_string
+	sta	<L477+descriptor_1+2
+	stx	<L477+descriptor_1+4
+	ldy	#$0
+	lda	<L477+descriptor_1
+	bpl	L479
+	dey
+L479:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	ldy	#$0
+	lda	<L477+locvar_1+2
+	bpl	L480
+	dey
+L480:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	pei	<L477+descriptor_1+4
+	pei	<L477+descriptor_1+2
+	jsl	~~memmove
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+descriptor_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_string
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$d
+	ldy	<L477+locvar_1+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	bra	L10369
+L10379:
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L477+locvar_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~save_array
+	brl	L20195
+L10380:
+	pea	#^L336
+	pea	#<L336
+	pea	#<$4f7
+	pea	#<$82
+	pea	#10
+	jsl	~~error
+L10369:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L20190
+	inc	|~~basicvars+62
+	beq	*+5
+	brl	L10367
+	inc	|~~basicvars+62+2
+	brl	L10367
+L476	equ	24
+L477	equ	13
+	ends
+	efunc
+	data
+L336:
+	db	$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00
+	ends
+	code
+	xdef	~~exec_local
+	func
+~~exec_local:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L485
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L487
+	inc	|~~basicvars+62+2
+L487:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	153
+	dw	L10384-1
+	dw	169
+	dw	L10383-1
+	dw	L10385-1
+L10383:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	jsl	~~check_ateol
+	sec
+	tsc
+	sbc	#9
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	pea	#<~~basicvars+232
+	pei	<R0+2
+	pei	<R0
+	lda	#$9
+	xref	~~~nfmov
+	jsl	~~~nfmov
+	jsl	~~push_error
+L488:
+	pld
+	tsc
+	clc
+	adc	#L485
+	tcs
+	rtl
+L10384:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	jsl	~~check_ateol
+	lda	|~~basicvars+407+2
+	pha
+	lda	|~~basicvars+407
+	pha
+	jsl	~~push_data
+	bra	L488
+L10385:
+	jsl	~~def_locvar
+	bra	L488
+L485	equ	4
+L486	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_next
+	func
+~~exec_next:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L489
+	tcs
+	phd
+	tcd
+fp_1	set	0
+nextvar_1	set	4
+contloop_1	set	10
+intvalue_1	set	11
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10390
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10390:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$15
+	beq	L492
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$16
+	bne	L10391
+L492:
+	lda	|~~basicvars+42
+	sta	<L490+fp_1
+	lda	|~~basicvars+42+2
+	sta	<L490+fp_1+2
+	bra	L10392
+L10391:
+	jsl	~~get_for
+	sta	<L490+fp_1
+	stx	<L490+fp_1+2
+L10392:
+	lda	<L490+fp_1
+	ora	<L490+fp_1+2
+	bne	L10393
+	pea	#<$35
+	pea	#4
+	jsl	~~error
+L10393:
+	inc	|~~basicvars+62
+	bne	L496
+	inc	|~~basicvars+62+2
+L496:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10394
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10394
+	pea	#0
+	clc
+	tdc
+	adc	#<L490+nextvar_1
+	pha
+	jsl	~~get_lvalue
+	lda	<L490+nextvar_1+2
+	ldy	#$5
+	cmp	[<L490+fp_1],Y
+	bne	L499
+	lda	<L490+nextvar_1+4
+	iny
+	iny
+	cmp	[<L490+fp_1],Y
+L499:
+	beq	L10394
+	pea	#<$36
+	pea	#4
+	jsl	~~error
+L10394:
+	ldy	#$2
+	lda	[<L490+fp_1],Y
+	and	#$ff
+	bne	*+5
+	brl	L10397
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	sta	<R0
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	<R0+2
+	lda	[<R0]
+	ina
+	sta	[<R0]
+	sta	<L490+intvalue_1
+	sec
+	ldy	#$d
+	lda	[<L490+fp_1],Y
+	sbc	<L490+intvalue_1
+	bvs	L502
+	eor	#$8000
+L502:
+	bpl	L10398
+L20216:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10399
+	ldy	#$b
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10399:
+	ldy	#$9
+	lda	[<L490+fp_1],Y
+	sta	|~~basicvars+62
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	|~~basicvars+62+2
+L505:
+	pld
+	tsc
+	clc
+	adc	#L489
+	tcs
+	rtl
+L10398:
+	sep	#$20
+	longa	off
+	stz	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L20197:
+	jsl	~~pop_for
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10390
+	jsl	~~check_ateol
+	bra	L505
+L10397:
+	ldy	#$3
+	lda	[<L490+fp_1],Y
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10403-1
+	dw	3
+	dw	L10406-1
+	dw	17
+	dw	L10409-1
+	dw	18
+	dw	L10412-1
+	dw	19
+	dw	L10415-1
+	dw	L10418-1
+L10403:
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	sta	<R0
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	<R0+2
+	clc
+	lda	[<R0]
+	ldy	#$f
+	adc	[<L490+fp_1],Y
+	sta	<L490+intvalue_1
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	sta	<R0
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	<R0+2
+	lda	<L490+intvalue_1
+	sta	[<R0]
+	sec
+	lda	#$0
+	ldy	#$f
+	sbc	[<L490+fp_1],Y
+	bvs	L506
+	eor	#$8000
+L506:
+	bmi	L10404
+	stz	<R0
+	sec
+	ldy	#$d
+	lda	[<L490+fp_1],Y
+	sbc	<L490+intvalue_1
+	bvs	L509
+	eor	#$8000
+L509:
+	bpl	L508
+	inc	<R0
+L508:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10404:
+	stz	<R0
+	sec
+	lda	<L490+intvalue_1
+	ldy	#$d
+	sbc	[<L490+fp_1],Y
+	bvs	L512
+	eor	#$8000
+L512:
+	bpl	L511
+	inc	<R0
+L511:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10406:
+	ldy	#$13
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	sta	<R0
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	<R0+2
+	ldy	#$2
+	lda	[<R0],Y
+	pha
+	lda	[<R0]
+	pha
+	xref	~~~fadc
+	jsl	~~~fadc
+	pla
+	sta	|L10386
+	pla
+	sta	|L10386+2
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	sta	<R0
+	iny
+	iny
+	lda	[<L490+fp_1],Y
+	sta	<R0+2
+	lda	|L10386
+	sta	[<R0]
+	lda	|L10386+2
+	ldy	#$2
+	sta	[<R0],Y
+	ldy	#$13
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	pea	#$0000
+	pea	#$0000
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bpl	L10407
+	stz	<R0
+	lda	|L10386+2
+	pha
+	lda	|L10386
+	pha
+	ldy	#$f
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bmi	L515
+	inc	<R0
+L515:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10407:
+	stz	<R0
+	ldy	#$f
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	lda	|L10386+2
+	pha
+	lda	|L10386
+	pha
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bmi	L517
+	inc	<R0
+L517:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10409:
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	tay
+	lda	|~~basicvars+6
+	sta	<R1
+	lda	|~~basicvars+6+2
+	sta	<R1+2
+	lda	[<R1],Y
+	and	#$ff
+	clc
+	ldy	#$f
+	adc	[<L490+fp_1],Y
+	sta	<L490+intvalue_1
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	tay
+	lda	|~~basicvars+6
+	sta	<R1
+	lda	|~~basicvars+6+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	<L490+intvalue_1
+	sta	[<R1],Y
+	rep	#$20
+	longa	on
+	sec
+	lda	#$0
+	ldy	#$f
+	sbc	[<L490+fp_1],Y
+	bvs	L519
+	eor	#$8000
+L519:
+	bmi	L10410
+	stz	<R0
+	sec
+	ldy	#$d
+	lda	[<L490+fp_1],Y
+	sbc	<L490+intvalue_1
+	bvs	L522
+	eor	#$8000
+L522:
+	bpl	L521
+	inc	<R0
+L521:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10410:
+	stz	<R0
+	sec
+	lda	<L490+intvalue_1
+	ldy	#$d
+	sbc	[<L490+fp_1],Y
+	bvs	L525
+	eor	#$8000
+L525:
+	bpl	L524
+	inc	<R0
+L524:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10412:
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	pha
+	jsl	~~get_integer
+	clc
+	ldy	#$f
+	adc	[<L490+fp_1],Y
+	sta	<L490+intvalue_1
+	pha
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	pha
+	jsl	~~store_integer
+	sec
+	lda	#$0
+	ldy	#$f
+	sbc	[<L490+fp_1],Y
+	bvs	L527
+	eor	#$8000
+L527:
+	bmi	L10413
+	stz	<R0
+	sec
+	ldy	#$d
+	lda	[<L490+fp_1],Y
+	sbc	<L490+intvalue_1
+	bvs	L530
+	eor	#$8000
+L530:
+	bpl	L529
+	inc	<R0
+L529:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10413:
+	stz	<R0
+	sec
+	lda	<L490+intvalue_1
+	ldy	#$d
+	sbc	[<L490+fp_1],Y
+	bvs	L533
+	eor	#$8000
+L533:
+	bpl	L532
+	inc	<R0
+L532:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	brl	L10400
+L10415:
+	ldy	#$13
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	phy
+	phy
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	pha
+	jsl	~~get_float
+	xref	~~~fadc
+	jsl	~~~fadc
+	pla
+	sta	|L10386
+	pla
+	sta	|L10386+2
+	pha
+	lda	|L10386
+	pha
+	ldy	#$5
+	lda	[<L490+fp_1],Y
+	pha
+	jsl	~~store_float
+	ldy	#$13
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	pea	#$0000
+	pea	#$0000
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bpl	L10416
+	stz	<R0
+	lda	|L10386+2
+	pha
+	lda	|L10386
+	pha
+	ldy	#$f
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bmi	L536
+	inc	<R0
+L536:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	bra	L10400
+L10416:
+	stz	<R0
+	ldy	#$f
+	lda	[<L490+fp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L490+fp_1],Y
+	pha
+	lda	|L10386+2
+	pha
+	lda	|L10386
+	pha
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bmi	L538
+	inc	<R0
+L538:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L490+contloop_1
+	rep	#$20
+	longa	on
+	bra	L10400
+L10418:
+	pea	#^L484
+	pea	#<L484
+	pea	#<$56c
+	pea	#<$82
+	pea	#10
+	jsl	~~error
+L10400:
+	lda	<L490+contloop_1
+	and	#$ff
+	bne	*+5
+	brl	L20197
+	brl	L20216
+L489	equ	21
+L490	equ	9
+	ends
+	efunc
+	udata
+L10386:
+	ds	4
+	ends
+	data
+L484:
+	db	$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00
+	ends
+	code
+	func
+~~exec_onerror:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L544
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L546
+	inc	|~~basicvars+62+2
+L546:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	185
+	dw	L10424-1
+	dw	193
+	dw	L10423-1
+	dw	L10427-1
+L10423:
+	jsl	~~clear_error
+	inc	|~~basicvars+62
+	bne	L547
+	inc	|~~basicvars+62+2
+L547:
+	jsl	~~check_ateol
+L551:
+	pld
+	tsc
+	clc
+	adc	#L544
+	tcs
+	rtl
+L10424:
+	inc	|~~basicvars+62
+	bne	L548
+	inc	|~~basicvars+62+2
+L548:
+	jsl	~~set_local_error
+	bra	L10425
+L20218:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10425:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L20218
+	bra	L551
+L10427:
+	jsl	~~set_error
+	bra	L10428
+L20220:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10428:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L20220
+	bra	L551
+L544	equ	4
+L545	equ	5
+	ends
+	efunc
+	code
+	func
+~~find_else:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L552
+	tcs
+	phd
+	tcd
+tp_0	set	4
+index_0	set	8
+	bra	L10430
+L20222:
+	pei	<L552+tp_0+2
+	pei	<L552+tp_0
+	jsl	~~skip_token
+	sta	<L552+tp_0
+	stx	<L552+tp_0+2
+L10430:
+	lda	[<L552+tp_0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L20222
+	sep	#$20
+	longa	off
+	lda	[<L552+tp_0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	L10432
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10433
+	pei	<L552+tp_0+2
+	pei	<L552+tp_0
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10433:
+	lda	#$3
+	clc
+	adc	<L552+tp_0
+	sta	|~~basicvars+62
+	lda	#$0
+	adc	<L552+tp_0+2
+	sta	|~~basicvars+62+2
+	bra	L557
+L10432:
+	pei	<L552+index_0
+	pea	#<$3b
+	pea	#6
+	jsl	~~error
+L557:
+	lda	<L552+2
+	sta	<L552+2+6
+	lda	<L552+1
+	sta	<L552+1+6
+	pld
+	tsc
+	clc
+	adc	#L552+6
+	tcs
+	rtl
+L552	equ	4
+L553	equ	5
+	ends
+	efunc
+	code
+	func
+~~find_onentry:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L558
+	tcs
+	phd
+	tcd
+tp_0	set	4
+wanted_0	set	8
+brackets_1	set	0
+count_1	set	2
+	lda	#$1
+	sta	<L559+count_1
+	stz	<L559+brackets_1
+	brl	L10438
+L20223:
+	lda	[<L558+tp_0]
+	and	#$ff
+	bne	*+5
+	brl	L10439
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10439
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L563
+	lda	<L559+brackets_1
+	beq	L10439
+L563:
+	pei	<L558+tp_0+2
+	pei	<L558+tp_0
+	jsl	~~skip_token
+	sta	<L558+tp_0
+	stx	<L558+tp_0+2
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10440
+	inc	<L559+brackets_1
+	bra	L10438
+L10440:
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$29
+	rep	#$20
+	longa	on
+	bne	L10438
+	dec	<L559+brackets_1
+	bra	L10438
+L20225:
+	lda	[<L558+tp_0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10443
+	pei	<L558+wanted_0
+	pea	#<$3b
+	pea	#6
+	jsl	~~error
+L10443:
+	inc	<L559+count_1
+	lda	<L559+count_1
+	cmp	<L558+wanted_0
+	beq	L10436
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10444
+	pea	#<$27
+	pea	#4
+	jsl	~~error
+L10444:
+	inc	<L558+tp_0
+	bne	L10438
+	inc	<L558+tp_0+2
+L10438:
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L20223
+L10439:
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	L20225
+L10436:
+	sep	#$20
+	longa	off
+	lda	[<L558+tp_0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10445
+	inc	<L558+tp_0
+	bne	L10445
+	inc	<L558+tp_0+2
+L10445:
+	ldx	<L558+tp_0+2
+	lda	<L558+tp_0
+	tay
+	lda	<L558+2
+	sta	<L558+2+6
+	lda	<L558+1
+	sta	<L558+1+6
+	pld
+	tsc
+	clc
+	adc	#L558+6
+	tcs
+	tya
+	rtl
+L558	equ	8
+L559	equ	5
+	ends
+	efunc
+	code
+	func
+~~exec_onbranch:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L576
+	tcs
+	phd
+	tcd
+index_1	set	0
+onwhat_1	set	2
+	jsl	~~eval_integer
+	sta	<L577+index_1
+	lda	<L577+index_1
+	bmi	L578
+	dea
+	bpl	L10446
+L578:
+	pei	<L577+index_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~find_else
+	brl	L630
+L10446:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	sta	<L577+onwhat_1
+	cmp	#<$b1
+	rep	#$20
+	longa	on
+	beq	L579
+	sep	#$20
+	longa	off
+	lda	<L577+onwhat_1
+	cmp	#<$b0
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10448
+L579:
+line_2	set	3
+dest_2	set	5
+	inc	|~~basicvars+62
+	bne	L582
+	inc	|~~basicvars+62+2
+L582:
+	sec
+	lda	#$1
+	sbc	<L577+index_1
+	bvs	L583
+	eor	#$8000
+L583:
+	bmi	L10449
+	pei	<L577+index_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~find_onentry
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10449:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	L10450
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L586
+	inc	|~~basicvars+62+2
+L586:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+L20234:
+	bne	L630
+L10465:
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L630:
+	pld
+	tsc
+	clc
+	adc	#L576
+	tcs
+	rtl
+L10450:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1f
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10453
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L589
+	dey
+L589:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L577+dest_2
+	lda	|~~basicvars+2
+	adc	<R0+2
+	brl	L20226
+L10453:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	bne	L10455
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_linedest
+	sta	<L577+dest_2
+	stx	<L577+dest_2+2
+	brl	L10454
+L10455:
+	jsl	~~eval_integer
+	sta	<L577+line_2
+	lda	<L577+line_2
+	bmi	L591
+	ldy	#$0
+	lda	<L577+line_2
+	bpl	L593
+	dey
+L593:
+	sta	<R0
+	sty	<R0+2
+	sec
+	lda	#$feff
+	sbc	<R0
+	lda	#$0
+	sbc	<R0+2
+	bvs	L594
+	eor	#$8000
+L594:
+	bmi	L10457
+L591:
+	pea	#<$b
+	pea	#4
+	jsl	~~error
+L10457:
+	pei	<L577+line_2
+	jsl	~~find_line
+	sta	<L577+dest_2
+	stx	<L577+dest_2+2
+	pei	<L577+dest_2+2
+	pei	<L577+dest_2
+	jsl	~~get_lineno
+	cmp	<L577+line_2
+	beq	L10458
+	pei	<L577+line_2
+	pea	#<$c
+	pea	#6
+	jsl	~~error
+L10458:
+	ldy	#$5
+	lda	[<L577+dest_2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L597
+	dey
+L597:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L577+dest_2],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L577+dest_2
+	clc
+	adc	<R2
+	sta	<L577+dest_2
+	lda	<L577+dest_2+2
+	adc	<R2+2
+L20226:
+	sta	<L577+dest_2+2
+L10454:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10459
+	pei	<L577+dest_2+2
+	pei	<L577+dest_2
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10459:
+	sep	#$20
+	longa	off
+	lda	<L577+onwhat_1
+	cmp	#<$b0
+	rep	#$20
+	longa	on
+	beq	L10461
+	bra	L10460
+L20228:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	beq	L10462
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10461:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L20228
+L10462:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10463
+	inc	|~~basicvars+62
+	bne	L10463
+	inc	|~~basicvars+62+2
+L10463:
+	jsl	~~push_gosub
+L10460:
+	lda	<L577+dest_2
+	sta	|~~basicvars+62
+	lda	<L577+dest_2+2
+L20235:
+	sta	|~~basicvars+62+2
+	brl	L630
+L10448:
+	sep	#$20
+	longa	off
+	lda	<L577+onwhat_1
+	cmp	#<$c
+	rep	#$20
+	longa	on
+	beq	L604
+	sep	#$20
+	longa	off
+	lda	<L577+onwhat_1
+	cmp	#<$d
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10465
+L604:
+base_3	set	3
+dp_3	set	7
+pp_3	set	11
+	sec
+	lda	#$1
+	sbc	<L577+index_1
+	bvs	L607
+	eor	#$8000
+L607:
+	bmi	L10466
+	pei	<L577+index_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~find_onentry
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10466:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$9f
+	rep	#$20
+	longa	on
+	bne	L10467
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L610
+	inc	|~~basicvars+62+2
+L610:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$1e
+	rep	#$20
+	longa	on
+	brl	L20234
+L10467:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$c
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10470
+ep_4	set	15
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_srcaddr
+	sta	<L577+base_3
+	stx	<L577+base_3+2
+	pei	<L577+base_3+2
+	pei	<L577+base_3
+	jsl	~~skip_name
+	sta	<L577+ep_4
+	stx	<L577+ep_4+2
+	lda	#$ffff
+	clc
+	adc	<L577+ep_4
+	sta	<R0
+	lda	#$ffff
+	adc	<L577+ep_4+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10471
+	lda	<L577+ep_4
+	bne	L614
+	dec	<L577+ep_4+2
+L614:
+	dec	<L577+ep_4
+L10471:
+	sec
+	lda	<L577+ep_4
+	sbc	<L577+base_3
+	sta	<R0
+	lda	<L577+ep_4+2
+	sbc	<L577+base_3+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L577+base_3+2
+	pei	<L577+base_3
+	jsl	~~find_fnproc
+	sta	<L577+pp_3
+	stx	<L577+pp_3+2
+	ldy	#$10
+	lda	[<L577+pp_3],Y
+	sta	<L577+dp_3
+	iny
+	iny
+	lda	[<L577+pp_3],Y
+	sta	<L577+dp_3+2
+	pei	<L577+pp_3+2
+	pei	<L577+pp_3
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_address
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$d
+	sta	[<R0]
+	rep	#$20
+	longa	on
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L615
+	inc	|~~basicvars+62+2
+L615:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	beq	L10472
+	ldy	#$7
+	lda	[<L577+dp_3],Y
+	iny
+	iny
+	ora	[<L577+dp_3],Y
+	bne	*+5
+	brl	L10476
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	dey
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	pea	#<$12
+L20236:
+	pea	#8
+	brl	L20232
+L10472:
+	ldy	#$7
+	lda	[<L577+dp_3],Y
+	iny
+	iny
+	ora	[<L577+dp_3],Y
+	beq	*+5
+	brl	L10476
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	dey
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	pea	#<$11
+	bra	L20236
+L10470:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$d
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10477
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L620
+	dey
+L620:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L577+pp_3
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L577+pp_3+2
+	ldy	#$10
+	lda	[<L577+pp_3],Y
+	sta	<L577+dp_3
+	iny
+	iny
+	lda	[<L577+pp_3],Y
+	sta	<L577+dp_3+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L10476
+	inc	|~~basicvars+62+2
+	bra	L10476
+L10477:
+	pea	#<$5
+	pea	#4
+L20232:
+	jsl	~~error
+L10476:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10479
+	ldy	#$8
+	lda	[<L577+pp_3],Y
+	pha
+	dey
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	pei	<L577+dp_3+2
+	pei	<L577+dp_3
+	jsl	~~push_parameters
+L10479:
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10483
+	lda	|~~basicvars+425
+	bit	#$4
+	beq	L10481
+	pea	#<$1
+	ldy	#$8
+	lda	[<L577+pp_3],Y
+	pha
+	dey
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	jsl	~~trace_proc
+L10481:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10483
+	ldy	#$2
+	lda	[<L577+dp_3],Y
+	pha
+	lda	[<L577+dp_3]
+	pha
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+	bra	L10483
+L20230:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	beq	L10484
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10483:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L20230
+L10484:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10485
+	inc	|~~basicvars+62
+	bne	L10485
+	inc	|~~basicvars+62+2
+L10485:
+	ldy	#$4
+	lda	[<L577+dp_3],Y
+	pha
+	ldy	#$8
+	lda	[<L577+pp_3],Y
+	pha
+	dey
+	dey
+	lda	[<L577+pp_3],Y
+	pha
+	jsl	~~push_proc
+	lda	[<L577+dp_3]
+	sta	|~~basicvars+62
+	ldy	#$2
+	lda	[<L577+dp_3],Y
+	brl	L20235
+L576	equ	31
+L577	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_on
+	func
+~~exec_on:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L631
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L633
+	inc	|~~basicvars+62+2
+L633:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$a9
+	rep	#$20
+	longa	on
+	bne	L10487
+	jsl	~~exec_onerror
+	bra	L636
+L10487:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10489
+	jsl	~~emulate_on
+	bra	L636
+L10489:
+	jsl	~~exec_onbranch
+L636:
+	pld
+	tsc
+	clc
+	adc	#L631
+	tcs
+	rtl
+L631	equ	4
+L632	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_oscli
+	func
+~~exec_oscli:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L637
+	tcs
+	phd
+	tcd
+stringtype_1	set	0
+descriptor_1	set	2
+response_1	set	8
+linecount_1	set	14
+tofile_1	set	20
+respname_1	set	21
+length_1	set	37
+count_1	set	39
+n_1	set	41
+respfile_1	set	43
+p_1	set	47
+ap_1	set	51
+	inc	|~~basicvars+62
+	bne	L639
+	inc	|~~basicvars+62+2
+L639:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L638+stringtype_1
+	cmp	#<$4
+	beq	L10491
+	lda	<L638+stringtype_1
+	cmp	#<$5
+	beq	L10491
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10491:
+	stz	<R0
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$e1
+	rep	#$20
+	longa	on
+	bne	L642
+	inc	<R0
+L642:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L638+tofile_1
+	rep	#$20
+	longa	on
+	lda	<L638+tofile_1
+	and	#$ff
+	beq	L10492
+	inc	|~~basicvars+62
+	bne	L645
+	inc	|~~basicvars+62+2
+L645:
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+response_1
+	pha
+	jsl	~~get_lvalue
+	lda	<L638+response_1
+	cmp	#<$c
+	beq	L10493
+	pea	#<$49
+	pea	#4
+	jsl	~~error
+L10493:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10494
+	inc	|~~basicvars+62
+	bne	L648
+	inc	|~~basicvars+62+2
+L648:
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+linecount_1
+	pha
+	jsl	~~get_lvalue
+	bra	L10492
+L10494:
+	stz	<L638+linecount_1
+L10492:
+	jsl	~~check_ateol
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L638+descriptor_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	ldy	#$0
+	lda	<L638+descriptor_1
+	bpl	L649
+	dey
+L649:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L638+descriptor_1+4
+	pei	<L638+descriptor_1+2
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	jsl	~~memmove
+	lda	|~~basicvars+70
+	sta	<R0
+	lda	|~~basicvars+70+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldy	<L638+descriptor_1
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	lda	<L638+stringtype_1
+	cmp	#<$5
+	bne	L10496
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L638+descriptor_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10496:
+	lda	<L638+tofile_1
+	and	#$ff
+	bne	L10497
+	pea	#^$0
+	pea	#<$0
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	jsl	~~emulate_oscli
+	bra	L652
+L20238:
+	jsl	~~__errno_location
+	sta	<R0
+	stx	<R0+2
+	lda	[<R0]
+	pha
+	jsl	~~strerror
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+	pea	#<$8f
+	pea	#8
+	jsl	~~error
+L652:
+	pld
+	tsc
+	clc
+	adc	#L637
+	tcs
+	rtl
+L10497:
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+respname_1
+	pha
+	jsl	~~secure_tmpnam
+	and	#$ff
+	beq	L20238
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+respname_1
+	pha
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	jsl	~~emulate_oscli
+	pea	#^L543
+	pea	#<L543
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+respname_1
+	pha
+	jsl	~~fopen
+	sta	<L638+respfile_1
+	stx	<L638+respfile_1+2
+	ora	<L638+respfile_1+2
+	beq	L652
+	lda	[<L638+response_1+2]
+	sta	<L638+ap_1
+	ldy	#$2
+	lda	[<L638+response_1+2],Y
+	sta	<L638+ap_1+2
+	stz	<L638+descriptor_1
+	lda	|~~nullstring
+	sta	<L638+descriptor_1+2
+	lda	|~~nullstring+2
+	sta	<L638+descriptor_1+4
+	stz	<L638+n_1
+	brl	L10503
+L10502:
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	ldy	#$0
+	lda	<L638+n_1
+	bpl	L655
+	dey
+L655:
+	sta	<R1
+	sty	<R1+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R1+2
+	pei	<R1
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R1
+	stx	<R1+2
+	clc
+	ldy	#$4
+	lda	[<L638+ap_1],Y
+	adc	<R1
+	sta	<R2
+	iny
+	iny
+	lda	[<L638+ap_1],Y
+	adc	<R1+2
+	pha
+	pei	<R2
+	pei	<R0+2
+	pei	<R0
+	tya
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+	clc
+	tdc
+	adc	#<L638+descriptor_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	tay
+	lda	<L638+n_1
+	bpl	L656
+	dey
+L656:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	ldy	#$4
+	lda	[<L638+ap_1],Y
+	adc	<R0
+	sta	<R1
+	iny
+	iny
+	lda	[<L638+ap_1],Y
+	adc	<R0+2
+	pha
+	pei	<R1
+	tya
+	xref	~~~fmov
+	jsl	~~~fmov
+	inc	<L638+n_1
+L10503:
+	sec
+	lda	<L638+n_1
+	ldy	#$2
+	sbc	[<L638+ap_1],Y
+	bvs	L657
+	eor	#$8000
+L657:
+	bmi	*+5
+	brl	L10502
+	stz	<L638+count_1
+	brl	L10504
+L20241:
+	lda	<L638+count_1
+	ina
+	sec
+	ldy	#$2
+	sbc	[<L638+ap_1],Y
+	bvs	L660
+	eor	#$8000
+L660:
+	bpl	*+5
+	brl	L10505
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	pea	#<$1000
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	jsl	~~fgets
+	sta	<L638+p_1
+	stx	<L638+p_1+2
+	ora	<L638+p_1+2
+	bne	L10506
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	jsl	~~ferror
+	tax
+	bne	*+5
+	brl	L10505
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	jsl	~~fclose
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+respname_1
+	pha
+	jsl	~~remove
+	pea	#^L543+3
+	pea	#<L543+3
+	pea	#<$67c
+	pea	#<$82
+	pea	#10
+	jsl	~~error
+L10506:
+	lda	<L638+p_1
+	ora	<L638+p_1+2
+	bne	*+5
+	brl	L10505
+	lda	|~~basicvars+70
+	sta	<L638+p_1
+	lda	|~~basicvars+70+2
+	sta	<L638+p_1+2
+	sep	#$20
+	longa	off
+	lda	[<L638+p_1]
+	cmp	#<$d
+	rep	#$20
+	longa	on
+	bne	L10507
+	inc	<L638+p_1
+	bne	L10507
+	inc	<L638+p_1+2
+L10507:
+	pei	<L638+p_1+2
+	pei	<L638+p_1
+	jsl	~~strlen
+	sta	<L638+length_1
+	bra	L10508
+L20240:
+	lda	#$ffff
+	clc
+	adc	<L638+length_1
+	tay
+	sep	#$20
+	longa	off
+	lda	[<L638+p_1],Y
+	cmp	#<$a
+	rep	#$20
+	longa	on
+	beq	L669
+	lda	#$ffff
+	clc
+	adc	<L638+length_1
+	tay
+	sep	#$20
+	longa	off
+	lda	[<L638+p_1],Y
+	cmp	#<$d
+	rep	#$20
+	longa	on
+	beq	L669
+	lda	#$ffff
+	clc
+	adc	<L638+length_1
+	tay
+	sep	#$20
+	longa	off
+	lda	[<L638+p_1],Y
+	cmp	#<$20
+	rep	#$20
+	longa	on
+	bne	L10509
+L669:
+	dec	<L638+length_1
+L10508:
+	sec
+	lda	#$0
+	sbc	<L638+length_1
+	bvs	L667
+	eor	#$8000
+L667:
+	bpl	L20240
+L10509:
+	sec
+	lda	#$0
+	sbc	<L638+length_1
+	bvs	L674
+	eor	#$8000
+L674:
+	bpl	L673
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	jsl	~~feof
+	tax
+	bne	L10504
+L673:
+	lda	<L638+length_1
+	sta	<L638+descriptor_1
+	pei	<L638+length_1
+	jsl	~~alloc_string
+	sta	<L638+descriptor_1+2
+	stx	<L638+descriptor_1+4
+	sec
+	lda	#$0
+	sbc	<L638+length_1
+	bvs	L677
+	eor	#$8000
+L677:
+	bmi	L10511
+	ldy	#$0
+	lda	<L638+length_1
+	bpl	L679
+	dey
+L679:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L638+p_1+2
+	pei	<L638+p_1
+	pei	<L638+descriptor_1+4
+	pei	<L638+descriptor_1+2
+	jsl	~~memmove
+L10511:
+	inc	<L638+count_1
+	clc
+	tdc
+	adc	#<L638+descriptor_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	tay
+	lda	<L638+count_1
+	bpl	L680
+	dey
+L680:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	ldy	#$4
+	lda	[<L638+ap_1],Y
+	adc	<R0
+	sta	<R1
+	iny
+	iny
+	lda	[<L638+ap_1],Y
+	adc	<R0+2
+	pha
+	pei	<R1
+	tya
+	xref	~~~fmov
+	jsl	~~~fmov
+L10504:
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	jsl	~~feof
+	tax
+	bne	*+5
+	brl	L20241
+L10505:
+	pei	<L638+respfile_1+2
+	pei	<L638+respfile_1
+	jsl	~~fclose
+	pea	#0
+	clc
+	tdc
+	adc	#<L638+respname_1
+	pha
+	jsl	~~remove
+	lda	<L638+linecount_1
+	bne	*+5
+	brl	L652
+	pea	#<$1
+	pei	<L638+count_1
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L638+linecount_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~store_value
+	brl	L652
+L637	equ	67
+L638	equ	13
+	ends
+	efunc
+	data
+L543:
+	db	$72,$62,$00,$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00
+	ends
+	code
+	xdef	~~exec_overlay
+	func
+~~exec_overlay:
+	longa	on
+	longi	on
+	pea	#<$2
+	pea	#4
+	jsl	~~error
+	rtl
+L683	equ	0
+L684	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_proc
+	func
+~~exec_proc:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L686
+	tcs
+	phd
+	tcd
+dp_1	set	0
+vp_1	set	4
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10513
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10513:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L689
+	dey
+L689:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L687+vp_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L687+vp_1+2
+	ldy	#$10
+	lda	[<L687+vp_1],Y
+	sta	<L687+dp_1
+	iny
+	iny
+	lda	[<L687+vp_1],Y
+	sta	<L687+dp_1+2
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L690
+	inc	|~~basicvars+62+2
+L690:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10514
+	ldy	#$8
+	lda	[<L687+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L687+vp_1],Y
+	pha
+	pei	<L687+dp_1+2
+	pei	<L687+dp_1
+	jsl	~~push_parameters
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10514
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10514:
+	ldy	#$4
+	lda	[<L687+dp_1],Y
+	pha
+	ldy	#$8
+	lda	[<L687+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L687+vp_1],Y
+	pha
+	jsl	~~push_proc
+	lda	|~~basicvars+425
+	bit	#$1
+	beq	L10516
+	lda	|~~basicvars+425
+	bit	#$4
+	beq	L10517
+	pea	#<$1
+	ldy	#$8
+	lda	[<L687+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L687+vp_1],Y
+	pha
+	jsl	~~trace_proc
+L10517:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10516
+	ldy	#$2
+	lda	[<L687+dp_1],Y
+	pha
+	lda	[<L687+dp_1]
+	pha
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10516:
+	lda	[<L687+dp_1]
+	sta	|~~basicvars+62
+	ldy	#$2
+	lda	[<L687+dp_1],Y
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L686
+	tcs
+	rtl
+L686	equ	20
+L687	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_xproc
+	func
+~~exec_xproc:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L697
+	tcs
+	phd
+	tcd
+tp_1	set	0
+base_1	set	4
+vp_1	set	8
+dp_1	set	12
+	lda	|~~basicvars+62
+	sta	<L698+tp_1
+	lda	|~~basicvars+62+2
+	sta	<L698+tp_1+2
+	pha
+	pei	<L698+tp_1
+	jsl	~~get_srcaddr
+	sta	<L698+base_1
+	stx	<L698+base_1+2
+	sep	#$20
+	longa	off
+	lda	[<L698+base_1]
+	cmp	#<$cd
+	rep	#$20
+	longa	on
+	beq	L10519
+	pea	#<$53
+	pea	#4
+	jsl	~~error
+L10519:
+	pei	<L698+base_1+2
+	pei	<L698+base_1
+	jsl	~~skip_name
+	sta	<L698+tp_1
+	stx	<L698+tp_1+2
+	lda	#$ffff
+	clc
+	adc	<L698+tp_1
+	sta	<R0
+	lda	#$ffff
+	adc	<L698+tp_1+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	bne	L10520
+	lda	<L698+tp_1
+	bne	L701
+	dec	<L698+tp_1+2
+L701:
+	dec	<L698+tp_1
+L10520:
+	sec
+	lda	<L698+tp_1
+	sbc	<L698+base_1
+	sta	<R0
+	lda	<L698+tp_1+2
+	sbc	<L698+base_1+2
+	sta	<R0+2
+	pei	<R0
+	pei	<L698+base_1+2
+	pei	<L698+base_1
+	jsl	~~find_fnproc
+	sta	<L698+vp_1
+	stx	<L698+vp_1+2
+	ldy	#$10
+	lda	[<L698+vp_1],Y
+	sta	<L698+dp_1
+	iny
+	iny
+	lda	[<L698+vp_1],Y
+	sta	<L698+dp_1+2
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	#$d
+	sta	[<R0]
+	rep	#$20
+	longa	on
+	pei	<L698+vp_1+2
+	pei	<L698+vp_1
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_address
+	lda	#$5
+	clc
+	adc	|~~basicvars+62
+	sta	<L698+tp_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L698+tp_1+2
+	sep	#$20
+	longa	off
+	lda	[<L698+tp_1]
+	cmp	#<$28
+	rep	#$20
+	longa	on
+	beq	L10521
+	ldy	#$7
+	lda	[<L698+dp_1],Y
+	iny
+	iny
+	ora	[<L698+dp_1],Y
+	beq	L10522
+	dey
+	lda	[<L698+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L698+vp_1],Y
+	pha
+	pea	#<$12
+	pea	#8
+	jsl	~~error
+L10522:
+	lda	[<L698+tp_1]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10524
+	pea	#<$5
+	pea	#4
+	bra	L20242
+L10521:
+	ldy	#$7
+	lda	[<L698+dp_1],Y
+	iny
+	iny
+	ora	[<L698+dp_1],Y
+	bne	L10524
+	dey
+	lda	[<L698+vp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L698+vp_1],Y
+	pha
+	pea	#<$11
+	pea	#8
+L20242:
+	jsl	~~error
+L10524:
+	jsl	~~exec_proc
+	pld
+	tsc
+	clc
+	adc	#L697
+	tcs
+	rtl
+L697	equ	20
+L698	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_quit
+	func
+~~exec_quit:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L707
+	tcs
+	phd
+	tcd
+retcode_1	set	0
+	inc	|~~basicvars+62
+	bne	L709
+	inc	|~~basicvars+62+2
+L709:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~isateol
+	and	#$ff
+	beq	L10526
+	stz	<L708+retcode_1
+	bra	L10527
+L10526:
+	jsl	~~eval_integer
+	sta	<L708+retcode_1
+	jsl	~~check_ateol
+L10527:
+	pei	<L708+retcode_1
+	jsl	~~exit_interpreter
+	pld
+	tsc
+	clc
+	adc	#L707
+	tcs
+	rtl
+L707	equ	2
+L708	equ	1
+	ends
+	efunc
+	code
+	func
+~~find_data:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L712
+	tcs
+	phd
+	tcd
+dp_1	set	0
+	lda	|~~basicvars+407
+	sta	<L713+dp_1
+	lda	|~~basicvars+407+2
+	sta	<L713+dp_1+2
+	lda	<L713+dp_1
+	ora	<L713+dp_1+2
+	beq	L10528
+	sep	#$20
+	longa	off
+	lda	[<L713+dp_1]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L715
+	sep	#$20
+	longa	off
+	lda	[<L713+dp_1]
+	cmp	#<$99
+	rep	#$20
+	longa	on
+	bne	L10528
+L715:
+	inc	|~~basicvars+407
+	bne	L719
+	inc	|~~basicvars+407+2
+L719:
+	pld
+	tsc
+	clc
+	adc	#L712
+	tcs
+	rtl
+L10528:
+	lda	<L713+dp_1
+	ora	<L713+dp_1+2
+	bne	L10529
+	lda	|~~basicvars+22
+	sta	<L713+dp_1
+	lda	|~~basicvars+22+2
+	bra	L20243
+L10529:
+	lda	#$1
+	clc
+	adc	<L713+dp_1
+	sta	<R0
+	lda	#$0
+	adc	<L713+dp_1+2
+	pha
+	pei	<R0
+	jsl	~~skip_token
+	sta	<R1
+	stx	<R1+2
+	lda	#$1
+	clc
+	adc	<R1
+	sta	<L713+dp_1
+	lda	#$0
+	adc	<R1+2
+L20243:
+	sta	<L713+dp_1+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L713+dp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L20245
+L10532:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L713+dp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10533
+	pea	#<$58
+	pea	#4
+	jsl	~~error
+L10533:
+	ldy	#$5
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L726
+	dey
+L726:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L713+dp_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L713+dp_1+2
+	adc	<R2+2
+	pha
+	pei	<R0
+	jsl	~~get_srcaddr
+	sta	|~~basicvars+407
+	stx	|~~basicvars+407+2
+	brl	L719
+L20245:
+	ldy	#$5
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L722
+	dey
+L722:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L713+dp_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L713+dp_1+2
+	adc	<R2+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$99
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10532
+	dey
+	dey
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L713+dp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L724
+	dey
+L724:
+	sta	<R0
+	sty	<R0+2
+	lda	<L713+dp_1
+	clc
+	adc	<R0
+	sta	<L713+dp_1
+	lda	<L713+dp_1+2
+	adc	<R0+2
+	brl	L20243
+L712	equ	16
+L713	equ	13
+	ends
+	efunc
+	code
+	func
+~~read_numeric:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L727
+	tcs
+	phd
+	tcd
+destination_0	set	4
+dp_1	set	0
+itemtype_1	set	4
+n_1	set	6
+text_1	set	8
+readexpr_1	set	12
+	pea	#^$400
+	pea	#<$400
+	jsl	~~malloc
+	sta	<L728+text_1
+	stx	<L728+text_1+2
+	pea	#^$400
+	pea	#<$400
+	jsl	~~malloc
+	sta	<L728+readexpr_1
+	stx	<L728+readexpr_1+2
+	stz	<L728+n_1
+	lda	|~~basicvars+407+2
+	pha
+	lda	|~~basicvars+407
+	pha
+	jsl	~~skip
+	sta	<L728+dp_1
+	stx	<L728+dp_1+2
+	bra	L10534
+L20247:
+	sep	#$20
+	longa	off
+	lda	[<L728+dp_1]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10535
+	sep	#$20
+	longa	off
+	lda	[<L728+dp_1]
+	ldy	<L728+n_1
+	sta	[<L728+text_1],Y
+	rep	#$20
+	longa	on
+	inc	<L728+dp_1
+	bne	L731
+	inc	<L728+dp_1+2
+L731:
+	inc	<L728+n_1
+L10534:
+	lda	[<L728+dp_1]
+	and	#$ff
+	bne	L20247
+L10535:
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldy	<L728+n_1
+	sta	[<L728+text_1],Y
+	rep	#$20
+	longa	on
+	tya
+	bne	L10536
+	pea	#<$51
+	pea	#4
+	jsl	~~error
+L10536:
+	lda	<L728+dp_1
+	sta	|~~basicvars+407
+	lda	<L728+dp_1+2
+	sta	|~~basicvars+407+2
+	pea	#<$0
+	pei	<L728+readexpr_1+2
+	pei	<L728+readexpr_1
+	pei	<L728+text_1+2
+	pei	<L728+text_1
+	jsl	~~tokenize
+	jsl	~~save_current
+	ldy	#$5
+	lda	[<L728+readexpr_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L733
+	dey
+L733:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L728+readexpr_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L728+readexpr_1
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	<L728+readexpr_1+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+	jsl	~~expression
+	jsl	~~restore_current
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L728+itemtype_1
+	lda	<L727+destination_0
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10539-1
+	dw	3
+	dw	L10545-1
+	dw	17
+	dw	L10551-1
+	dw	18
+	dw	L10557-1
+	dw	19
+	dw	L10563-1
+	dw	L10569-1
+L10539:
+	lda	<L728+itemtype_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10542-1
+	dw	3
+	dw	L10543-1
+	dw	L10544-1
+L10542:
+	jsl	~~pop_int
+L20248:
+	sta	[<L727+destination_0+2]
+L736:
+	lda	<L727+2
+	sta	<L727+2+6
+	lda	<L727+1
+	sta	<L727+1+6
+	pld
+	tsc
+	clc
+	adc	#L727+6
+	tcs
+	rtl
+L10543:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	bra	L20248
+L10544:
+	pea	#<$3f
+L20258:
+	pea	#4
+	jsl	~~error
+	bra	L736
+L10545:
+	lda	<L728+itemtype_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10548-1
+	dw	3
+	dw	L10549-1
+	dw	L10544-1
+L10548:
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L734
+	dey
+L734:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+L20263:
+	pla
+	sta	[<L727+destination_0+2]
+	pla
+	ldy	#$2
+	sta	[<L727+destination_0+2],Y
+	bra	L736
+L10549:
+	phy
+	phy
+	jsl	~~pop_float
+	bra	L20263
+L10551:
+	pea	#<$1
+	pei	<L727+destination_0+2
+	jsl	~~check_write
+	lda	<L728+itemtype_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10554-1
+	dw	3
+	dw	L10555-1
+	dw	L10544-1
+L10554:
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	jsl	~~pop_int
+	sep	#$20
+	longa	off
+	ldy	<L727+destination_0+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L736
+L10555:
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R1
+	pla
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	<R1
+	ldy	<L727+destination_0+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L736
+L10557:
+	lda	<L728+itemtype_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10560-1
+	dw	3
+	dw	L10561-1
+	dw	L10544-1
+L10560:
+	jsl	~~pop_int
+	pha
+L20265:
+	pei	<L727+destination_0+2
+	jsl	~~store_integer
+	brl	L736
+L10561:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	pei	<R0
+	bra	L20265
+L10563:
+	lda	<L728+itemtype_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	2
+	dw	L10566-1
+	dw	3
+	dw	L10567-1
+	dw	L10544-1
+L10566:
+	jsl	~~pop_int
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L735
+	dey
+L735:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+L20267:
+	pei	<L727+destination_0+2
+	jsl	~~store_float
+	brl	L736
+L10567:
+	phy
+	phy
+	jsl	~~pop_float
+	bra	L20267
+L10569:
+	pea	#<$45
+	brl	L20258
+L727	equ	28
+L728	equ	13
+	ends
+	efunc
+	code
+	func
+~~read_string:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L737
+	tcs
+	phd
+	tcd
+destination_0	set	4
+length_1	set	0
+start_1	set	2
+cp_1	set	6
+	lda	|~~basicvars+407+2
+	pha
+	lda	|~~basicvars+407
+	pha
+	jsl	~~skip
+	sta	<L738+cp_1
+	stx	<L738+cp_1+2
+	sta	<L738+start_1
+	lda	<L738+cp_1+2
+	sta	<L738+start_1+2
+	sep	#$20
+	longa	off
+	lda	[<L738+cp_1]
+	cmp	#<$22
+	rep	#$20
+	longa	on
+	bne	L10579
+	inc	<L738+start_1
+	bne	L10573
+	inc	<L738+start_1+2
+L10573:
+	inc	<L738+cp_1
+	bne	L10571
+	inc	<L738+cp_1+2
+L10571:
+	lda	[<L738+cp_1]
+	and	#$ff
+	beq	L10572
+	sep	#$20
+	longa	off
+	lda	[<L738+cp_1]
+	cmp	#<$22
+	rep	#$20
+	longa	on
+	bne	L10573
+L10572:
+	sep	#$20
+	longa	off
+	lda	[<L738+cp_1]
+	cmp	#<$22
+	rep	#$20
+	longa	on
+	beq	L10574
+	pea	#<$2b
+	pea	#4
+	jsl	~~error
+L10574:
+	sec
+	lda	<L738+cp_1
+	sbc	<L738+start_1
+	sta	<R0
+	lda	<L738+cp_1+2
+	sbc	<L738+start_1+2
+	sta	<R0+2
+	lda	<R0
+	sta	<L738+length_1
+	bra	L10577
+L20269:
+	sep	#$20
+	longa	off
+	lda	[<L738+cp_1]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10578
+L10577:
+	inc	<L738+cp_1
+	bne	L10575
+	inc	<L738+cp_1+2
+L10575:
+	lda	[<L738+cp_1]
+	and	#$ff
+	bne	L20269
+	bra	L10578
+L10579:
+	lda	[<L738+cp_1]
+	and	#$ff
+	beq	L10580
+	sep	#$20
+	longa	off
+	lda	[<L738+cp_1]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10580
+	inc	<L738+cp_1
+	bne	L10579
+	inc	<L738+cp_1+2
+	bra	L10579
+L10580:
+	sec
+	lda	<L738+cp_1
+	sbc	<L738+start_1
+	sta	<R0
+	lda	<L738+cp_1+2
+	sbc	<L738+start_1+2
+	sta	<R0+2
+	lda	<R0
+	sta	<L738+length_1
+L10578:
+	lda	<L738+cp_1
+	sta	|~~basicvars+407
+	lda	<L738+cp_1+2
+	sta	|~~basicvars+407+2
+	lda	<L737+destination_0
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	4
+	dw	L10583-1
+	dw	21
+	dw	L10586-1
+	dw	L10588-1
+L10583:
+	lda	[<L737+destination_0+2]
+	cmp	<L738+length_1
+	beq	L10584
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	pei	<L737+destination_0+4
+	pei	<L737+destination_0+2
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+	lda	<L738+length_1
+	sta	[<L737+destination_0+2]
+	pei	<L738+length_1
+	jsl	~~alloc_string
+	stx	<R0+2
+	ldy	#$2
+	sta	[<L737+destination_0+2],Y
+	lda	<R0+2
+	iny
+	iny
+	sta	[<L737+destination_0+2],Y
+L10584:
+	lda	<L738+length_1
+	beq	L759
+	ldy	#$0
+	lda	<L738+length_1
+	bpl	L755
+	dey
+L755:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L738+start_1+2
+	pei	<L738+start_1
+	ldy	#$4
+	lda	[<L737+destination_0+2],Y
+	pha
+	dey
+	dey
+	lda	[<L737+destination_0+2],Y
+	pha
+	jsl	~~memmove
+L759:
+	lda	<L737+2
+	sta	<L737+2+6
+	lda	<L737+1
+	sta	<L737+1+6
+	pld
+	tsc
+	clc
+	adc	#L737+6
+	tcs
+	rtl
+L10586:
+	lda	<L738+length_1
+	ina
+	pha
+	pei	<L737+destination_0+2
+	jsl	~~check_write
+	lda	<L738+length_1
+	beq	L10587
+	ldy	#$0
+	lda	<L738+length_1
+	bpl	L757
+	dey
+L757:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L738+start_1+2
+	pei	<L738+start_1
+	ldy	#$0
+	lda	<L737+destination_0+2
+	bpl	L758
+	dey
+L758:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	jsl	~~memmove
+L10587:
+	lda	<L737+destination_0+2
+	clc
+	adc	<L738+length_1
+	tay
+	lda	|~~basicvars+6
+	sta	<R1
+	lda	|~~basicvars+6+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	#$d
+	sta	[<R1],Y
+	rep	#$20
+	longa	on
+	bra	L759
+L10588:
+	pea	#<$45
+	pea	#4
+	jsl	~~error
+	bra	L759
+L737	equ	22
+L738	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_read
+	func
+~~exec_read:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L760
+	tcs
+	phd
+	tcd
+destination_1	set	0
+	inc	|~~basicvars+62
+	bne	L762
+	inc	|~~basicvars+62+2
+L762:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10589
+L764:
+	pld
+	tsc
+	clc
+	adc	#L760
+	tcs
+	rtl
+L10589:
+	lda	|~~basicvars+423
+	bit	#$10
+	beq	L10591
+	pea	#<$58
+	pea	#4
+	jsl	~~error
+L10591:
+	pea	#0
+	clc
+	tdc
+	adc	#<L761+destination_1
+	pha
+	jsl	~~get_lvalue
+	jsl	~~find_data
+	lda	<L761+destination_1
+	and	#<$7
+	sta	<R0
+	lda	<R0
+	bmi	L766
+	dea
+	dea
+	dea
+	dea
+	bpl	L10593
+L766:
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L761+destination_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~read_numeric
+	bra	L10594
+L10593:
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L761+destination_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~read_string
+L10594:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10592
+	inc	|~~basicvars+62
+	beq	*+5
+	brl	L10591
+	inc	|~~basicvars+62+2
+	brl	L10591
+L10592:
+	jsl	~~check_ateol
+	brl	L764
+L760	equ	14
+L761	equ	9
+	ends
+	efunc
+	code
+	xdef	~~exec_repeat
+	func
+~~exec_repeat:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L769
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L771
+	inc	|~~basicvars+62+2
+L771:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10595
+	inc	|~~basicvars+62
+	bne	L10595
+	inc	|~~basicvars+62+2
+L10595:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L10596
+	inc	|~~basicvars+62
+	bne	L775
+	inc	|~~basicvars+62+2
+L775:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10597
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10597:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L777
+	dey
+L777:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L10596:
+	jsl	~~push_repeat
+	pld
+	tsc
+	clc
+	adc	#L769
+	tcs
+	rtl
+L769	equ	12
+L770	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_report
+	func
+~~exec_report:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L779
+	tcs
+	phd
+	tcd
+p_1	set	0
+	inc	|~~basicvars+62
+	bne	L781
+	inc	|~~basicvars+62+2
+L781:
+	jsl	~~check_ateol
+	jsl	~~get_lasterror
+	sta	<L780+p_1
+	stx	<L780+p_1+2
+	pei	<L780+p_1+2
+	pei	<L780+p_1
+	jsl	~~strlen
+	sta	<R0
+	stx	<R0+2
+	pei	<R0
+	pei	<L780+p_1+2
+	pei	<L780+p_1
+	jsl	~~emulate_vdustr
+	ldy	#$0
+	lda	|~~basicvars+494
+	bpl	L782
+	dey
+L782:
+	sta	<R0
+	sty	<R0+2
+	pei	<L780+p_1+2
+	pei	<L780+p_1
+	jsl	~~strlen
+	stx	<R1+2
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<R2
+	sta	|~~basicvars+494
+	pld
+	tsc
+	clc
+	adc	#L779
+	tcs
+	rtl
+L779	equ	16
+L780	equ	13
+	ends
+	efunc
+	code
+	func
+~~restore_dataptr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L784
+	tcs
+	phd
+	tcd
+dest_1	set	0
+p_1	set	4
+line_1	set	8
+	lda	#$10
+	trb	~~basicvars+423
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	3
+	dw	30
+	dw	L10600-1
+	dw	31
+	dw	L10601-1
+	dw	43
+	dw	L10602-1
+	dw	L10608-1
+L10600:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~set_linedest
+	sta	<R0
+	stx	<R0+2
+	phx
+	pha
+L20287:
+	jsl	~~find_linestart
+	sta	<L785+dest_1
+	stx	<L785+dest_1+2
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	jsl	~~check_ateol
+	brl	L10612
+L10613:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L785+dest_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L20278
+	ldy	#$5
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L803
+	dey
+L803:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L785+dest_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L785+dest_1+2
+	adc	<R2+2
+	pha
+	pei	<R0
+	jsl	~~get_srcaddr
+	sta	<R1
+	stx	<R1+2
+	lda	#$ffff
+	clc
+	adc	<R1
+	sta	|~~basicvars+407
+	lda	#$ffff
+	adc	<R1+2
+	sta	|~~basicvars+407+2
+	brl	L795
+L10601:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	ldy	#$1
+	lda	[<R0],Y
+	and	#$ff
+	sta	<R0
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	iny
+	lda	[<R2],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	iny
+	lda	[<R1],Y
+	and	#$ff
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R2
+	sta	<R1
+	lda	|~~basicvars+62
+	sta	<R2
+	lda	|~~basicvars+62+2
+	sta	<R2+2
+	ldy	#$4
+	lda	[<R2],Y
+	and	#$ff
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	ora	<R1
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L786
+	dey
+L786:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars
+	clc
+	adc	<R0
+	sta	<L785+dest_1
+	lda	|~~basicvars+2
+	adc	<R0+2
+	sta	<L785+dest_1+2
+	pha
+	pei	<L785+dest_1
+	brl	L20287
+L10602:
+	inc	|~~basicvars+62
+	bne	L787
+	inc	|~~basicvars+62+2
+L787:
+	jsl	~~eval_integer
+	sta	<L785+line_1
+	jsl	~~check_ateol
+	lda	|~~basicvars+62
+	sta	<L785+p_1
+	lda	|~~basicvars+62+2
+	sta	<L785+p_1+2
+	bra	L10603
+L20272:
+	pei	<L785+p_1+2
+	pei	<L785+p_1
+	jsl	~~skip_token
+	sta	<L785+p_1
+	stx	<L785+p_1+2
+L10603:
+	lda	[<L785+p_1]
+	and	#$ff
+	bne	L20272
+	inc	<L785+p_1
+	bne	L789
+	inc	<L785+p_1+2
+	bra	L789
+L20278:
+	lda	#$10
+	tsb	~~basicvars+423
+L795:
+	pld
+	tsc
+	clc
+	adc	#L784
+	tcs
+	rtl
+L20274:
+	sec
+	lda	#$0
+	sbc	<L785+line_1
+	bvs	L791
+	eor	#$8000
+L791:
+	bmi	L10606
+	ldy	#$2
+	lda	[<L785+p_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L785+p_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L793
+	dey
+L793:
+	sta	<R0
+	sty	<R0+2
+	lda	<L785+p_1
+	clc
+	adc	<R0
+	sta	<L785+p_1
+	lda	<L785+p_1+2
+	adc	<R0+2
+	sta	<L785+p_1+2
+L789:
+	dec	<L785+line_1
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L785+p_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L20274
+L10606:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L785+p_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	beq	L20278
+	lda	<L785+p_1
+	sta	<L785+dest_1
+	lda	<L785+p_1+2
+	bra	L20288
+L20290:
+	lda	|~~basicvars+22
+	sta	<L785+dest_1
+	lda	|~~basicvars+22+2
+L20288:
+	sta	<L785+dest_1+2
+	bra	L10612
+L10608:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L20290
+	jsl	~~eval_integer
+	sta	<L785+line_1
+	jsl	~~check_ateol
+	pei	<L785+line_1
+	jsl	~~find_line
+	sta	<L785+dest_1
+	stx	<L785+dest_1+2
+	pei	<L785+dest_1+2
+	pei	<L785+dest_1
+	jsl	~~get_lineno
+	cmp	<L785+line_1
+	beq	L10612
+	pei	<L785+line_1
+	pea	#<$c
+	pea	#6
+	jsl	~~error
+L10612:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L785+dest_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10613
+	ldy	#$5
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L799
+	dey
+L799:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L785+dest_1
+	clc
+	adc	<R2
+	sta	<R0
+	lda	<L785+dest_1+2
+	adc	<R2+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$99
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10613
+	dey
+	dey
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L785+dest_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L801
+	dey
+L801:
+	sta	<R0
+	sty	<R0+2
+	lda	<L785+dest_1
+	clc
+	adc	<R0
+	sta	<L785+dest_1
+	lda	<L785+dest_1+2
+	adc	<R0+2
+	brl	L20288
+L784	equ	22
+L785	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_restore
+	func
+~~exec_restore:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L804
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L806
+	inc	|~~basicvars+62+2
+L806:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	153
+	dw	L10620-1
+	dw	169
+	dw	L10618-1
+	dw	L10622-1
+L10618:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	jsl	~~check_ateol
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$17
+	beq	L10619
+	pea	#<$64
+	pea	#4
+	jsl	~~error
+L10619:
+	jsl	~~pop_error
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pea	#<~~basicvars+232
+	lda	#$9
+	xref	~~~fnmov
+	jsl	~~~fnmov
+L809:
+	pld
+	tsc
+	clc
+	adc	#L804
+	tcs
+	rtl
+L10620:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+	jsl	~~check_ateol
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$18
+	beq	L10621
+	pea	#<$65
+	pea	#4
+	jsl	~~error
+L10621:
+	jsl	~~pop_data
+	sta	|~~basicvars+407
+	stx	|~~basicvars+407+2
+	bra	L809
+L10622:
+	jsl	~~restore_dataptr
+	bra	L809
+L804	equ	4
+L805	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_return
+	func
+~~exec_return:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L810
+	tcs
+	phd
+	tcd
+returnblock_1	set	0
+	inc	|~~basicvars+62
+	bne	L812
+	inc	|~~basicvars+62+2
+L812:
+	jsl	~~check_ateol
+	lda	|~~basicvars+403
+	ora	|~~basicvars+403+2
+	bne	L10623
+	pea	#<$52
+	pea	#4
+	jsl	~~error
+L10623:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$e
+	beq	L10624
+	pea	#<$e
+	jsl	~~empty_stack
+L10624:
+	jsl	~~pop_gosub
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L811+returnblock_1
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$8
+	xref	~~~fmov
+	jsl	~~~fmov
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10625
+	pei	<L811+returnblock_1+6
+	pei	<L811+returnblock_1+4
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~trace_branch
+L10625:
+	lda	<L811+returnblock_1+4
+	sta	|~~basicvars+62
+	lda	<L811+returnblock_1+6
+	sta	|~~basicvars+62+2
+	pld
+	tsc
+	clc
+	adc	#L810
+	tcs
+	rtl
+L810	equ	12
+L811	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_run
+	func
+~~exec_run:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L817
+	tcs
+	phd
+	tcd
+string_1	set	0
+topitem_1	set	6
+bp_1	set	8
+line_1	set	12
+filename_1	set	14
+	inc	|~~basicvars+62
+	bne	L819
+	inc	|~~basicvars+62+2
+L819:
+	stz	<L818+bp_1
+	stz	<L818+bp_1+2
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	*+5
+	brl	L10626
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L818+topitem_1
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	2
+	dw	4
+	dw	L10638-1
+	dw	L10630-1
+	dw	L10630-1
+	dw	L10636-1
+	dw	L10636-1
+L10630:
+	lda	<L818+topitem_1
+	cmp	#<$2
+	bne	L10631
+	jsl	~~pop_int
+	bra	L20291
+L10631:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20291:
+	sta	<L818+line_1
+	lda	<L818+line_1
+	bmi	L822
+	ldy	#$0
+	lda	<L818+line_1
+	bpl	L824
+	dey
+L824:
+	sta	<R0
+	sty	<R0+2
+	sec
+	lda	#$feff
+	sbc	<R0
+	lda	#$0
+	sbc	<R0+2
+	bvs	L825
+	eor	#$8000
+L825:
+	bmi	L10633
+L822:
+	pea	#<$b
+	pea	#4
+	jsl	~~error
+L10633:
+	pei	<L818+line_1
+	jsl	~~find_line
+	sta	<L818+bp_1
+	stx	<L818+bp_1+2
+	pei	<L818+bp_1+2
+	pei	<L818+bp_1
+	jsl	~~get_lineno
+	cmp	<L818+line_1
+	beq	L10626
+	pei	<L818+line_1
+	pea	#<$c
+	pea	#6
+L20292:
+	jsl	~~error
+L10626:
+	pei	<L818+bp_1+2
+	pei	<L818+bp_1
+	jsl	~~run_program
+	pld
+	tsc
+	clc
+	adc	#L817
+	tcs
+	rtl
+L10636:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L818+string_1
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L818+string_1
+	pei	<L818+string_1+4
+	pei	<L818+string_1+2
+	jsl	~~tocstring
+	sta	<L818+filename_1
+	stx	<L818+filename_1+2
+	lda	<L818+topitem_1
+	cmp	#<$5
+	bne	L10637
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L818+string_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10637:
+	jsl	~~check_ateol
+	jsl	~~clear_error
+	jsl	~~clear_varlists
+	jsl	~~clear_strings
+	jsl	~~clear_heap
+	pei	<L818+filename_1+2
+	pei	<L818+filename_1
+	jsl	~~read_basic
+	brl	L10626
+L10638:
+	pea	#<$3e
+	pea	#4
+	brl	L20292
+L817	equ	26
+L818	equ	9
+	ends
+	efunc
+	code
+	xdef	~~exec_stop
+	func
+~~exec_stop:
+	longa	on
+	longi	on
+	inc	|~~basicvars+62
+	bne	L832
+	inc	|~~basicvars+62+2
+L832:
+	jsl	~~check_ateol
+	pea	#<$9
+	pea	#4
+	jsl	~~error
+	rtl
+L830	equ	0
+L831	equ	1
+	ends
+	efunc
+	code
+	xdef	~~exec_swap
+	func
+~~exec_swap:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L834
+	tcs
+	phd
+	tcd
+first_1	set	0
+second_1	set	6
+	inc	|~~basicvars+62
+	bne	L836
+	inc	|~~basicvars+62+2
+L836:
+	pea	#0
+	clc
+	tdc
+	adc	#<L835+first_1
+	pha
+	jsl	~~get_lvalue
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10639
+	pea	#<$27
+	pea	#4
+	jsl	~~error
+L10639:
+	inc	|~~basicvars+62
+	bne	L838
+	inc	|~~basicvars+62+2
+L838:
+	pea	#0
+	clc
+	tdc
+	adc	#<L835+second_1
+	pha
+	jsl	~~get_lvalue
+	jsl	~~check_ateol
+	lda	<L835+first_1
+	bmi	L839
+	dea
+	dea
+	dea
+	dea
+	bmi	L839
+	sec
+	lda	<L835+first_1
+	sbc	#<$11
+	bvs	L842
+	eor	#$8000
+L842:
+	bmi	*+5
+	brl	L10640
+	sec
+	lda	#$13
+	sbc	<L835+first_1
+	bvs	L844
+	eor	#$8000
+L844:
+	bmi	*+5
+	brl	L10640
+L839:
+	lda	<L835+second_1
+	bmi	L846
+	dea
+	dea
+	dea
+	dea
+	bmi	L846
+	sec
+	lda	<L835+second_1
+	sbc	#<$11
+	bvs	L849
+	eor	#$8000
+L849:
+	bmi	*+5
+	brl	L10640
+	sec
+	lda	#$13
+	sbc	<L835+second_1
+	bvs	L851
+	eor	#$8000
+L851:
+	bmi	*+5
+	brl	L10640
+L846:
+ival1_2	set	12
+ival2_2	set	14
+isint_2	set	16
+	lda	<L835+first_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10645-1
+	dw	3
+	dw	L10646-1
+	dw	17
+	dw	L10647-1
+	dw	18
+	dw	L10648-1
+	dw	19
+	dw	L10649-1
+	dw	L10650-1
+L10645:
+	lda	[<L835+first_1+2]
+	sta	<L835+ival1_2
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+L10644:
+	lda	<L835+second_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10653-1
+	dw	3
+	dw	L10654-1
+	dw	17
+	dw	L10655-1
+	dw	18
+	dw	L10656-1
+	dw	19
+	dw	L10657-1
+	dw	L10658-1
+L10646:
+	lda	[<L835+first_1+2]
+	sta	|L10641
+	ldy	#$2
+	lda	[<L835+first_1+2],Y
+	sta	|L10641+2
+	sep	#$20
+	longa	off
+	stz	<L835+isint_2
+	rep	#$20
+	longa	on
+	bra	L10644
+L10647:
+	pea	#<$1
+	pei	<L835+first_1+2
+	jsl	~~check_write
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	ldy	<L835+first_1+2
+	lda	[<R0],Y
+	and	#$ff
+	sta	<L835+ival1_2
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+	bra	L10644
+L10648:
+	pei	<L835+first_1+2
+	jsl	~~get_integer
+	sta	<L835+ival1_2
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+	bra	L10644
+L10649:
+	phy
+	phy
+	pei	<L835+first_1+2
+	jsl	~~get_float
+	pla
+	sta	|L10641
+	pla
+	sta	|L10641+2
+	sep	#$20
+	longa	off
+	stz	<L835+isint_2
+	rep	#$20
+	longa	on
+	brl	L10644
+L10650:
+	pea	#^L682
+	pea	#<L682
+	pea	#<$894
+	pea	#<$82
+	pea	#10
+	jsl	~~error
+	brl	L10644
+L10653:
+	lda	[<L835+second_1+2]
+	sta	<L835+ival2_2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L853
+	lda	<L835+ival1_2
+	bra	L855
+L853:
+	lda	|L10641+2
+	pha
+	lda	|L10641
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L855:
+	sta	[<L835+second_1+2]
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+L10652:
+	lda	<L835+first_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	2
+	dw	L10661-1
+	dw	3
+	dw	L10662-1
+	dw	17
+	dw	L10663-1
+	dw	18
+	dw	L10664-1
+	dw	19
+	dw	L10665-1
+	dw	L10666-1
+L10654:
+	lda	[<L835+second_1+2]
+	sta	|L10642
+	ldy	#$2
+	lda	[<L835+second_1+2],Y
+	sta	|L10642+2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L856
+	dey
+	dey
+	lda	<L835+ival1_2
+	bpl	L858
+	dey
+L858:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L859
+L856:
+	lda	|L10641+2
+	pha
+	lda	|L10641
+	pha
+L859:
+	pla
+	sta	[<L835+second_1+2]
+	pla
+	ldy	#$2
+	sta	[<L835+second_1+2],Y
+	sep	#$20
+	longa	off
+	stz	<L835+isint_2
+	rep	#$20
+	longa	on
+	bra	L10652
+L10655:
+	pea	#<$1
+	pei	<L835+second_1+2
+	jsl	~~check_write
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	ldy	<L835+second_1+2
+	lda	[<R0],Y
+	and	#$ff
+	sta	<L835+ival2_2
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L860
+	lda	<L835+ival1_2
+	bra	L862
+L860:
+	lda	|L10641+2
+	pha
+	lda	|L10641
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R1
+	pla
+	sta	<R1+2
+	lda	<R1
+L862:
+	sep	#$20
+	longa	off
+	ldy	<L835+second_1+2
+	sta	[<R0],Y
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+	brl	L10652
+L10656:
+	pei	<L835+second_1+2
+	jsl	~~get_integer
+	sta	<L835+ival2_2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L863
+	lda	<L835+ival1_2
+	bra	L865
+L863:
+	lda	|L10641+2
+	pha
+	lda	|L10641
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L865:
+	pha
+	pei	<L835+second_1+2
+	jsl	~~store_integer
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L835+isint_2
+	rep	#$20
+	longa	on
+	brl	L10652
+L10657:
+	phy
+	phy
+	pei	<L835+second_1+2
+	jsl	~~get_float
+	pla
+	sta	|L10642
+	pla
+	sta	|L10642+2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L866
+	ldy	#$0
+	lda	<L835+ival1_2
+	bpl	L868
+	dey
+L868:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L869
+L866:
+	lda	|L10641+2
+	pha
+	lda	|L10641
+	pha
+L869:
+	pei	<L835+second_1+2
+	jsl	~~store_float
+	sep	#$20
+	longa	off
+	stz	<L835+isint_2
+	rep	#$20
+	longa	on
+	brl	L10652
+L10658:
+	pea	#^L682+10
+	pea	#<L682+10
+	pea	#<$8b5
+	pea	#<$82
+	pea	#10
+	jsl	~~error
+	brl	L10652
+L10661:
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L870
+	lda	<L835+ival2_2
+	bra	L872
+L870:
+	lda	|L10642+2
+	pha
+	lda	|L10642
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L872:
+	sta	[<L835+first_1+2]
+	brl	L914
+L10662:
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L873
+	ldy	#$0
+	lda	<L835+ival2_2
+	bpl	L875
+	dey
+L875:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L876
+L873:
+	lda	|L10642+2
+	pha
+	lda	|L10642
+	pha
+L876:
+	pla
+	sta	[<L835+first_1+2]
+	pla
+	ldy	#$2
+	sta	[<L835+first_1+2],Y
+	brl	L914
+L10663:
+	lda	|~~basicvars+6
+	sta	<R0
+	lda	|~~basicvars+6+2
+	sta	<R0+2
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L877
+	lda	<L835+ival2_2
+	bra	L879
+L877:
+	lda	|L10642+2
+	pha
+	lda	|L10642
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R1
+	pla
+	sta	<R1+2
+	lda	<R1
+L879:
+	sep	#$20
+	longa	off
+	ldy	<L835+first_1+2
+	sta	[<R0],Y
+	rep	#$20
+	longa	on
+	brl	L914
+L10664:
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L880
+	lda	<L835+ival2_2
+	bra	L882
+L880:
+	lda	|L10642+2
+	pha
+	lda	|L10642
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L882:
+	pha
+	pei	<L835+first_1+2
+	jsl	~~store_integer
+	brl	L914
+L10665:
+	lda	<L835+isint_2
+	and	#$ff
+	beq	L883
+	ldy	#$0
+	lda	<L835+ival2_2
+	bpl	L885
+	dey
+L885:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	bra	L886
+L883:
+	lda	|L10642+2
+	pha
+	lda	|L10642
+	pha
+L886:
+	pei	<L835+first_1+2
+	jsl	~~store_float
+	brl	L914
+L10666:
+	pea	#^L682+20
+	pea	#<L682+20
+	pea	#<$8cb
+	pea	#<$82
+	pea	#10
+	brl	L20293
+L10640:
+	lda	<L835+first_1
+	cmp	#<$4
+	beq	L887
+	lda	<L835+first_1
+	cmp	#<$15
+	beq	*+5
+	brl	L10668
+L887:
+stringtemp_3	set	12
+	lda	<L835+second_1
+	cmp	#<$4
+	beq	L10669
+	lda	<L835+second_1
+	cmp	#<$15
+	beq	L10669
+	pea	#<$4e
+	pea	#4
+	jsl	~~error
+L10669:
+	lda	<L835+first_1
+	cmp	#<$4
+	bne	L10670
+	lda	<L835+second_1
+	cmp	#<$4
+	bne	L10670
+	pei	<L835+first_1+4
+	pei	<L835+first_1+2
+	clc
+	tdc
+	adc	#<L835+stringtemp_3
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L835+second_1+4
+	pei	<L835+second_1+2
+	pei	<L835+first_1+4
+	pei	<L835+first_1+2
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	clc
+	tdc
+	adc	#<L835+stringtemp_3
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	pei	<L835+second_1+4
+	pei	<L835+second_1+2
+L20296:
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	brl	L914
+L10670:
+	lda	<L835+first_1
+	cmp	#<$15
+	beq	*+5
+	brl	L10672
+	lda	<L835+second_1
+	cmp	#<$15
+	beq	*+5
+	brl	L10672
+len1_4	set	18
+len2_4	set	20
+	pei	<L835+first_1+2
+	jsl	~~get_stringlen
+	ina
+	sta	<L835+len1_4
+	pei	<L835+second_1+2
+	jsl	~~get_stringlen
+	ina
+	sta	<L835+len2_4
+	pha
+	pei	<L835+first_1+2
+	jsl	~~check_write
+	pei	<L835+len1_4
+	pei	<L835+second_1+2
+	jsl	~~check_write
+	ldy	#$0
+	lda	<L835+len1_4
+	bpl	L896
+	dey
+L896:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	ldy	#$0
+	lda	<L835+first_1+2
+	bpl	L897
+	dey
+L897:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	jsl	~~memmove
+	ldy	#$0
+	lda	<L835+len2_4
+	bpl	L898
+	dey
+L898:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	ldy	#$0
+	lda	<L835+second_1+2
+	bpl	L899
+	dey
+L899:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	ldy	#$0
+	lda	<L835+first_1+2
+	bpl	L900
+	dey
+L900:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R3
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R3
+	jsl	~~memmove
+	ldy	#$0
+	lda	<L835+len1_4
+	bpl	L901
+	dey
+L901:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	lda	|~~basicvars+70+2
+	pha
+	lda	|~~basicvars+70
+	pha
+	ldy	#$0
+	lda	<L835+second_1+2
+	bpl	L902
+	dey
+L902:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	jsl	~~memmove
+	brl	L914
+L10672:
+len_5	set	18
+	lda	<L835+first_1
+	cmp	#<$15
+	bne	L10674
+temp_6	set	20
+	clc
+	tdc
+	adc	#<L835+first_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	clc
+	tdc
+	adc	#<L835+temp_6
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	clc
+	tdc
+	adc	#<L835+second_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	clc
+	tdc
+	adc	#<L835+first_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	clc
+	tdc
+	adc	#<L835+temp_6
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	clc
+	tdc
+	adc	#<L835+second_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+L10674:
+	lda	[<L835+first_1+2]
+	ina
+	pha
+	pei	<L835+second_1+2
+	jsl	~~check_write
+	pei	<L835+second_1+2
+	jsl	~~get_stringlen
+	sta	<L835+len_5
+	sta	<L835+stringtemp_3
+	pei	<L835+len_5
+	jsl	~~alloc_string
+	sta	<L835+stringtemp_3+2
+	stx	<L835+stringtemp_3+4
+	sec
+	lda	#$0
+	sbc	<L835+len_5
+	bvs	L904
+	eor	#$8000
+L904:
+	bmi	L10675
+	ldy	#$0
+	lda	<L835+len_5
+	bpl	L906
+	dey
+L906:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	ldy	#$0
+	lda	<L835+second_1+2
+	bpl	L907
+	dey
+L907:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	pei	<L835+stringtemp_3+4
+	pei	<L835+stringtemp_3+2
+	jsl	~~memmove
+L10675:
+	lda	[<L835+first_1+2]
+	sta	<L835+len_5
+	sec
+	lda	#$0
+	sbc	<L835+len_5
+	bvs	L908
+	eor	#$8000
+L908:
+	bmi	L10676
+	ldy	#$0
+	lda	<L835+len_5
+	bpl	L910
+	dey
+L910:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	ldy	#$4
+	lda	[<L835+first_1+2],Y
+	pha
+	dey
+	dey
+	lda	[<L835+first_1+2],Y
+	pha
+	dey
+	dey
+	lda	<L835+second_1+2
+	bpl	L911
+	dey
+L911:
+	sta	<R1
+	sty	<R1+2
+	lda	|~~basicvars+6
+	clc
+	adc	<R1
+	sta	<R2
+	lda	|~~basicvars+6+2
+	adc	<R1+2
+	pha
+	pei	<R2
+	jsl	~~memmove
+L10676:
+	lda	<L835+second_1+2
+	clc
+	adc	<L835+len_5
+	tay
+	lda	|~~basicvars+6
+	sta	<R1
+	lda	|~~basicvars+6+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	#$d
+	sta	[<R1],Y
+	rep	#$20
+	longa	on
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	pei	<L835+first_1+4
+	pei	<L835+first_1+2
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+	clc
+	tdc
+	adc	#<L835+stringtemp_3
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	pei	<L835+first_1+4
+	pei	<L835+first_1+2
+	brl	L20296
+L10668:
+	lda	<L835+first_1
+	and	#<$8
+	beq	L10678
+arraytemp_7	set	12
+	lda	<L835+second_1
+	cmp	<L835+first_1
+	beq	L10679
+	pea	#<$4e
+	pea	#4
+	jsl	~~error
+L10679:
+	lda	[<L835+first_1+2]
+	sta	<L835+arraytemp_7
+	ldy	#$2
+	lda	[<L835+first_1+2],Y
+	sta	<L835+arraytemp_7+2
+	lda	[<L835+second_1+2]
+	sta	[<L835+first_1+2]
+	lda	[<L835+second_1+2],Y
+	sta	[<L835+first_1+2],Y
+	lda	<L835+arraytemp_7
+	sta	[<L835+second_1+2]
+	lda	<L835+arraytemp_7+2
+	sta	[<L835+second_1+2],Y
+	bra	L914
+L10678:
+	pea	#<$4e
+	pea	#4
+L20293:
+	jsl	~~error
+L914:
+	pld
+	tsc
+	clc
+	adc	#L834
+	tcs
+	rtl
+L834	equ	42
+L835	equ	17
+	ends
+	efunc
+	udata
+L10641:
+	ds	4
+	ends
+	udata
+L10642:
+	ds	4
+	ends
+	data
+L682:
+	db	$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00,$6D,$61,$69,$6E,$73
+	db	$74,$61,$74,$65,$00,$6D,$61,$69,$6E,$73,$74,$61,$74,$65,$00
+	ends
+	code
+	xdef	~~exec_sys
+	func
+~~exec_sys:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L916
+	tcs
+	phd
+	tcd
+n_1	set	0
+parmcount_1	set	2
+flags_1	set	4
+swino_1	set	6
+inregs_1	set	8
+outregs_1	set	28
+parmtype_1	set	48
+descriptor_1	set	50
+tempdesc_1	set	56
+destination_1	set	116
+	inc	|~~basicvars+62
+	bne	L918
+	inc	|~~basicvars+62+2
+L918:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L917+parmtype_1
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	2
+	dw	4
+	dw	L10688-1
+	dw	L10683-1
+	dw	L10684-1
+	dw	L10686-1
+	dw	L10686-1
+L10683:
+	jsl	~~pop_int
+L20297:
+	sta	<L917+swino_1
+L10682:
+	stz	<L917+n_1
+L10691:
+	ldy	#$0
+	lda	<L917+n_1
+	bpl	L920
+	dey
+L920:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$1
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+inregs_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	lda	#$0
+	sta	[<R3]
+	tay
+	lda	<L917+n_1
+	bpl	L921
+	dey
+L921:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+tempdesc_1
+	sta	<R1
+	lda	#$0
+	sta	<R1+2
+	ina
+	ina
+	clc
+	adc	<R1
+	sta	<R2
+	lda	#$0
+	adc	<R1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R1
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R1+2
+	lda	#$0
+	sta	[<R1]
+	ldy	#$2
+	sta	[<R1],Y
+	inc	<L917+n_1
+	sec
+	lda	<L917+n_1
+	sbc	#<$a
+	bvs	L922
+	eor	#$8000
+L922:
+	bpl	*+5
+	brl	L10690
+	brl	L10691
+L10684:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	brl	L20297
+L10686:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L917+descriptor_1
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L917+descriptor_1
+	pei	<L917+descriptor_1+4
+	pei	<L917+descriptor_1+2
+	jsl	~~emulate_getswino
+	sta	<L917+swino_1
+	lda	<L917+parmtype_1
+	cmp	#<$5
+	beq	*+5
+	brl	L10682
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L917+descriptor_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+	brl	L10682
+L10688:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+	brl	L10682
+L10690:
+	stz	<L917+parmcount_1
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10693
+L20307:
+	inc	|~~basicvars+62
+	beq	*+5
+	brl	L10693
+	inc	|~~basicvars+62+2
+	brl	L10693
+L20302:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$e1
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10694
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10695
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L917+parmtype_1
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	2
+	dw	4
+	dw	L10704-1
+	dw	L10698-1
+	dw	L10699-1
+	dw	L10701-1
+	dw	L10701-1
+L10698:
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L929
+	dey
+L929:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$1
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+inregs_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	jsl	~~pop_int
+L20298:
+	sta	[<R3]
+	brl	L10695
+L10699:
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L930
+	dey
+L930:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$1
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+inregs_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+L20305:
+	sta	<R0+2
+	lda	<R0
+	bra	L20298
+L10701:
+length_2	set	122
+cp_2	set	124
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L917+descriptor_1
+	sta	<R0
+	lda	#$0
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	lda	<L917+descriptor_1
+	sta	<L917+length_2
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L931
+	dey
+L931:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+tempdesc_1
+	sta	<R1
+	lda	#$0
+	sta	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L917+length_2
+	ina
+	sta	[<R2]
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L932
+	dey
+L932:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+tempdesc_1
+	sta	<R1
+	lda	#$0
+	sta	<R1+2
+	ina
+	ina
+	clc
+	adc	<R1
+	sta	<R2
+	lda	#$0
+	adc	<R1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R1
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R1+2
+	lda	<L917+length_2
+	ina
+	pha
+	jsl	~~alloc_string
+	sta	<L917+cp_2
+	stx	<L917+cp_2+2
+	sta	[<R1]
+	lda	<L917+cp_2+2
+	ldy	#$2
+	sta	[<R1],Y
+	sec
+	lda	#$0
+	sbc	<L917+length_2
+	bvs	L933
+	eor	#$8000
+L933:
+	bmi	L10702
+	ldy	#$0
+	lda	<L917+length_2
+	bpl	L935
+	dey
+L935:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L917+descriptor_1+4
+	pei	<L917+descriptor_1+2
+	pei	<L917+cp_2+2
+	pei	<L917+cp_2
+	jsl	~~memmove
+L10702:
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldy	<L917+length_2
+	sta	[<L917+cp_2],Y
+	rep	#$20
+	longa	on
+	lda	<L917+parmtype_1
+	cmp	#<$5
+	bne	L10703
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L917+descriptor_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10703:
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L937
+	dey
+L937:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$1
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+inregs_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	sec
+	lda	<L917+cp_2
+	sbc	|~~basicvars+6
+	sta	<R0
+	lda	<L917+cp_2+2
+	sbc	|~~basicvars+6+2
+	brl	L20305
+L10704:
+	pea	#<$45
+	pea	#4
+	jsl	~~error
+L10695:
+	inc	<L917+parmcount_1
+	sec
+	lda	<L917+parmcount_1
+	sbc	#<$a
+	bvs	L938
+	eor	#$8000
+L938:
+	bpl	L10705
+	pea	#<$5b
+	pea	#4
+	jsl	~~error
+L10705:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L20307
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10693
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$e1
+	rep	#$20
+	longa	on
+	beq	L10693
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10693:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	*+5
+	brl	L20302
+L10694:
+	pea	#0
+	clc
+	tdc
+	adc	#<L917+flags_1
+	pha
+	pea	#0
+	clc
+	tdc
+	adc	#<L917+outregs_1
+	pha
+	pea	#0
+	clc
+	tdc
+	adc	#<L917+inregs_1
+	pha
+	pei	<L917+swino_1
+	jsl	~~emulate_sys
+	stz	<L917+n_1
+L10711:
+	ldy	#$0
+	lda	<L917+n_1
+	bpl	L944
+	dey
+L944:
+	sta	<R0
+	sty	<R0+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R0+2
+	pei	<R0
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+tempdesc_1
+	sta	<R1
+	lda	#$0
+	sta	<R1+2
+	ina
+	ina
+	clc
+	adc	<R1
+	sta	<R2
+	lda	#$0
+	adc	<R1+2
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R1
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R1+2
+	lda	[<R1]
+	ldy	#$2
+	ora	[<R1],Y
+	beq	L10709
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	dey
+	dey
+	lda	<L917+n_1
+	bpl	L946
+	dey
+L946:
+	sta	<R1
+	sty	<R1+2
+	pea	#^$6
+	pea	#<$6
+	pei	<R1+2
+	pei	<R1
+	xref	~~~lmul
+	jsl	~~~lmul
+	sta	<R1
+	stx	<R1+2
+	clc
+	tdc
+	adc	#<L917+tempdesc_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R1
+	sta	<R3
+	lda	<R2+2
+	adc	<R1+2
+	pha
+	pei	<R3
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L10709:
+	inc	<L917+n_1
+	sec
+	lda	<L917+n_1
+	sbc	#<$a
+	bvs	L947
+	eor	#$8000
+L947:
+	bmi	*+5
+	brl	L10711
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10713
+L950:
+	pld
+	tsc
+	clc
+	adc	#L916
+	tcs
+	rtl
+L10713:
+	inc	|~~basicvars+62
+	bne	L951
+	inc	|~~basicvars+62+2
+L951:
+	stz	<L917+parmcount_1
+	brl	L10714
+L20303:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$3b
+	rep	#$20
+	longa	on
+	bne	*+5
+	brl	L10715
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	beq	L10716
+	pea	#0
+	clc
+	tdc
+	adc	#<L917+destination_1
+	pha
+	jsl	~~get_lvalue
+	pea	#<$0
+	ldy	#$0
+	lda	<L917+parmcount_1
+	bpl	L955
+	dey
+L955:
+	sta	<R1
+	sty	<R1+2
+	pei	<R1+2
+	pei	<R1
+	lda	#$1
+	xref	~~~lasl
+	jsl	~~~lasl
+	sta	<R0
+	stx	<R0+2
+	clc
+	tdc
+	adc	#<L917+outregs_1
+	sta	<R2
+	lda	#$0
+	sta	<R2+2
+	lda	<R2
+	clc
+	adc	<R0
+	sta	<R3
+	lda	<R2+2
+	adc	<R0+2
+	sta	<R3+2
+	lda	[<R3]
+	pha
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L917+destination_1
+	sta	<R2
+	lda	#$0
+	pha
+	pei	<R2
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~store_value
+L10716:
+	inc	<L917+parmcount_1
+	sec
+	lda	<L917+parmcount_1
+	sbc	#<$a
+	bvs	L956
+	eor	#$8000
+L956:
+	bpl	L10717
+	pea	#<$5b
+	pea	#4
+	jsl	~~error
+L10717:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$2c
+	rep	#$20
+	longa	on
+	bne	L10718
+	inc	|~~basicvars+62
+	bne	L10714
+	inc	|~~basicvars+62+2
+	bra	L10714
+L10718:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10714
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	sep	#$20
+	longa	off
+	lda	[<R1]
+	cmp	#<$3b
+	rep	#$20
+	longa	on
+	beq	L10714
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L10714:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	*+5
+	brl	L20303
+L10715:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3b
+	rep	#$20
+	longa	on
+	bne	L10721
+	inc	|~~basicvars+62
+	bne	L963
+	inc	|~~basicvars+62+2
+L963:
+	pea	#0
+	clc
+	tdc
+	adc	#<L917+destination_1
+	pha
+	jsl	~~get_lvalue
+	pea	#<$1
+	pei	<L917+flags_1
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L917+destination_1
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~store_value
+L10721:
+	jsl	~~check_ateol
+	brl	L950
+L916	equ	144
+L917	equ	17
+	ends
+	efunc
+	code
+	xdef	~~exec_trace
+	func
+~~exec_trace:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L964
+	tcs
+	phd
+	tcd
+yes_1	set	0
+option_1	set	1
+	inc	|~~basicvars+62
+	bne	L966
+	inc	|~~basicvars+62+2
+L966:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$c2
+	rep	#$20
+	longa	on
+	bne	L10722
+	lda	#$1
+	tsb	~~basicvars+425
+	ina
+	tsb	~~basicvars+425
+	brl	L10723
+L10722:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$c1
+	rep	#$20
+	longa	on
+	bne	L10724
+	lda	#$1
+	trb	~~basicvars+425
+	ina
+	trb	~~basicvars+425
+	ina
+	ina
+	trb	~~basicvars+425
+	lda	#$8
+	trb	~~basicvars+425
+	lda	#$10
+	trb	~~basicvars+425
+	brl	L10723
+L10724:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$e1
+	rep	#$20
+	longa	on
+	beq	*+5
+	brl	L10726
+stringtype_2	set	2
+descriptor_2	set	4
+	inc	|~~basicvars+62
+	bne	L970
+	inc	|~~basicvars+62+2
+L970:
+	jsl	~~expression
+	jsl	~~check_ateol
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	sta	<L965+stringtype_2
+	cmp	#<$4
+	beq	L10727
+	lda	<L965+stringtype_2
+	cmp	#<$5
+	beq	L10727
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10727:
+	jsl	~~pop_string
+	sta	<R0
+	stx	<R0+2
+	pei	<R0+2
+	pei	<R0
+	clc
+	tdc
+	adc	#<L965+descriptor_2
+	sta	<R0
+	lda	#$0
+	sta	<R0+2
+	pha
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	pei	<L965+descriptor_2
+	pei	<L965+descriptor_2+4
+	pei	<L965+descriptor_2+2
+	jsl	~~fileio_openout
+	sta	|~~basicvars+427
+	lda	<L965+stringtype_2
+	cmp	#<$5
+	bne	L974
+	sec
+	tsc
+	sbc	#6
+	tcs
+	ina
+	sta	<R0
+	stz	<R0+2
+	clc
+	tdc
+	adc	#<L965+descriptor_2
+	sta	<R1
+	lda	#$0
+	pha
+	pei	<R1
+	pei	<R0+2
+	pei	<R0
+	lda	#$6
+	xref	~~~fmov
+	jsl	~~~fmov
+	jsl	~~free_string
+L974:
+	pld
+	tsc
+	clc
+	adc	#L964
+	tcs
+	rtl
+L10726:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$96
+	rep	#$20
+	longa	on
+	bne	L10729
+	lda	|~~basicvars+427
+	bne	*+5
+	brl	L10723
+	lda	|~~basicvars+427
+	pha
+	jsl	~~fileio_close
+	stz	|~~basicvars+427
+	brl	L10723
+L10729:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10732
+	pea	#<$63
+	pea	#4
+	jsl	~~error
+	brl	L10723
+L10732:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<R0],Y
+	sta	<L965+option_1
+	rep	#$20
+	longa	on
+	lda	<L965+option_1
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10734
+	sep	#$20
+	longa	off
+	lda	<L965+option_1
+	cmp	#<$c2
+	rep	#$20
+	longa	on
+	beq	L10734
+	sep	#$20
+	longa	off
+	lda	<L965+option_1
+	cmp	#<$c1
+	rep	#$20
+	longa	on
+	beq	L10734
+	pea	#<$63
+	pea	#4
+	jsl	~~error
+L10734:
+	stz	<R0
+	sep	#$20
+	longa	off
+	lda	<L965+option_1
+	cmp	#<$c1
+	rep	#$20
+	longa	on
+	beq	L981
+	inc	<R0
+L981:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L965+yes_1
+	rep	#$20
+	longa	on
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	5
+	dw	173
+	dw	L10738-1
+	dw	177
+	dw	L10739-1
+	dw	205
+	dw	L10738-1
+	dw	213
+	dw	L10741-1
+	dw	217
+	dw	L10740-1
+	dw	L10742-1
+L10738:
+	lda	<L965+yes_1
+	and	#$ff
+	asl
+	asl
+	and	#<$4
+	sta	<R0
+	lda	#$4
+L20313:
+	trb	|~~basicvars+425
+	lda	<R0
+	tsb	|~~basicvars+425
+	bra	L10736
+L984:
+	inc	<R0
+	bra	L983
+L10739:
+	lda	<L965+yes_1
+	and	#$ff
+	asl
+	asl
+	asl
+	asl
+	and	#<$10
+	sta	<R0
+	lda	#$10
+	bra	L20313
+L10740:
+	lda	<L965+yes_1
+	and	#$ff
+	asl
+	asl
+	asl
+	and	#<$8
+	sta	<R0
+	lda	#$8
+	bra	L20313
+L10741:
+	lda	<L965+yes_1
+	and	#$ff
+	asl
+	asl
+	asl
+	asl
+	asl
+	and	#<$20
+	sta	<R0
+	lda	#$20
+	bra	L20313
+L10742:
+	pea	#<$63
+	pea	#4
+	jsl	~~error
+L10736:
+	stz	<R0
+	lda	|~~basicvars+425
+	bit	#$4
+	bne	L984
+	lda	|~~basicvars+425
+	bit	#$10
+	bne	L984
+L983:
+	lda	<R0
+	and	#<$1
+	sta	<R0
+	lda	#$1
+	trb	|~~basicvars+425
+	lda	<R0
+	tsb	|~~basicvars+425
+	lda	<L965+option_1
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L10723
+	inc	|~~basicvars+62
+	bne	L10723
+	inc	|~~basicvars+62+2
+L10723:
+	inc	|~~basicvars+62
+	bne	L989
+	inc	|~~basicvars+62+2
+L989:
+	jsl	~~check_ateol
+	brl	L974
+L964	equ	18
+L965	equ	9
+	ends
+	efunc
+	code
+	xdef	~~exec_until
+	func
+~~exec_until:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L990
+	tcs
+	phd
+	tcd
+here_1	set	0
+rp_1	set	4
+result_1	set	8
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$14
+	bne	L10744
+	lda	|~~basicvars+42
+	sta	<L991+rp_1
+	lda	|~~basicvars+42+2
+	sta	<L991+rp_1+2
+	bra	L10745
+L10744:
+	jsl	~~get_repeat
+	sta	<L991+rp_1
+	stx	<L991+rp_1+2
+L10745:
+	lda	<L991+rp_1
+	ora	<L991+rp_1+2
+	bne	L10746
+	pea	#<$34
+	pea	#4
+	jsl	~~error
+L10746:
+	lda	|~~basicvars+489
+	and	#$ff
+	beq	L10747
+	pea	#<$8
+	pea	#4
+	jsl	~~error
+L10747:
+	lda	|~~basicvars+62
+	sta	<L991+here_1
+	lda	|~~basicvars+62+2
+	sta	<L991+here_1+2
+	inc	|~~basicvars+62
+	bne	L995
+	inc	|~~basicvars+62+2
+L995:
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10748
+	jsl	~~pop_int
+	bra	L20314
+L20316:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20314:
+	sta	<L991+result_1
+	bra	L10749
+L10748:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20316
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10749:
+	lda	<L991+result_1
+	bne	L10752
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L10753
+	ldy	#$4
+	lda	[<L991+rp_1],Y
+	pha
+	dey
+	dey
+	lda	[<L991+rp_1],Y
+	pha
+	pei	<L991+here_1+2
+	pei	<L991+here_1
+	jsl	~~trace_branch
+L10753:
+	ldy	#$2
+	lda	[<L991+rp_1],Y
+	sta	|~~basicvars+62
+	iny
+	iny
+	lda	[<L991+rp_1],Y
+	sta	|~~basicvars+62+2
+	bra	L1001
+L10752:
+	jsl	~~pop_repeat
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	bne	L1001
+	pea	#<$5
+	pea	#4
+	jsl	~~error
+L1001:
+	pld
+	tsc
+	clc
+	adc	#L990
+	tcs
+	rtl
+L990	equ	14
+L991	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_wait
+	func
+~~exec_wait:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L1002
+	tcs
+	phd
+	tcd
+	inc	|~~basicvars+62
+	bne	L1004
+	inc	|~~basicvars+62+2
+L1004:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	tax
+	lda	|~~ateol,X
+	and	#$ff
+	beq	L10756
+	jsl	~~emulate_wait
+	bra	L1006
+L10756:
+delay_2	set	0
+	jsl	~~eval_integer
+	sta	<L1003+delay_2
+	jsl	~~check_ateol
+	pei	<L1003+delay_2
+	jsl	~~emulate_waitdelay
+L1006:
+	pld
+	tsc
+	clc
+	adc	#L1002
+	tcs
+	rtl
+L1002	equ	6
+L1003	equ	5
+	ends
+	efunc
+	code
+	xdef	~~exec_xwhen
+	func
+~~exec_xwhen:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L1007
+	tcs
+	phd
+	tcd
+lp_1	set	0
+lp2_1	set	4
+depth_1	set	8
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	<L1008+lp_1
+	lda	#$0
+	adc	|~~basicvars+62+2
+	sta	<L1008+lp_1+2
+	bra	L10758
+L20318:
+	pei	<L1008+lp_1+2
+	pei	<L1008+lp_1
+	jsl	~~skip_token
+	sta	<L1008+lp_1
+	stx	<L1008+lp_1+2
+L10758:
+	lda	[<L1008+lp_1]
+	and	#$ff
+	bne	L20318
+	inc	<L1008+lp_1
+	bne	L1010
+	inc	<L1008+lp_1+2
+L1010:
+	lda	#$1
+	sta	<L1008+depth_1
+L10762:
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<L1008+lp_1],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10763
+	pea	#<$2f
+	pea	#4
+	jsl	~~error
+L10763:
+	ldy	#$5
+	lda	[<L1008+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L1012
+	dey
+L1012:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L1008+lp_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L1008+lp_1
+	clc
+	adc	<R2
+	sta	<L1008+lp2_1
+	lda	<L1008+lp_1+2
+	adc	<R2+2
+	sta	<L1008+lp2_1+2
+	sep	#$20
+	longa	off
+	lda	[<L1008+lp2_1]
+	cmp	#<$a4
+	rep	#$20
+	longa	on
+	bne	L10766
+	dec	<L1008+depth_1
+	lda	<L1008+depth_1
+	bne	L10765
+	inc	<L1008+lp2_1
+	bne	L1020
+	inc	<L1008+lp2_1+2
+L1020:
+	sep	#$20
+	longa	off
+	lda	[<L1008+lp2_1]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	beq	L1021
+	bra	L10769
+L10766:
+	lda	[<L1008+lp2_1]
+	and	#$ff
+	beq	L10767
+	sep	#$20
+	longa	off
+	lda	[<L1008+lp2_1]
+	cmp	#<$90
+	rep	#$20
+	longa	on
+	beq	L10767
+	sep	#$20
+	longa	off
+	lda	[<L1008+lp2_1]
+	cmp	#<$91
+	rep	#$20
+	longa	on
+	beq	L10767
+	pei	<L1008+lp2_1+2
+	pei	<L1008+lp2_1
+	jsl	~~skip_token
+	sta	<L1008+lp2_1
+	stx	<L1008+lp2_1+2
+	bra	L10766
+L10767:
+	lda	[<L1008+lp2_1]
+	and	#$ff
+	beq	L10765
+	inc	<L1008+depth_1
+L10765:
+	ldy	#$2
+	lda	[<L1008+lp_1],Y
+	and	#$ff
+	sta	<R0
+	iny
+	lda	[<L1008+lp_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	ldy	#$0
+	lda	<R2
+	bpl	L1019
+	dey
+L1019:
+	sta	<R0
+	sty	<R0+2
+	lda	<L1008+lp_1
+	clc
+	adc	<R0
+	sta	<L1008+lp_1
+	lda	<L1008+lp_1+2
+	adc	<R0+2
+	sta	<L1008+lp_1+2
+	brl	L10762
+L1021:
+	inc	<L1008+lp2_1
+	bne	L10769
+	inc	<L1008+lp2_1+2
+L10769:
+	lda	[<L1008+lp2_1]
+	and	#$ff
+	bne	L10770
+	inc	<L1008+lp2_1
+	bne	L1024
+	inc	<L1008+lp2_1+2
+L1024:
+	ldy	#$5
+	lda	[<L1008+lp2_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L1025
+	dey
+L1025:
+	sta	<R0
+	sty	<R0+2
+	ldy	#$4
+	lda	[<L1008+lp2_1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	<L1008+lp2_1
+	clc
+	adc	<R2
+	sta	<L1008+lp2_1
+	lda	<L1008+lp2_1+2
+	adc	<R2+2
+	sta	<L1008+lp2_1+2
+L10770:
+	pei	<L1008+lp2_1+2
+	pei	<L1008+lp2_1
+	lda	#$1
+	clc
+	adc	|~~basicvars+62
+	sta	<R0
+	lda	#$0
+	adc	|~~basicvars+62+2
+	pha
+	pei	<R0
+	jsl	~~set_dest
+	jsl	~~exec_elsewhen
+	pld
+	tsc
+	clc
+	adc	#L1007
+	tcs
+	rtl
+L1007	equ	22
+L1008	equ	13
+	ends
+	efunc
+	code
+	xdef	~~exec_while
+	func
+~~exec_while:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L1027
+	tcs
+	phd
+	tcd
+expr_1	set	0
+here_1	set	4
+result_1	set	8
+	lda	|~~basicvars+62
+	sta	<L1028+here_1
+	lda	|~~basicvars+62+2
+	sta	<L1028+here_1+2
+	lda	#$3
+	clc
+	adc	|~~basicvars+62
+	sta	|~~basicvars+62
+	bcc	L1029
+	inc	|~~basicvars+62+2
+L1029:
+	lda	|~~basicvars+62
+	sta	<L1028+expr_1
+	lda	|~~basicvars+62+2
+	sta	<L1028+expr_1+2
+	jsl	~~expression
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$2
+	bne	L10771
+	jsl	~~pop_int
+	bra	L20330
+L20332:
+	phy
+	phy
+	jsl	~~pop_float
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+L20330:
+	sta	<L1028+result_1
+	bra	L10772
+L10771:
+	lda	|~~basicvars+42
+	sta	<R0
+	lda	|~~basicvars+42+2
+	sta	<R0+2
+	lda	[<R0]
+	cmp	#<$3
+	beq	L20332
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+L10772:
+	lda	<L1028+result_1
+	bne	*+5
+	brl	L10775
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10776
+	inc	|~~basicvars+62
+	bne	L10776
+	inc	|~~basicvars+62+2
+L10776:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L10777
+	inc	|~~basicvars+62
+	bne	L1036
+	inc	|~~basicvars+62+2
+L1036:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10778
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10778:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L1038
+	dey
+L1038:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L10777:
+	pei	<L1028+expr_1+2
+	pei	<L1028+expr_1
+	jsl	~~push_while
+	brl	L1063
+L10775:
+	sep	#$20
+	longa	off
+	lda	[<L1028+here_1]
+	cmp	#<$ec
+	rep	#$20
+	longa	on
+	bne	L10780
+	inc	<L1028+here_1
+	bne	L1040
+	inc	<L1028+here_1+2
+L1040:
+	lda	[<L1028+here_1]
+	and	#$ff
+	sta	<R0
+	ldy	#$1
+	lda	[<L1028+here_1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	ora	<R0
+	sta	<R2
+	dey
+	lda	<R2
+	bpl	L1041
+	dey
+L1041:
+	sta	<R0
+	sty	<R0+2
+	lda	<L1028+here_1
+	clc
+	adc	<R0
+	sta	|~~basicvars+62
+	lda	<L1028+here_1+2
+	adc	<R0+2
+	sta	|~~basicvars+62+2
+	brl	L20329
+L10780:
+depth_2	set	10
+	lda	#$1
+	sta	<L1028+depth_2
+	brl	L10783
+L20319:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	beq	*+5
+	brl	L10785
+	inc	|~~basicvars+62
+	bne	L1046
+	inc	|~~basicvars+62+2
+L1046:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	ldy	#$1
+	lda	[<R0],Y
+	cmp	#<$ff
+	rep	#$20
+	longa	on
+	bne	L10786
+	pea	#<$2e
+	pea	#4
+	jsl	~~error
+L10786:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L1048
+	dey
+L1048:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L10785:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$a7
+	rep	#$20
+	longa	on
+	bne	L10787
+	dec	<L1028+depth_2
+	bra	L10788
+L10787:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$ec
+	rep	#$20
+	longa	on
+	beq	L1050
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$eb
+	rep	#$20
+	longa	on
+	bne	L10788
+L1050:
+	inc	<L1028+depth_2
+L10788:
+	sec
+	lda	#$0
+	sbc	<L1028+depth_2
+	bvs	L1053
+	eor	#$8000
+L1053:
+	bmi	L10783
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~skip_token
+	sta	|~~basicvars+62
+	stx	|~~basicvars+62+2
+L10783:
+	sec
+	lda	#$0
+	sbc	<L1028+depth_2
+	bvs	L1043
+	eor	#$8000
+L1043:
+	bmi	*+5
+	brl	L20319
+	inc	|~~basicvars+62
+	bne	L1055
+	inc	|~~basicvars+62+2
+L1055:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$3a
+	rep	#$20
+	longa	on
+	bne	L10791
+	inc	|~~basicvars+62
+	bne	L10791
+	inc	|~~basicvars+62+2
+L10791:
+	lda	|~~basicvars+62
+	sta	<R0
+	lda	|~~basicvars+62+2
+	sta	<R0+2
+	lda	[<R0]
+	and	#$ff
+	bne	L10792
+	inc	|~~basicvars+62
+	bne	L1059
+	inc	|~~basicvars+62+2
+L1059:
+	lda	|~~basicvars+425
+	bit	#$2
+	beq	L10793
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	jsl	~~get_lineno
+	pha
+	jsl	~~trace_line
+L10793:
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$5
+	lda	[<R1],Y
+	and	#$ff
+	xba
+	and	#$ff00
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L1061
+	dey
+L1061:
+	sta	<R0
+	sty	<R0+2
+	lda	|~~basicvars+62
+	sta	<R1
+	lda	|~~basicvars+62+2
+	sta	<R1+2
+	ldy	#$4
+	lda	[<R1],Y
+	and	#$ff
+	sta	<R1
+	stz	<R1+2
+	lda	<R1
+	clc
+	adc	<R0
+	sta	<R2
+	lda	<R1+2
+	adc	<R0+2
+	sta	<R2+2
+	lda	|~~basicvars+62
+	clc
+	adc	<R2
+	sta	|~~basicvars+62
+	lda	|~~basicvars+62+2
+	adc	<R2+2
+	sta	|~~basicvars+62+2
+L10792:
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	lda	#$1
+	clc
+	adc	<L1028+here_1
+	sta	<R0
+	lda	#$0
+	adc	<L1028+here_1+2
+	pha
+	pei	<R0
+	jsl	~~set_dest
+	sep	#$20
+	longa	off
+	lda	#$ec
+	sta	[<L1028+here_1]
+	rep	#$20
+	longa	on
+L20329:
+	lda	|~~basicvars+425
+	bit	#$10
+	beq	L1063
+	lda	|~~basicvars+62+2
+	pha
+	lda	|~~basicvars+62
+	pha
+	pei	<L1028+here_1+2
+	pei	<L1028+here_1
+	jsl	~~trace_branch
+L1063:
+	pld
+	tsc
+	clc
+	adc	#L1027
+	tcs
+	rtl
+L1027	equ	24
+L1028	equ	13
+	ends
+	efunc
+	xref	~~fileio_close
+	xref	~~fileio_openout
+	xref	~~get_lvalue
+	xref	~~emulate_wait
+	xref	~~emulate_on
+	xref	~~emulate_vdustr
+	xref	~~emulate_call
+	xref	~~emulate_sys
+	xref	~~emulate_getswino
+	xref	~~emulate_waitdelay
+	xref	~~emulate_endeq
+	xref	~~emulate_oscli
+	xref	~~read_library
+	xref	~~read_basic
+	xref	~~secure_tmpnam
+	xref	~~restore_current
+	xref	~~save_current
+	xref	~~find_linestart
+	xref	~~find_line
+	xref	~~tocstring
+	xref	~~skip
+	xref	~~store_float
+	xref	~~store_integer
+	xref	~~check_write
+	xref	~~init_expressions
+	xref	~~push_parameters
+	xref	~~eval_intfactor
+	xref	~~eval_integer
+	xref	~~expression
+	xref	~~get_float
+	xref	~~get_integer
+	xref	~~end_run
+	xref	~~store_value
+	xref	~~check_ateol
+	xref	~~isateol
+	xref	~~trace_branch
+	xref	~~trace_proc
+	xref	~~trace_line
+	xref	~~run_program
+	xref	~~clear_error
+	xref	~~set_local_error
+	xref	~~set_error
+	xref	~~show_error
+	xref	~~get_lasterror
+	xref	~~error
+	xref	~~get_stringlen
+	xref	~~clear_strings
+	xref	~~free_string
+	xref	~~alloc_string
+	xref	~~clear_heap
+	xref	~~condalloc
+	xref	~~allocmem
+	xref	~~clear_stack
+	xref	~~empty_stack
+	xref	~~restore_parameters
+	xref	~~save_array
+	xref	~~save_string
+	xref	~~save_float
+	xref	~~save_int
+	xref	~~pop_error
+	xref	~~pop_data
+	xref	~~pop_for
+	xref	~~pop_repeat
+	xref	~~pop_while
+	xref	~~get_for
+	xref	~~get_repeat
+	xref	~~get_while
+	xref	~~pop_gosub
+	xref	~~pop_fn
+	xref	~~pop_proc
+	xref	~~pop_string
+	xref	~~pop_float
+	xref	~~pop_int
+	xref	~~push_error
+	xref	~~push_data
+	xref	~~push_floatfor
+	xref	~~push_intfor
+	xref	~~push_repeat
+	xref	~~push_while
+	xref	~~push_gosub
+	xref	~~push_proc
+	xref	~~push_strtemp
+	xref	~~alloc_stackmem
+	xref	~~define_array
+	xref	~~create_variable
+	xref	~~find_fnproc
+	xref	~~find_variable
+	xref	~~clear_varlists
+	xref	~~clear_varptrs
+	xref	~~get_linenum
+	xref	~~get_lineno
+	xref	~~get_srcaddr
+	xref	~~set_address
+	xref	~~set_dest
+	xref	~~skip_name
+	xref	~~skip_token
+	xref	~~tokenize
+	xref	~~exit_interpreter
+	xref	~~__errno_location
+	xref	~~strerror
+	xref	~~strlen
+	xref	~~memcmp
+	xref	~~memmove
+	xref	~~malloc
+	xref	~~remove
+	xref	~~ferror
+	xref	~~feof
+	xref	~~fclose
+	xref	~~fgets
+	xref	~~fopen
+	xref	~~ateol
+	xref	~~nullstring
+	xref	~~basicvars

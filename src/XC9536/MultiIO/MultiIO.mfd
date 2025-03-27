@@ -1,0 +1,515 @@
+MDF Database:  version 1.0
+MDF_INFO | MultiIO | XC9536-15-PC44
+MACROCELL | 1 | 13 | D_1_IOBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<6>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 10
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<1> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<6> & RW & !A<14> & !AL<0>;
+   D<1>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 12 | D_2_OBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<5>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 11
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<2> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<5> & RW & !A<14> & !AL<0>;
+   D<2>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 11 | D_3_OBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<4>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 12
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<3> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<4> & RW & !A<14> & !AL<0>;
+   D<3>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 10 | D_4_OBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<3>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 13
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<4> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<3> & RW & !A<14> & !AL<0>;
+   D<4>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 9 | D_5_OBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<2>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 14
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<5> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<2> & RW & !A<14> & !AL<0>;
+   D<5>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 8 | D_6_OBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<1>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 15
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<6> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<1> & RW & !A<14> & !AL<0>;
+   D<6>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 7 | D_7_IOBUFE
+ATTRIBUTES | 265986 | 0
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<0>  | RW  | A<14>  | AL<0>
+INPUTMC | 1 | 0 | 16
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EQ | 6 | 
+   D<7> = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<0> & RW & !A<14> & !AL<0>;
+   D<7>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 1 | 17 | PHI2L<0>
+ATTRIBUTES | 8557328 | 0
+OUTPUTMC | 3 | 1 | 17 | 1 | 5 | 1 | 1
+INPUTS | 3 | PHI2L<0>  | PHI2L<1>  | SPIAccess
+INPUTMC | 3 | 1 | 17 | 1 | 5 | 1 | 0
+EQ | 4 | 
+   !PHI2L<0>.D = PHI2L<0> & !PHI2L<1>;
+   !PHI2L<0>.CLK = PHI2;	// GCK
+   !PHI2L<0>.AP = RES;	// GSR
+   PHI2L<0>.AR = SPIAccess;
+GLOBALS | 2 | 2 | PHI2 | 1 | RES
+
+MACROCELL | 1 | 5 | PHI2L<1>
+ATTRIBUTES | 8557328 | 0
+OUTPUTMC | 3 | 1 | 17 | 1 | 5 | 1 | 1
+INPUTS | 3 | PHI2L<0>  | PHI2L<1>  | SPIAccess
+INPUTMC | 3 | 1 | 17 | 1 | 5 | 1 | 0
+EQ | 4 | 
+   !PHI2L<1>.D = !PHI2L<0> & !PHI2L<1>;
+   !PHI2L<1>.CLK = PHI2;	// GCK
+   !PHI2L<1>.AP = RES;	// GSR
+   PHI2L<1>.AR = SPIAccess;
+GLOBALS | 2 | 2 | PHI2 | 1 | RES
+
+MACROCELL | 0 | 0 | D<0>_BUFR.MC
+ATTRIBUTES | 133888 | 0
+OUTPUTMC | 1 | 1 | 14
+INPUTS | 8 | PHI2  | SPIData1  | A<10>  | A<11>  | A<4>  | A<6>  | EXP0_.EXP  | EXP1_.EXP
+INPUTMC | 3 | 0 | 4 | 0 | 1 | 0 | 17
+INPUTP | 5 | 6 | 11 | 9 | 20 | 18
+IMPORTS | 2 | 0 | 1 | 0 | 17
+EQ | 28 | 
+   D<0>_BUFR = !PHI2 & SPIData1
+	# !A<11> & SPIData1
+	# !A<10> & SPIData1
+	# !A<6> & SPIData1
+	# !A<4> & SPIData1
+;Imported pterms FB1_2
+	# !A<15> & SPIData1
+	# !A<12> & SPIData1
+	# !RW & SPIData1
+	# A<14> & SPIData1
+	# AL<1> & AL<0> & SPIData1
+;Imported pterms FB1_3
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	RW & !A<14> & !AL<0> & MISO
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<8> & RW & !A<14> & AL<0>
+;Imported pterms FB1_18
+	# !A<9> & SPIData1
+	# !A<8> & SPIData1
+	# !A<13> & SPIData1
+	# !A<7> & SPIData1
+	# A<5> & SPIData1
+;Imported pterms FB1_17
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<7> & RW & !A<14> & !AL<0>;
+
+MACROCELL | 0 | 8 | PS2Data<8>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 10 | 0 | 2 | 0 | 8 | 0 | 16 | 0 | 15 | 0 | 14 | 0 | 13 | 0 | 12 | 0 | 11 | 0 | 10 | 0 | 9
+INPUTS | 4 | PS2Data<8>  | PS2Data<7>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 4 | 0 | 8 | 0 | 9 | 1 | 2 | 0 | 3
+EQ | 3 | 
+   PS2Data<8>.D = PS2Data<8> & PS2Data<7>;
+   PS2Data<8>.CLK = PS2EdgeL;
+   PS2Data<8>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 7 | PS2CLKIN<0>
+ATTRIBUTES | 8553344 | 0
+OUTPUTMC | 2 | 1 | 4 | 1 | 2
+INPUTS | 2 | PS2CLK  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 1 | 0 | 3
+INPUTP | 1 | 24
+EQ | 3 | 
+   PS2CLKIN<0>.D = PS2CLK;
+   !PS2CLKIN<0>.CLK = PHI2;	// GCK
+   PS2CLKIN<0>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 0 | 16 | PS2Data<0>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 4 | 1 | 7 | 0 | 16 | 0 | 15 | 0 | 17
+INPUTS | 22 | PS2Data<8>  | PS2Data<0>  | PS2DAT  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT  | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | PS2Data<7>  | RW  | A<14>  | AL<0>
+INPUTMC | 5 | 0 | 8 | 0 | 16 | 1 | 2 | 0 | 3 | 0 | 9
+INPUTP | 17 | 22 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40
+EXPORTS | 1 | 0 | 17
+EQ | 7 | 
+   PS2Data<0>.D = PS2Data<8> & PS2DAT
+	# !PS2Data<8> & PS2Data<0>;
+   PS2Data<0>.CLK = PS2EdgeL;
+   PS2Data<0>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+    PS2Data<0>.EXP  =  PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<7> & RW & !A<14> & !AL<0>
+
+MACROCELL | 0 | 15 | PS2Data<1>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 8 | 0 | 15 | 0 | 14
+INPUTS | 5 | PS2Data<8>  | PS2Data<1>  | PS2Data<0>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 15 | 0 | 16 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<1>.D = PS2Data<8> & PS2Data<0>
+	# !PS2Data<8> & PS2Data<1>;
+   PS2Data<1>.CLK = PS2EdgeL;
+   PS2Data<1>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 14 | PS2Data<2>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 9 | 0 | 14 | 0 | 13
+INPUTS | 5 | PS2Data<8>  | PS2Data<2>  | PS2Data<1>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 14 | 0 | 15 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<2>.D = PS2Data<8> & PS2Data<1>
+	# !PS2Data<8> & PS2Data<2>;
+   PS2Data<2>.CLK = PS2EdgeL;
+   PS2Data<2>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 13 | PS2Data<3>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 10 | 0 | 13 | 0 | 12
+INPUTS | 5 | PS2Data<8>  | PS2Data<3>  | PS2Data<2>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 13 | 0 | 14 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<3>.D = PS2Data<8> & PS2Data<2>
+	# !PS2Data<8> & PS2Data<3>;
+   PS2Data<3>.CLK = PS2EdgeL;
+   PS2Data<3>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 12 | PS2Data<4>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 11 | 0 | 12 | 0 | 11
+INPUTS | 5 | PS2Data<8>  | PS2Data<4>  | PS2Data<3>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 12 | 0 | 13 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<4>.D = PS2Data<8> & PS2Data<3>
+	# !PS2Data<8> & PS2Data<4>;
+   PS2Data<4>.CLK = PS2EdgeL;
+   PS2Data<4>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 11 | PS2Data<5>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 12 | 0 | 11 | 0 | 10
+INPUTS | 5 | PS2Data<8>  | PS2Data<5>  | PS2Data<4>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 11 | 0 | 12 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<5>.D = PS2Data<8> & PS2Data<4>
+	# !PS2Data<8> & PS2Data<5>;
+   PS2Data<5>.CLK = PS2EdgeL;
+   PS2Data<5>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 10 | PS2Data<6>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 1 | 13 | 0 | 10 | 0 | 9
+INPUTS | 5 | PS2Data<8>  | PS2Data<6>  | PS2Data<5>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 10 | 0 | 11 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<6>.D = PS2Data<8> & PS2Data<5>
+	# !PS2Data<8> & PS2Data<6>;
+   PS2Data<6>.CLK = PS2EdgeL;
+   PS2Data<6>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 0 | 9 | PS2Data<7>
+ATTRIBUTES | 8520608 | 0
+OUTPUTMC | 3 | 0 | 9 | 0 | 8 | 0 | 16
+INPUTS | 5 | PS2Data<8>  | PS2Data<7>  | PS2Data<6>  | PS2EdgeL  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 5 | 0 | 8 | 0 | 9 | 0 | 10 | 1 | 2 | 0 | 3
+EQ | 4 | 
+   PS2Data<7>.D = PS2Data<8> & PS2Data<6>
+	# !PS2Data<8> & PS2Data<7>;
+   PS2Data<7>.CLK = PS2EdgeL;
+   PS2Data<7>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+
+MACROCELL | 1 | 4 | PS2CLKIN<1>
+ATTRIBUTES | 8553344 | 0
+OUTPUTMC | 1 | 1 | 2
+INPUTS | 2 | PS2CLKIN<0>  | PS2Data<8>/PS2Data<8>_SETF__$INT
+INPUTMC | 2 | 0 | 7 | 0 | 3
+EQ | 3 | 
+   PS2CLKIN<1>.D = PS2CLKIN<0>;
+   !PS2CLKIN<1>.CLK = PHI2;	// GCK
+   PS2CLKIN<1>.AP = !PS2Data<8>/PS2Data<8>_SETF__$INT;
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 1 | 1 | SCLK_OBUF
+ATTRIBUTES | 8815362 | 0
+INPUTS | 5 | SPIAccess  | RES  | PHI2L<0>  | PHI2L<1>  | SCLK.PIN
+INPUTMC | 3 | 1 | 0 | 1 | 17 | 1 | 5
+INPUTP | 2 | 39 | 44
+EQ | 4 | 
+   !SCLK.D = !RES & !SCLK.PIN
+	# SPIAccess & !SCLK.PIN
+	# RES & PHI2L<0> & PHI2L<1> & !SPIAccess;
+   !SCLK.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 1 | 6 | SPICS_OBUF
+ATTRIBUTES | 4621058 | 0
+INPUTS | 18 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | RW  | A<14>  | AL<0>  | D<1>.PIN  | SPICS.PIN
+INPUTP | 18 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40 | 28 | 38
+EQ | 7 | 
+   SPICS.T = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & AL<0> & D<1>.PIN & !SPICS.PIN
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & AL<0> & !D<1>.PIN & SPICS.PIN;
+   !SPICS.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 1 | 2 | PS2EdgeL
+ATTRIBUTES | 8520496 | 0
+OUTPUTMC | 10 | 0 | 8 | 0 | 16 | 0 | 15 | 0 | 14 | 0 | 13 | 0 | 12 | 0 | 11 | 0 | 10 | 0 | 9 | 1 | 2
+INPUTS | 3 | PS2CLKIN<0>  | PS2CLKIN<1>  | PS2EdgeL
+INPUTMC | 3 | 0 | 7 | 1 | 4 | 1 | 2
+EQ | 3 | 
+   PS2EdgeL.D = Vcc;
+   PS2EdgeL.CLK = !PS2CLKIN<0> & !PS2CLKIN<1>;
+   PS2EdgeL.AR = PS2CLKIN<0> & PS2CLKIN<1> & PS2EdgeL;
+
+MACROCELL | 1 | 0 | SPIAccess
+ATTRIBUTES | 8553216 | 0
+OUTPUTMC | 4 | 1 | 17 | 1 | 5 | 1 | 1 | 1 | 0
+INPUTS | 16 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | A<5>  | A<14>  | SPIAccess  | AL<1>  | AL<0>
+INPUTMC | 1 | 1 | 0
+INPUTP | 15 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 19 | 3 | 42 | 40
+EQ | 7 | 
+   SPIAccess.D = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & !A<14> & 
+	SPIAccess
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!A<14> & !AL<0>;
+   !SPIAccess.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 0 | 4 | SPIData1
+ATTRIBUTES | 4358912 | 0
+OUTPUTMC | 4 | 0 | 0 | 0 | 4 | 0 | 17 | 0 | 1
+INPUTS | 18 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | RW  | A<14>  | AL<0>  | SPIData1  | D<0>.PIN
+INPUTMC | 1 | 0 | 4
+INPUTP | 17 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40 | 27
+EQ | 7 | 
+   SPIData1.T = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & AL<0> & SPIData1 & !D<0>.PIN
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & AL<0> & !SPIData1 & D<0>.PIN;
+   !SPIData1.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 0 | 6 | PS2Read
+ATTRIBUTES | 8553216 | 0
+OUTPUTMC | 2 | 0 | 6 | 0 | 3
+INPUTS | 17 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | A<5>  | A<14>  | PS2Read  | AL<1>  | RW  | AL<0>
+INPUTMC | 1 | 0 | 6
+INPUTP | 16 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 19 | 3 | 42 | 7 | 40
+EQ | 7 | 
+   PS2Read.D = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & !A<14> & 
+	PS2Read
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	!RW & !A<14> & !AL<0>;
+   !PS2Read.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 0 | 5 | SPIData
+ATTRIBUTES | 4358912 | 0
+OUTPUTMC | 1 | 0 | 5
+INPUTS | 18 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | RW  | A<14>  | AL<0>  | SPIData  | D<7>.PIN
+INPUTMC | 1 | 0 | 5
+INPUTP | 17 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40 | 37
+EQ | 7 | 
+   SPIData.T = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & !AL<0> & SPIData & !D<7>.PIN
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	!RW & !A<14> & !AL<0> & !SPIData & D<7>.PIN;
+   !SPIData.CLK = PHI2;	// GCK
+GLOBALS | 1 | 2 | PHI2
+
+MACROCELL | 1 | 3 | MOSI_OBUF
+ATTRIBUTES | 396034 | 0
+INPUTS | 1 | FC_0_.OUT
+EQ | 1 | 
+   !MOSI = FC_0_.OUT;
+
+MACROCELL | 1 | 15 | LATCH_OBUF
+ATTRIBUTES | 396034 | 0
+INPUTS | 14 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | A<5>  | RW  | A<14>
+INPUTP | 14 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 19 | 7 | 3
+EQ | 3 | 
+   LATCH = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & !A<4> & A<5> & !RW & 
+	!A<14>;
+
+MACROCELL | 0 | 2 | N0
+ATTRIBUTES | 265986 | 0
+OUTPUTMC | 1 | 0 | 1
+INPUTS | 18 | PS2Data<8>  | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | AL<1>  | A<5>  | RW  | A<14>  | AL<0>  | MISO
+INPUTMC | 1 | 0 | 8
+INPUTP | 17 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 42 | 19 | 7 | 3 | 40 | 1
+EXPORTS | 1 | 0 | 1
+EQ | 8 | 
+   IRQ = Gnd;
+   IRQ.OE = !PS2Data<8>;
+    N0.EXP  =  PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	RW & !A<14> & !AL<0> & MISO
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<8> & RW & !A<14> & AL<0>
+
+MACROCELL | 1 | 16 | CSSER_OBUF
+ATTRIBUTES | 396034 | 0
+INPUTS | 13 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | A<5>  | A<14>
+INPUTP | 13 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 19 | 3
+EQ | 2 | 
+   !CSSER = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & A<5> & !A<14>;
+
+MACROCELL | 0 | 3 | PS2Data<8>/PS2Data<8>_SETF__$INT
+ATTRIBUTES | 133888 | 0
+OUTPUTMC | 11 | 0 | 8 | 0 | 7 | 0 | 16 | 0 | 15 | 0 | 14 | 0 | 13 | 0 | 12 | 0 | 11 | 0 | 10 | 0 | 9 | 1 | 4
+INPUTS | 2 | RES  | PS2Read
+INPUTMC | 1 | 0 | 6
+INPUTP | 1 | 39
+EQ | 1 | 
+   PS2Data<8>/PS2Data<8>_SETF__$INT = RES & !PS2Read;
+
+MACROCELL | 1 | 14 | _4_
+ATTRIBUTES | 265986 | 0
+INPUTS | 15 | PHI2  | A<9>  | A<8>  | A<15>  | A<13>  | A<12>  | A<11>  | A<10>  | A<7>  | A<6>  | A<4>  | A<5>  | RW  | A<14>  | D<0>_BUFR
+INPUTMC | 1 | 0 | 0
+INPUTP | 14 | 6 | 12 | 13 | 2 | 4 | 8 | 9 | 11 | 14 | 18 | 20 | 19 | 7 | 3
+EQ | 4 | 
+   D<0> = D<0>_BUFR;
+   D<0>.OE = PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !A<5> & RW & 
+	!A<14>;
+
+MACROCELL | 0 | 1 | EXP0_
+ATTRIBUTES | 2048 | 0
+OUTPUTMC | 1 | 0 | 0
+INPUTS | 8 | A<15>  | SPIData1  | A<12>  | RW  | A<14>  | AL<1>  | AL<0>  | N0.EXP
+INPUTMC | 2 | 0 | 4 | 0 | 2
+INPUTP | 6 | 2 | 8 | 7 | 3 | 42 | 40
+EXPORTS | 1 | 0 | 0
+IMPORTS | 1 | 0 | 2
+EQ | 12 | 
+       EXP0_.EXP  =  !A<15> & SPIData1
+	# !A<12> & SPIData1
+	# !RW & SPIData1
+	# A<14> & SPIData1
+	# AL<1> & AL<0> & SPIData1
+;Imported pterms FB1_3
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & AL<1> & !A<5> & 
+	RW & !A<14> & !AL<0> & MISO
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<8> & RW & !A<14> & AL<0>
+
+MACROCELL | 0 | 17 | EXP1_
+ATTRIBUTES | 2048 | 0
+OUTPUTMC | 1 | 0 | 0
+INPUTS | 7 | A<9>  | SPIData1  | A<8>  | A<13>  | A<7>  | A<5>  | PS2Data<0>.EXP
+INPUTMC | 2 | 0 | 4 | 0 | 16
+INPUTP | 5 | 12 | 13 | 4 | 14 | 19
+EXPORTS | 1 | 0 | 0
+IMPORTS | 1 | 0 | 16
+EQ | 9 | 
+       EXP1_.EXP  =  !A<9> & SPIData1
+	# !A<8> & SPIData1
+	# !A<13> & SPIData1
+	# !A<7> & SPIData1
+	# A<5> & SPIData1
+;Imported pterms FB1_17
+	# PHI2 & A<9> & A<8> & A<15> & A<13> & A<12> & 
+	A<11> & A<10> & A<7> & A<6> & A<4> & !AL<1> & !A<5> & 
+	PS2Data<7> & RW & !A<14> & !AL<0>
+
+PIN | PHI2 | 8256 | 0 | N/A | 6 | 23 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 0 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 1 | 14 | 0 | 2 | 0 | 16 | 1 | 17 | 1 | 5 | 0 | 7 | 1 | 4 | 1 | 1
+PIN | A<9> | 64 | 0 | N/A | 12 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 2 | 0 | 16 | 0 | 17
+PIN | A<8> | 64 | 0 | N/A | 13 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 2 | 0 | 16 | 0 | 17
+PIN | A<15> | 64 | 0 | N/A | 2 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | A<13> | 64 | 0 | N/A | 4 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 2 | 0 | 16 | 0 | 17
+PIN | A<12> | 64 | 0 | N/A | 8 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | A<11> | 64 | 0 | N/A | 9 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 0 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 1 | 14 | 0 | 2 | 0 | 16
+PIN | A<10> | 64 | 0 | N/A | 11 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 0 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 1 | 14 | 0 | 2 | 0 | 16
+PIN | A<7> | 64 | 0 | N/A | 14 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 2 | 0 | 16 | 0 | 17
+PIN | A<6> | 64 | 0 | N/A | 18 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 0 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 1 | 14 | 0 | 2 | 0 | 16
+PIN | A<4> | 64 | 0 | N/A | 20 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 0 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 1 | 14 | 0 | 2 | 0 | 16
+PIN | AL<1> | 64 | 0 | N/A | 42 | 15 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 5 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | RW | 64 | 0 | N/A | 7 | 16 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | A<14> | 64 | 0 | N/A | 3 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | A<5> | 64 | 0 | N/A | 19 | 18 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 1 | 14 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 5 | 1 | 15 | 1 | 16 | 0 | 2 | 0 | 16 | 0 | 17
+PIN | AL<0> | 64 | 0 | N/A | 40 | 15 | 1 | 13 | 1 | 12 | 1 | 11 | 1 | 10 | 1 | 9 | 1 | 8 | 1 | 7 | 0 | 5 | 1 | 6 | 1 | 0 | 0 | 4 | 0 | 6 | 0 | 1 | 0 | 2 | 0 | 16
+PIN | RES | 65600 | 0 | N/A | 39 | 4 | 1 | 1 | 0 | 3 | 1 | 17 | 1 | 5
+PIN | MISO | 64 | 0 | N/A | 1 | 1 | 0 | 2
+PIN | PS2CLK | 64 | 0 | N/A | 24 | 1 | 0 | 7
+PIN | PS2DAT | 64 | 0 | N/A | 22 | 1 | 0 | 16
+PIN | D<2> | 536871040 | 0 | N/A | 29
+PIN | D<3> | 536871040 | 0 | N/A | 33
+PIN | D<4> | 536871040 | 0 | N/A | 34
+PIN | D<5> | 536871040 | 0 | N/A | 35
+PIN | D<6> | 536871040 | 0 | N/A | 36
+PIN | MOSI | 536871040 | 0 | N/A | 43
+PIN | LATCH | 536871040 | 0 | N/A | 26
+PIN | IRQ | 536871040 | 0 | N/A | 5
+PIN | CSSER | 536871040 | 0 | N/A | 25
+PIN | D<1> | 536870976 | 0 | N/A | 28 | 1 | 1 | 6
+PIN | D<7> | 536870976 | 0 | N/A | 37 | 1 | 0 | 5
+PIN | D<0> | 536870976 | 0 | N/A | 27 | 1 | 0 | 4
+PIN | SCLK | 536870976 | 0 | N/A | 44 | 1 | 1 | 1
+PIN | SPICS | 536870976 | 0 | N/A | 38 | 1 | 1 | 6

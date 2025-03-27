@@ -1,0 +1,12 @@
+	.segment  "ZEROPAGE": zeropage
+
+_gx:	.byte 0
+_gxhi:	.byte 0
+
+_src:	.byte 0
+_srchi:	.byte 0
+
+_b:	.byte 0
+
+	.exportzp	_gx, _gxhi, _b, _src, _srchi;
+	

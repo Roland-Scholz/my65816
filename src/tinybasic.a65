@@ -1,0 +1,2334 @@
+	.include "homebrew.inc"
+	.include "myos.inc"
+	
+	.define DEBUG 0
+
+
+; v0.2.2
+;
+; Bill O'Neill - Last update: 2011/11/11
+;
+; Monitor code is Open License and can be used freely
+; Tiny Basic code is Copyright, Tom Pitman
+;
+; Consist of a minimal terminal monitor and Tom
+; Pitman's Tiny Basic as a high-level
+; programming language
+;
+; This code assembles as-is with the macro assembler in the
+; Michal Kowalski simulator.
+;
+; It should be easy enough to configure this to run any-
+; where in memory or convert it to assemble with any 6502
+; assembler.
+;
+; Next steps:
+;        More comments to document this code
+;
+;
+; Revision History:
+;
+; v0.2.2q - 2017/08/12
+;        Reverse engineering the code; added a lot of labels
+;        and comments to the source code. Still a work in progress.
+;
+; v0.2.2p - 2017/07/25
+;        Ported to Simple 65816 computer by TBW. Recoded so ACME
+;        assembler can assemble it; changes made to I/O calls
+;        and warm boot vector; and implement input line hook.
+;        Also modified the startup code to avoid video memory
+;        area. One difficulty: The BIOS's PRCH treats CR as if
+;        it is a CR/LF sequence, which may play havoc with Tiny
+;        Basic in its current form. We'll see...
+;
+; v0.2.2 - 2011/11/11
+;        Reduced version containing only a terminal monitor
+;        for a 6850 ACIA and Tom Pitman's Tiny Basic
+;
+; v0.2.1 - 2011/05/18
+;        Ported to Michal Kowalski's macro assembler
+;
+; v0.2.0 - 2011/01/04
+;        Corrected some label problems
+;        Added/corrected some comments
+;
+; v0.1.3 - 2009/11/28
+;        Changed the look-up table for the IL op-code
+;          handlers to use labels instead of literal addresses
+;          this helps make the code re-locatable.
+;        Added some comments to source
+;
+; v0.1.2 - 2009/01/12
+;        Added BREAK routine
+;        Fixed my bad reference to error string " AT "
+;        Compressed gaps in monitor code
+;        Added some comments to source
+;
+; v0.1.1 - 2008/12/15
+;        Initial working version
+; 
+;
+; Notes:
+;  - I changed the prompt character from a ":" ($3A) to a ">" ($3E) for no
+;    other reason than I think it looks a bit better. The prompt character
+;    is the second byte of the IL program table.
+;
+;  - This version is to run in Simple 65816. The memory map is as follows.
+;
+;    $0000-$CFFF     RAM (was: $0000-$7FFF)
+;    $D000-$EFFF     Video RAM, I/O and microRAM area
+;    ($F000-$F7FF     I/O - ACIA is at $F000 ... will be deleted)
+;    $F000-$FBFF     ROM - Tiny Basic (was: $8000-$EFFF)
+;    $FC00-$FFFF     ROM - Simple monitor
+;
+;  - Starting address in this version (referred to as "S" in the EXPERIMENTER'S
+;    KIT) is $F000 (was: $8000)
+
+
+;
+; Tiny Basic starts here
+;
+;start_prgm:     rmb    2        ; $20 start of BASIC text (0x900)
+;end_ram:        rmb    2        ; $22 end of available RAM
+;end_prgm:       rmb    2        ; $24 end of BASIC text
+;top_of_stack:   rmb    2        ; $26 top of return stack pointer location
+;basic_lineno:   rmb    2        ; $28 save for current line number to be executed
+;il_pc:          rmb    2        ; $2A program counter for IL code
+;basic_ptr:      rmb    2        ; $2C pointer to currently executed BASIC byte
+;basicptr_save:  rmb    2        ; $2E temporary save for basic_ptr
+;expr_stack:     rmb    80       ; lowest byte of expr_stack (0x30)
+;rnd_seed:       rmb    2        ; used as seed value for RND function
+;                                ; note this is actually top of predecrementing expr_stack
+;var_tbl:        rmb    52       ; variables (A-Z), 26 words
+;LS_end:         rmb    2        ; used to store addr of end of LS listing,
+;                                ; start of list is in basic_ptr
+;BP_save:        rmb    2        ; another temporary save for basic_ptr
+;X_save:         rmb    2        ; temporary save for X
+;IL_temp:        rmb    2        ; temporary for various IL operations
+;                                ; used for branch to IL handler routine for opcode
+;lead_zero:      rmb    1        ; flag for number output and negative sign in DV
+;column_cnt:     rmb    1        ; counter for output columns (required for TAB in PRINT)
+;                                ; if bit 7 is set, suppress output (XOFF)
+;run_mode:       rmb    1        ; run mode
+;                                ; = 0 direct mode
+;                                ; <> 0 running program
+;expr_stack_low: rmb    1        ; low addr byte of expr_stack (should be 0x30)
+;expr_stack_x:   rmb    1        ; high byte of expr_stack_top (==0x00, used with X register)
+;expr_stack_top: rmb    1        ; low byte of expr_stack_top (used in 8 bit comparisons)
+;il_pc_save:     rmb    2        ; save of IL program counter
+;                rmb    58       ; unused area in zero page (starting with 0xc6)
+
+DPAGE	=	$A00
+	                     
+; Zero page variables        
+                             
+LOWEST   =        $20           ; Lowest address of user program area
+HIGHST   =        $22           ; Highest address of user program area
+TEXTEND  =        $24           ; End of user program area plus stack reserve
+RETPTR   =        $26           ; Top of GOSUB stack
+LINNUM   =        $28           ; Current line number of BASIC line
+                             
+PGMPTR   =        $2A           ; Pointer to TBIL program table
+TXTPTR   =        $2C           ; Pointer to program text area
+                             
+INPLIN   =        $30           ; Input line buffer and computation stack ($30-$7F)
+RNDNUM   =        $80           ; Random number generator workspace
+VARS     =        $82           ; Variable "A" at $82-$83, "B" at $84-$85, etc. ($82-$B5)
+TEMPS    =        $B6           ; Interpreter temporaries ($B6-$C7)
+                             
+WORK     =        $BC           ; Working register (two byte pair)
+RUNNIN   =        $BE           ; Running status flag
+TERMPOS  =        $BF               ; Terminal position
+                            
+CSTOP    =        $C0           ; Computation stack pointer boundary variable
+CSPTR    =        $C1           ; Computation stack pointer (points to $0030-$007F area)
+                                ; Note that CSPTR+1 is set to zero (in WARM_S routine) so that
+                                ;   (CSPTR) actually points to $0030-$007F stack area as well,
+                                ;   which is used in XCHBYT routine
+BIN	=	$D0		;2-bytes binary value
+BCD	= 	$D2		;3-bytes bcd value
+STACK_S	=	$D5		;2-bytes stack save
+
+
+
+TXTBGN   =        $1600              ; Start of available RAM area
+ENDMEM   =        $B000             ; Barrier against video RAM area in Simple 65816
+
+         .ORG   $0B00             ; Start of Basic.  (was: $7600)
+START:
+
+	.p816
+	.smart
+		
+         JMP      FBLK              ; Jump to initialization code. So load address is start address.
+
+CV:      JMP      COLD_S            ; Cold start vector
+WV:      JMP      WARM_S            ; Warm start vector
+IN_V:    JMP      RCCHR             ; Input routine address. 
+OUT_V:   JMP      CHROUT            ; Output routine address.
+BV:      JMP      CHKBREAK          ; Begin check break routine
+
+;
+; Some codes
+;
+;BSC:     .byte $08                   ; Backspace code
+;LSC:     .byte $18                   ; Line cancel code
+;PCC:     .byte $80                   ; Pad character control
+;TMC:     .byte $00                   ; Tape mode control
+SSS:	 .word $04                   ; Spare Stack size. (was $04 but documentation suggests $20)
+
+;
+; Code fragment for 'PEEK' and 'POKE'
+;
+;PEEK:    STX $C3                   ; 'PEEK' - store X in $C3
+;         BCC LBL008                ; On carry clear goto LBL008
+;         STX $C3                   ; 'POKE' - store X in $C3
+;         STA ($C2),Y               ; Store A in location pointed to by $C3 (hi) and Y (lo)
+;         RTS                       ; Return
+;LBL008:  LDA ($C2),Y               ; Load A with value pointed to by $C3 (hi) and Y (lo)
+;         LDY #$00                  ; Reset Y
+;         RTS                       ; Return
+IL__PK:		jsr IL__SP
+		lda (WORK)
+		sta WORK
+		lda #0
+		jmp PSHWKA		
+
+IL__PO:		jsr POPBYT 
+		pha
+		jsr POPBYT
+		jsr IL__SP
+		pla
+		sta (WORK)
+		rts
+
+	.IF DEBUG=1
+ILSTR:
+;	.byte	"IL_BBR"
+;        .byte	"IL_FBR"
+;        .byte	"IL__BC"
+;        .byte	"IL__BV"
+;        .byte	"IL__BN"
+;        .byte	"IL__BE"
+        .byte	"IL__NO"
+        .byte	"IL__LB"
+        .byte	"IL__LN"
+        .byte	"IL__DS"
+        .byte	"IL__SP"
+        .byte	"IL__NO"
+        .byte	"IL__NO"
+        .byte	"IL__NO"
+        .byte	"IL__SB"
+        .byte	"IL__RB"
+        .byte	"IL__FV"
+        .byte	"IL__SV"
+        .byte	"IL__GS"
+        .byte	"IL__RS"
+        .byte	"IL__GO"
+        .byte	"IL__NE"
+        .byte	"IL__AD"
+        .byte	"IL__SU"
+        .byte	"IL__MP"
+        .byte	"IL__DV"
+        .byte	"IL__CP"
+        .byte	"IL__NX"
+        .byte	"IL__QU"
+        .byte	"IL__LS"
+        .byte	"IL__PN"
+        .byte	"IL__PQ"
+        .byte	"IL__PT"
+        .byte	"IL__NL"
+        .byte	"IL__PL"
+        .byte	"IL__NO"
+        .byte	"IL__NO"
+        .byte	"IL__GL"
+        .byte	"ILRES1"
+        .byte	"ILRES2"
+        .byte	"IL__IL"
+        .byte	"IL__MT"
+        .byte	"IL__XQ"
+        .byte	"IL__EN"
+        .byte	"IL__US"
+        .byte	"IL__RT"
+	.ENDIF
+	
+;
+; The following table contains the addresses for the ML handlers for the IL opcodes.
+;
+						; ($30-$3F) (need to annotate that)
+SRVT:    .word  IL_BBR				; ($40-$5F) Backward Branch Relative
+         .word  IL_FBR				; ($60-$7F) Forward Branch Relative
+         .word  IL__BC				; ($80-$9F) String Match Branch
+         .word  IL__BV				; ($A0-$BF) Branch if not Variable
+         .word  IL__BN				; ($C0-$DF) Branch if not a Number
+         .word  IL__BE				; ($E0-$FF) Branch if not End of line
+	; ($00-$07) opcodes are used for stack exchange; no addresses needed here
+         .word  IL__NO			; ($08) No Operation
+         .word  IL__LB			; ($09) Push Literal Byte onto Stack
+         .word  IL__LN			; ($0A) Push Literal Number
+         .word  IL__DS			; ($0B) Duplicate Top two bytes on Stack
+         .word  IL__SP			; ($0C) Stack Pop
+         .word  IL__NO			; ($0D) (Reserved)
+         .word  IL__NO			; ($0E) (Reserved)
+         .word  IL__NO			; ($0F) (Reserved)
+         .word  IL__SB			; ($10) Save Basic Pointer
+         .word  IL__RB			; ($11) Restore Basic Pointer
+         .word  IL__FV			; ($12) Fetch Variable
+         .word  IL__SV			; ($13) Store Variable
+         .word  IL__GS			; ($14) Save GOSUB line
+         .word  IL__RS			; ($15) Restore saved line
+         .word  IL__GO			; ($16) GOTO
+         .word  IL__NE			; ($17) Negate
+         .word  IL__AD			; ($18) Add
+         .word  IL__SU			; ($19) Subtract
+         .word  IL__MP			; ($1A) Multiply
+         .word  IL__DV			; ($1B) Divide
+         .word  IL__CP			; ($1C) Compare
+         .word  IL__NX			; ($1D) Next BASIC statement
+         .word  IL__QT			; ($1E) Quit
+         .word  IL__LS			; ($1F) List the program
+         .word  IL__PN			; ($20) Print Number
+         .word  IL__PQ			; ($21) Print BASIC string
+         .word  IL__PT			; ($22) Print Tab
+         .word  IL__NL			; ($23) New Line
+         .word  IL__PL			; ($24) Print Literal String
+         .word  IL__PK			; ($25) Peek
+         .word  IL__PO			; ($26) Poke
+         .word  IL__GL			; ($27) Get input Line
+         .word  IL__LO			; ($28) (Seems to be reserved - No IL opcode calls this)
+         .word  IL__SA			; ($29) (Seems to be reserved - No IL opcode calls this)
+         .word  IL__IL			; ($2A) Insert BASIC Line
+         .word  IL__MT			; ($2B) Mark the BASIC program space Empty
+         .word  IL__XQ			; ($2C) Execute
+         .word  IL__END			; ($2D) Stop (Warm Start)
+         .word  IL__US			; ($2E) Machine Language Subroutine Call
+         .word  IL__RT			; ($2F) IL subroutine return
+
+ERRSTR:  .byte   " AT "			; " AT " string used in error reporting.  Tom was right about this.
+         .byte   $80			; String terminator
+
+PGMADR:  .word  ILTBL			; Address of IL program table
+
+;IL__END:	pla			;pull jsr execute	
+;		pla
+;		jmp WARM_S
+;
+
+;
+; Begin base system initialization
+;
+FBLK:
+		rep #M
+		.A16
+		.I8
+
+		phd				;push direct pointer to stack
+		
+		tsc				;save stack to STACK_S
+		sta DPAGE+STACK_S
+			
+		ldx #$00
+		
+		lda #PUTREC			;lo-byte in ICCOM, high in ICSTA (0)
+		sta ICCOM,x
+		lda #MBLK
+		sta ICBAL,x
+		lda #$00FF
+		sta ICBLL,x
+		
+		sep #M
+		.A8
+		jsr CIOV
+		
+		pea DPAGE
+		pld
+	
+;	jmp COLD_S
+
+; Begin Cold Start
+;
+; Load start of free ram (TXTBGN; was: $0200) into LOWEST
+; and initialize the address for end of free ram (HIGHST)
+;
+COLD_S:		rep #M+CARRY+DECIMAL_FLAG
+		.A16
+		
+		lda #TXTBGN 	   		; Load accumulator with TXTBGN
+		sta LOWEST      		; Store in LOWEST
+		sta TEXTEND			; and TEXTEND
+;		lda #>TXTBGN    		; Load accumulator with TXTBGN
+;		sta LOWEST+1    		; Store TXTBGN in $21
+;		sta TEXTEND+1
+		
+		lda #ENDMEM-1		
+		sta HIGHST 			; Store $00 in $22
+;		lda #>(ENDMEM-1)		
+;		sta HIGHST+1    		; Store TXTBGN in $23
+		
+;		ldy #0
+
+TEXTLEN1:	lda (TEXTEND)
+		beq TEXTLEN2
+		inc TEXTEND
+		bra TEXTLEN1
+TEXTLEN2:	lda TEXTEND
+		adc SSS
+		sta TEXTEND
+		bra IL__END
+
+;	 beq IL__MT
+;
+;
+; Begin test for free RAM
+;
+	.IF 3=4
+
+		ldy #1         			; Load register Y with 1
+MEM_T:		lda (HIGHST),Y 			; Load accumulator With the contents of a byte of memory
+		tax            			; Save it to X
+		eor #$FF       			; Next 4 instuctions test to see if this memory location
+		sta (HIGHST),Y 			;   is RAM by trying to write something new to it - new value
+		cmp (HIGHST),Y 			;   gets created by XORing the old value with $FF - store the
+		php            			;   result of the test on the stack to look at later
+		txa            			; Retrieve the old memory value
+		sta (HIGHST),Y 			; Put it back where it came from
+		inc HIGHST     			; Increment HIGHST (for next memory location)
+		bne SKP_PI     			; Skip if we don't need to increment page
+		inc HIGHST+1   			; Increment HIGHST+1 (for next memory page)
+SKP_PI:		lda HIGHST+1   			; Get high byte of memory address
+		cmp #>ENDMEM   			; Did we reach start address of Tiny Basic?
+		bne PULL       			; Branch if not
+		lda HIGHST     			; Get low byte of memory address
+		cmp #<ENDMEM   			; Did we reach start address of Tiny Basic?
+		beq TOP        			; If so, stop memory test so we don't overwrite ourselves
+PULL:			
+		plp           			; Now look at the result of the memory test
+		beq MEM_T     			; Go test the next memory location if the last one was RAM
+TOP:			
+		dey            			; If last memory location did not test as RAM, decrement Y (should be zero now)
+	.ENDIF
+	 
+;
+; TBIL MT (Mark the BASIC program space Empty)
+;
+IL__MT:		
+;		cld				; Make sure we're not in decimal mode
+;		clc
+
+		rep #M+CARRY+DECIMAL_FLAG
+		.A16
+		
+		lda LOWEST			; Load up the low order byte of the start of free ram
+		adc SSS				; Add to the spare stack size
+		sta TEXTEND			; Store the result in $0024
+;		tya				; Y is zero
+;		adc LOWEST+1			; And add it to the high order byte of the start of free RAM
+;		lda LOWEST+1
+;		sta TEXTEND+1			; Store the result in $0025
+		lda #0				; Retrieve Y again
+		sta (LOWEST)			; Store A in the first byte of program memory
+;		iny				; Increment Y
+;		sta (LOWEST),Y			; Store A in the second byte of program memory
+;
+; Begin Warm Start
+;
+RESTRT:
+IL__END:
+WARM_S:		rep #M+CARRY+DECIMAL_FLAG
+		.A16	
+		lda HIGHST			; Set $C6 and RETPTR to HIGHST
+		sta $C6
+		sta RETPTR
+;		lda HIGHST+1
+;		sta $C7
+;		sta RETPTR+1
+		jsr P_NWLN			; Go print CR, LF and pad characters
+	 
+;
+; Restart the interpreter state
+;
+;RESTRT:
+;		rep #M+CARRY+DECIMAL_FLAG
+;		.A16
+
+		lda PGMADR			; Reset the start of the IL Table
+		sta PGMPTR			;   by setting PGMPTR to PGMADR
+;		lda PGMADR+1			;
+;		sta PGMPTR+1
+		lda #DPAGE+$80			; Reset the computation stack pointer
+		sta CSPTR			;   to bottom
+		ldx #$30
+		stx CSTOP			; Set computation stack top boundary to $30
+;		ldx #$00			; Set RUNNIN to zero
+		stz RUNNIN
+;		ldx #>DPAGE			;set CSPTR to DPAGE (= $0A00)
+;		stx CSPTR+1			; CSPTR+1 is permanently set to zero
+;		lda STACK_S+1
+;		xba
+		lda STACK_S
+		tcs
+		
+		sep #M
+		.A8
+;
+; IL execution loop
+;
+loop:
+		.IF DEBUG=1	
+		
+		lda PGMPTR+1
+		jsr puthex
+		lda PGMPTR
+		jsr puthex
+		jsr SPACE
+		lda (PGMPTR)
+		jsr puthex
+		jsr SPACE
+		jsr SPACE
+		
+		.ENDIF
+		
+		jsr PGMBYT			; Go read a byte from the IL program table
+		
+		jsr EXECUT			; Go decide what to do with it
+		jmp loop			; Repeat
+
+;		.byte $83			; No idea about this
+;		.byte $65			; No idea about this
+
+;
+;
+; Routine to service the TBIL Instructions
+;
+EXECUT:		cmp #$30			;
+		bcs LBL011			; If it's $30 or higher, it's a Branch or Jump - go handle it
+		cmp #$08			; 
+		bcc XCHBYT			; If it's less than $08, it's a stack exchange - go handle it
+		asl				; Multiply the OP code by 2 
+		tax				; and make it an index
+EXEC:		jmp (SRVT-4,X)
+
+;	  lda SRVT-$03,X             ; Get the high byte of the OP Code handling routine
+;         pha                        ;   and save it on the stack
+;         lda SRVT-$04,X             ; Get the low byte
+;         pha                        ;   and save it on the stack
+;         php                        ; Save the processor status too
+;        rti                        ; Now go execute the OP Code handling routine
+;	 rts
+;
+;
+; Routine to handle the stack exchange
+; Exchange the low byte of TOS with the low byte of CSPTR+n,
+;   where n is passed in accumulator
+;
+XCHBYT:		adc CSPTR			; Add index number (should be even number) to
+		tax				; CSPTR so that it points to CSPTR+n
+		lda (CSPTR),Y			; Get low byte of TOS
+		pha
+		lda $00,X			; Get low byte of CSPTR+n and
+		sta (CSPTR),Y			; write into low byte of TOS
+		pla
+		sta $00,X			; Write original low byte of TOS into
+		rts				; low byte of CSPTR+n and exit
+;
+; Print error message?
+;
+PRERR:		jsr P_NWLN  			; Go print CR, LF and pad characters
+		lda #'!'    			; '!' character
+		jsr OUT_V   			; Go print it
+		lda PGMPTR  			; Load the current TBIL pointer (low) 
+		sec         			; Set the carry flag
+		sbc PGMADR  			; Subtract the TBIL table origin (low)
+		tax         			; Move the difference to X
+		lda PGMPTR+1			; Load the current TBIL pointer (high)
+		sbc PGMADR+1			; Subtract the TBIL table origin (high)
+		jsr PRAXNM			
+		lda RUNNIN  			; Was the program in running state?
+		beq serr    			; No, just a simple error (bell)
+		lda #<ERRSTR			; Get low byte of error string address
+		sta PGMPTR  			; Put in PGMPTR
+		lda #>ERRSTR			; Get high byte of error string address
+		sta PGMPTR+1			; Put in PGMPTR+1
+		jsr IL__PL  			; Go report an error has been detected
+		ldx LINNUM  			; Print the current line number
+		lda LINNUM+1		
+		jsr PRAXNM		
+serr: 		lda #'-'			;$07                   ; ASCII Bell
+		jsr OUT_V			; Go ring Bell
+		jsr P_NWLN			; Go print CR, LF and pad characters
+CLRSTK:		lda RETPTR			; Set $C6 to RETPTR
+		sta $C6
+		lda RETPTR+1
+		sta $C7
+		jmp RESTRT
+;
+; Pop computation stack pointer
+;
+POPNBR:		ldx #$7C  			; Does the computation stack have at
+POPNB1:		cpx CSPTR 			;   least two items (four bytes)?
+PRERR1:		bcc PRERR 			; No, error
+		ldx CSPTR 			; Load old computation stack pointer
+		inc CSPTR 			;   into X and increment computation
+		inc CSPTR 			;   stack pointer by two
+		clc       			; Carry cleared for use by math routines
+		rts
+;
+; TBIL Backward Branch Relative
+;
+IL_BBR:		dec WORK+1			; Entry point for
+;
+; TBIL Forward Branch Relative
+;
+IL_FBR:
+;		lda WORK+1			; Entry point for
+;		beq PRERR
+LBL017:		lda WORK			; Set PGMPTR to WORK
+		sta PGMPTR
+		lda WORK+1
+		beq PRERR
+		sta PGMPTR+1
+		rts
+;
+; Jump handling routine
+;
+LBL011:		cmp #$40
+		bcs BRANCHES			; >= 40, If it's not a Jump, go to branch handler
+		pha
+		jsr PGMBYT			; Go read a byte from the TBIL table, Y=0
+		adc PGMADR
+		sta WORK
+		pla
+		pha
+		and #$07
+		adc PGMADR+1
+		sta WORK+1
+		pla
+		and #$08			; Jump instruction ($38)?
+		bne LBL017			; yes, copy WORK to PGMPTR 
+		lda WORK			; Swap WORK and PGMPTR
+		ldx PGMPTR
+		sta PGMPTR
+		stx WORK
+		lda WORK+1
+		ldx PGMPTR+1
+		sta PGMPTR+1
+		stx WORK+1
+LBL126:
+;	 php
+;	 php
+;	 lda #'C'
+;	 jsr CHROUT
+;	 ldx #'0'
+;	 plp
+;	 bcc LBL126A
+;	 inx
+;LBL126A: txa
+;	 jsr CHROUT
+;	 plp
+						; push return address in WORK on stack 
+		lda $C6				; Decrement $C6 by 2, carry = 0!
+		sbc #$01
+		sta $C6
+		bcs @skip
+		dec $C7
+@skip:		cmp TEXTEND			; Is $C6 < TEXTEND?
+		lda $C7
+		sbc TEXTEND+1
+		bcc PRERR1			; Yes, error (go to PRERR)
+		lda WORK
+		sta ($C6),Y
+		iny
+		lda WORK+1
+		sta ($C6),Y
+	 
+;	 lda WORK+1
+;	 jsr puthex
+;	 lda WORK
+;	 jsr puthex
+	 
+;	 lda $C7
+;	 jsr puthex
+;	 lda $C6
+;	 jsr puthex
+		rts
+;
+;
+; Branch Handler
+;
+BRANCHES:
+		pha
+		lsr
+		lsr
+		lsr
+		lsr
+		and #$0E
+		tax
+		pla
+		cmp #$60                   ; Is it a forward branch IL code?
+		and #$1F
+		bcs LBL020                 ; Yes, go and add its offset
+		ora #$E0                   ; Create a negative offset
+LBL020:		clc
+		beq LBL021                 ; Offset is zero, so skip the addition, force error
+		adc PGMPTR                 ; Add offset to PGMPTR and save to WORK
+		sta WORK
+		tya
+		adc PGMPTR+1
+LBL021:		sta WORK+1
+		jmp (SRVT-4,X)
+;		jmp EXEC                   ; And go to IL table dispatcher
+;
+; TBIL BC (String Match Branch)
+;
+IL__BC:  lda TXTPTR                 ; Save TXTPTR into $B8
+;	jsr puthex
+         sta $B8
+         lda TXTPTR+1
+;	 jsr puthex
+         sta $B9
+@match:  jsr CHRGOT
+         jsr CHRGET
+;	 pha
+;	 jsr CHROUT
+;	 lda (PGMPTR),Y
+;	 jsr CHROUT
+;	 lda #'+'
+;	 jsr CHROUT
+;	 pla
+         eor (PGMPTR),Y             ; Test for char match and end of
+         tax                        ;   string (high bit), then save it
+         jsr PGMBYT                 ; Go read a byte from the TBIL table
+         txa                        ; Is it a plain match?
+         beq @match                 ; Yes, continue checking for a match
+         asl                        ; Mask out high bit, then is it a final match?
+         beq BCEXIT                 ; Yes, exit
+         lda $B8                    ; Restore TXTPTR from $B8
+         sta TXTPTR
+         lda $B9
+         sta TXTPTR+1
+DO_FBR:  jmp IL_FBR                 ; Match failed, so do a (forward) branch
+;
+; TBIL BE (Branch if not End of line)
+;
+IL__BE:
+;	tya
+;	jsr puthex
+;	lda TXTPTR+1
+;	jsr puthex
+;	lda TXTPTR
+;	jsr puthex
+	
+	jsr CHRGOT                 ; Check that CR is there
+         cmp #EOL
+         bne DO_FBR                 ; Else do a (forward) branch
+BCEXIT:  rts
+;
+; TBIL BV (Branch if not Variable)
+;
+IL__BV:  jsr CHRGOT                 ; Get current char from program area
+;	 jsr CHROUT
+         cmp #'Z'+1                 ; Is it a letter ('A' to 'Z')?
+         bcs DO_FBR                 ; No, do a (forward) branch
+         cmp #'A'
+         bcc DO_FBR                 ; No, do a (forward) branch
+         asl                        ; Yes, so create an index out of it
+         jsr PSHACC                 ;   and push it on stack
+CHRGET:  ldy #$00
+         lda (TXTPTR),Y             ; Get a char from program text	
+	 inc TXTPTR                 ;   and increment TXTPTR by one
+         bne @chk
+         inc TXTPTR+1
+@chk:    cmp #EOL                   ; CR?
+         clc
+         rts
+;
+; CHRGOT - Starting with current character in the program area, skip
+;          any blanks until a nonblank character is reached, and return
+;          with carry clear (nondigit) or set (digit)
+;
+chgot1:  jsr CHRGET
+CHRGOT:  lda (TXTPTR),Y             ; Get a char from program text
+         cmp #' '                   ; Space?
+         beq chgot1                 ; Yes, skip it
+         cmp #':'                   ; Colon?
+         clc
+         bpl @exit                  ; Yes, exit with carry flag clear
+         cmp #'0'                   ; Digit char? (carry set if yes)
+@exit:   rts
+;
+; TBIL BN (Branch if not a Number)
+;
+IL__BN:  jsr CHRGOT                 ; Get current char from program area
+         bcc DO_FBR                 ; Not a digit, so do a (forward) branch
+         sty WORK                   ; Set WORK to zero
+         sty WORK+1
+@loop1:  lda WORK                   ; Set WORK to 10*WORK
+         ldx WORK+1
+         asl WORK
+         rol WORK+1
+         asl WORK
+         rol WORK+1
+         clc
+         adc WORK
+         sta WORK
+         txa
+         adc WORK+1
+         asl WORK
+         rol
+         sta WORK+1
+         jsr CHRGET                  ; Get next char from program area
+         and #$0F                    ; Assuming it is a digit, get the value
+         adc WORK                    ;   and add it to WORK
+         sta WORK
+         tya
+         adc WORK+1
+         sta WORK+1
+         jsr CHRGOT                  ; is next char a digit? 	
+         bcs @loop1                  ; It is a digit, so continue adding it to WORK
+         jmp PSHWRK
+;
+; Find BASIC line with target line number
+;
+FINDLN:  jsr IL__SP                 ; Pop the number into WORK
+         lda WORK                   ; Is WORK zero?
+         ora WORK+1
+         beq PQERR                  ; Yes, print error
+FNDLN1:  lda LOWEST                 ; Set TXTPTR to LOWEST
+         sta TXTPTR
+         lda LOWEST+1
+         sta TXTPTR+1
+LBL040:  jsr GETNUM
+         beq LBL038
+         lda LINNUM+1                 ; Is LINNUM >= WORK?
+         cmp WORK+1
+	 bcc @skip5		    ; no, next line 
+         lda LINNUM
+         cmp WORK
+         bcs LBL038                 ; Yes, ...
+@skip5:  jsr CHRGET                 ; Skip the BASIC program line
+	 cmp #EOL
+         bne @skip5                 ;   by searching for $00 sentinel
+         jmp LBL040                 ; Continue looking for ...
+LBL038:  lda LINNUM                 ; Test whether LINNUM = WORK
+         eor WORK
+         bne @skip6
+         lda LINNUM+1
+         eor WORK+1
+@skip6:  rts
+;
+; TBIL PC (Print Literal String)
+;
+pcloop:  jsr CPRCHR
+IL__PL:  jsr PGMBYT                 ; Go read a byte from the TBIL table
+         bpl pcloop                 ; ...else fall thru to ...
+;
+; Counted printing a character
+;
+CPRCHR:;  inc TERMPOS                ; Update terminal position
+;         bmi @nopr                  ; 127 is maximum allowed; won't print beyond that
+	 and #$7f
+         jmp OUT_V                  ; Go print it
+;@nopr:   dec TERMPOS                ; Keep TERMPOS at its maximum
+prexit:  rts
+;
+;
+;
+LBL046:  cmp #'"'                   ; Is it a quote?
+         beq prexit                 ; No, quit
+         jsr CPRCHR
+;
+; TBIL PQ (Print BASIC string)
+;
+IL__PQ:  jsr CHRGET                 ; Entry point for
+         bne LBL046
+PQERR:   jmp PRERR
+;
+; TBIL PT (Print Tab)
+;
+IL__PT:;  lda #' '                   ; Print a space
+         jmp SPACE
+;         lda TERMPOS
+;         and #$87                   ; Do a modulo of 8, plus see if it it has gone past 127
+;         bmi prexit                 ; Yes, it went past 127, so quit
+;         bne IL__PT                 ; It is not divisible by 8, so continue printing spaces
+         rts                        ; Else it's all done
+;
+; TBIL CP (Compare)
+;
+IL__CP:  ldx #$7B                   ; Make sure the computation stack has
+         jsr POPNB1                 ;   at least 5 bytes, then decrement
+         inc CSPTR                  ;   CSPTR by 5 bytes (POPNB1 already
+         inc CSPTR                  ;   decremented it by 2)
+         inc CSPTR
+         sec                        ; Subtract TOS from $03 and store into TOS
+         lda $03,X
+         sbc $00,X
+         sta $00,X
+         lda $04,X
+         sbc $01,X
+         bvc LBL052                 ; No overflow
+         eor #$80                   ; No idea what it does
+         ora #$01
+LBL052:  bmi LBL053                 ; It's negative, so that means TOS < $03
+         bne LBL054
+         ora $00,X
+         beq LBL049
+LBL054:  lsr $02,X
+LBL049:  lsr $02,X
+LBL053:  lsr $02,X
+         bcc LBL050
+
+PGMBYT:  ldy #$00                   ; Read a byte from the TBIL Table
+         lda (PGMPTR),Y             ;
+;	 pha
+;	 jsr puthex
+;	 phd
+;	 pla
+;	 jsr puthex
+;	 pla
+;	 jsr puthex
+         inc PGMPTR                 ; Increment TBIL Table pointer as required
+         bne @skip0                 ;
+         inc PGMPTR+1               ;
+@skip0:  ora #$00                   ; Check for $00 and set the 'Z' flag acordingly
+;	 pla
+LBL050:  rts                        ; Return
+;
+; TBIL NX (Next BASIC statement)
+;
+IL__NX:  lda RUNNIN                 ; Is the program running?
+         beq QUIT                   ; No, go to inputting
+@skip7:  jsr CHRGET                 ; Skip rest of BASIC statement until it hits EOL
+         bne @skip7
+         jsr GETNUM                 ; Get BASIC line number
+         beq RPERR                  ; It's zero, so error
+DOSTMT:  jsr LBL058                 ; Set RUNNIN to 1
+         jsr BV                     ; Test for break
+         bcs RESETP                 ; Break invoked, so quit running
+         lda $C4                    ; Set PGMPTR to $C4
+         sta PGMPTR
+         lda $C5
+         sta PGMPTR+1
+         rts
+;
+; Reset IL program pointer and go to error
+;
+RESETP:  lda PGMADR                 ; Reset PGMPTR back to the beginning of
+         sta PGMPTR                 ;   the IL program table (PGMADR)
+         lda PGMADR+1
+         sta PGMPTR+1
+RPERR:   jmp PRERR                  ; And go to error
+;
+;
+;
+QUIT:    sta TERMPOS                ; Set TERMPOS to zero,
+         jmp CLRSTK                 ;   clear stack and resume inputting
+;
+; TBIL XQ (Execute)
+;
+IL__XQ:  lda LOWEST                 ; Set TXTPTR to LOWEST
+         sta TXTPTR
+         lda LOWEST+1
+         sta TXTPTR+1
+         jsr GETNUM                 ; Get line number
+         beq RPERR                  ; Error if it's zero
+         lda PGMPTR                 ; Set $C4 to PGMPTR
+         sta $C4
+         lda PGMPTR+1
+         sta $C5
+LBL058:  lda #$01                   ; Set RUNNIN to 1
+         sta RUNNIN
+         rts
+;
+; TBIL GO (GOTO)
+;
+IL__GO:  jsr FINDLN                 ; Find BASIC line with target line number
+         beq DOSTMT                 ; Found; execute it
+GOERR:   lda WORK                   ; Otherwise set LINNUM to WORK
+         sta LINNUM
+         lda WORK+1
+         sta LINNUM+1
+         jmp PRERR                  ;   and print error
+;
+; TBIL RS (Restore saved line)
+;
+IL__RS:  jsr LBL063                 ; Entry point for
+         jsr LBL064
+         jsr FNDLN1
+         bne GOERR
+         rts
+;
+; Read line number into LINNUM
+;
+GETNUM:  jsr CHRGET                 ; Read next two bytes in program area
+         sta LINNUM                 ;   into LINNUM, and return with zero flag
+         jsr CHRGET                 ;   set according to whether LINNUM is zero
+         sta LINNUM+1
+         ora LINNUM
+         rts
+;
+; TBIL DS (Duplicate Top two bytes on Stack)
+;
+IL__DS:  jsr IL__SP                 ; Pop TOS onto WORK then push WORK twice
+         jsr PSHWRK
+PSHWRK:  lda WORK+1                 ; Push WORK onto computation stack
+PSHWKA:  jsr PSHACC                 ; Push WORK(low)/Accum(high) onto
+         lda WORK                   ;   computation stack
+PSHACC:  ldx CSPTR                  ; Push accumulator onto computation
+         dex                        ;   stack
+         sta $00,X
+         stx CSPTR                  ; Update computation stack pointer
+         cpx CSTOP                  ; Has it hit the top boundary of
+         bne IL__NO                 ;   computation stack area? No
+LBL068:  jmp PRERR                  ; Error: computation stack overflow
+;
+; Pop a byte from computation stack
+;
+POPBYT:		ldx CSPTR 			; Load computation stack pointer
+		cpx #$80  			; Is the stack empty?
+		bpl LBL068			; Yes, error
+		lda $00,X 			; Pop a byte from the stack
+		inc CSPTR 			;   and update the pointer
+;
+; TBIL NO (No Operation)
+;
+IL__NO:		rts				; Just that...no operation :-)
+;
+IL__QT:		pld
+		pld
+;		INC	DEVICNO
+		rts
+
+;; Print acc/X as (unsigned) number
+;
+PRAXNM:		sta WORK+1			; Copy accumulator and X register
+		stx WORK			;   to WORKa
+	 
+;		lda WORK+1
+;		jsr puthex
+;		lda WORK
+;		jsr puthex
+	 
+		jmp PRNUM			; Go print (unsigned) number
+;
+; TBIL PN (Print Number)
+;
+IL__PN:		ldx CSPTR 			; Load computation stack pointer
+		lda $01,X 			; See whether the number is
+		bpl @skip1			;   negative...no, skip it
+		jsr IL__NE			; Else negate the number on stack
+		lda #'-'  			; Print a '-' to show minus sign
+		jsr CPRCHR			
+@skip1:		jsr IL__SP			
+
+PRNUM:
+BIN2DEC:
+		STZ BCD
+		STZ BCD+1
+		STZ BCD+2
+
+		LDY #16
+		SED		
+BIN2DEC2:
+		ASL WORK
+		ROL WORK+1
+
+		LDX #2
+BIN2DEC3:
+		LDA BCD,X
+		ADC BCD,X
+		STA BCD,X
+		DEX
+		BPL BIN2DEC3
+		DEY
+		BNE BIN2DEC2
+		
+		CLD
+		INX
+
+BIN2DEC4:	LDA BCD,X
+		LSR
+		LSR
+		LSR
+		LSR
+		CLC
+		ADC #'0'
+		CMP #'0'
+		BNE BIN2DEC5
+		CPY #0
+		BEQ BIN2DEC6
+BIN2DEC5:	INY
+		JSR CPRCHR
+		
+BIN2DEC6:	LDA BCD,X
+		AND #15
+		CLC
+		ADC #'0'
+		CMP #'0'
+		BNE BIN2DEC7
+		CPX #2
+		BEQ BIN2DEC7
+		CPY #0
+		BEQ BIN2DEC8
+BIN2DEC7:	INY
+		JSR CPRCHR
+BIN2DEC8:	INX
+		CPX #3
+		BNE BIN2DEC4
+		
+		LDY #0
+		RTS
+
+;	rts
+;	lda #$1F
+;         sta $B8
+;         sta $BA
+;         lda #$2A
+;         sta $B9
+;         sta $BB
+;         ldx WORK
+;         ldy WORK+1
+;         sec
+;@sub10k: inc $B8
+;         txa                        ; Subtract 10000 ($2710) from Y/X register pair
+;         sbc #$10
+;         tax
+;         tya
+;         sbc #$27
+;         tay
+;         bcs @sub10k
+;@add1k:  dec $B9
+;         txa                        ; Add 1000 ($03E8) to Y/X register pair
+;         adc #$E8
+;         tax
+;         tya
+;         adc #$03
+;         tay
+;         bcc @add1k
+;         txa
+;@sub100: sec                        ; Subtract 100 ($64) from accumulator
+;         inc $BA
+;         sbc #$64
+;         bcs @sub100
+;         dey
+;         bpl @sub100
+;@add10:  dec $BB                    ; Add 10 ($0A) to accumulator
+;         adc #$0A
+;         bcc @add10
+;         ora #$30                   ; Convert it to ASCII digit
+;         sta WORK
+;         lda #$20
+;         sta WORK+1
+;         ldx #$FB
+;LBL199:  stx $C3
+;         lda WORK+1,X
+;         ora WORK+1
+;         cmp #$20
+;         beq LBL076
+;         ldy #$30
+;         sty WORK+1
+;         ora WORK+1
+;         jsr CPRCHR
+;LBL076:  ldx $C3
+;         inx
+;         bne LBL199
+;         rts
+;
+; TBIL LS (List the program)
+;
+IL__LS:  lda TXTPTR+1               ; Save TXTPTR on system stack
+         pha
+         lda TXTPTR
+         pha
+         lda LOWEST                 ; Set TXTPTR to LOWEST
+         sta TXTPTR
+         lda LOWEST+1
+         sta TXTPTR+1
+         lda TEXTEND
+         ldx TEXTEND+1
+         jsr LBL077
+         beq LBL078
+         jsr LBL077
+LBL078:  lda TXTPTR                 ; Is TXTPTR >= $B6?
+         sec
+         sbc $B6
+         lda TXTPTR+1
+         sbc $B7
+         bcs LBL079                 ; Yes, exiting
+         jsr GETNUM
+         beq LBL079                 ; Reach the end of program area, exiting
+         ldx LINNUM                 ; Print line number and ...
+         lda LINNUM+1
+         jsr PRAXNM
+         lda #' '                   ;   a blank after that number
+LBL080:  jsr CPRCHR
+         jsr BV                     ; Test for break
+         bcs LBL079                 ; Break hit, so exiting
+         jsr CHRGET                 ; Get a char from program area
+	 cmp #EOL
+         bne LBL080                 ; and print it until it hits a $00
+         jsr IL__NL                 ; Print a new line
+         jmp LBL078                 ; Loop back to LIST
+;
+;
+;
+LBL077:  sta $B6
+         inc $B6
+         bne LBL082
+         inx
+LBL082:  stx $B7
+         ldy CSPTR                  ; Load computation stack pointer
+         cpy #$80
+         beq LBL083
+         jsr FINDLN                 ; Find BASIC line with target line number
+;
+;
+;
+LBL099:		lda TXTPTR			; Decrement TXTPTR by 2
+		ldx TXTPTR+1
+		sec
+		sbc #$02
+		bcs @skip2
+		dex
+@skip2:		sta TXTPTR
+		jmp LBL085			;
+	 
+
+LBL079:		pla				; Restore TXTPTR from system stack
+		sta TXTPTR
+		pla
+		sta TXTPTR+1
+LBL083:		rts
+;
+; TBIL NL (New Line)
+;
+;IL__NL:	jmp P_NWLN
+
+	;  lda TERMPOS                ; Is the terminal position past 127?
+ ;        bmi LBL083                 ; Yes, exit. Otherwise fall thru to ...
+
+;
+;
+;
+;LBL092:  ldy TMC
+;LBL091:  sty TERMPOS
+;         bcs LBL090
+;
+; TBIL GL (Get input Line)
+;
+IL__GL:	
+		ldx #0
+		lda #GETREC
+		sta ICCOM,x
+		lda #<(DPAGE+$30)
+		sta TXTPTR
+		sta CSTOP
+		sta ICBAL,x
+		lda #>(DPAGE+$30)
+		sta TXTPTR+1
+		sta ICBAH,x
+		lda #$80
+		sta ICBLL,x
+		txa
+		sta ICBLH,x
+		jmp CALLCIO
+
+	.IF 3=4
+;IL__GL:	
+	 lda #$30                   ; Set TXTPTR and CSTOP to $0030
+         sta TXTPTR
+         sta CSTOP
+	 ldy #>DPAGE		    ; direct page (= $A00)
+         sty TXTPTR+1
+         jsr PSHWRK
+LBL090:  eor $80
+         sta $80
+         jsr IN_V
+         ldy #$00
+         ldx CSTOP
+         and #$7F
+         beq LBL090                 ; It is a NUL
+         cmp #$7F                   ; Is it a rubout?
+         beq LBL090
+         cmp #$13                   ; Is it a ...?
+         beq LBL091
+;         cmp #$0A                   ; Is it a line feed?
+;         beq LBL092
+;         cmp LSC                    ; Is it a line cancel?
+;         beq @cancl
+         cmp #BACK                    ; Is it a backspace?
+         bne @back
+         cpx #$30                   ; Has it reached the end of input buffer?
+         bne LBL095                 ; No, @..
+@cancl:  ldx TXTPTR
+         sty TERMPOS                ; Reset TERMPOS to zero
+         lda #EOL
+@back:   cpx CSPTR                  ; ... computation stack pointer
+         bmi LBL096
+         lda #$07                   ; ASCII Bell
+         jsr CPRCHR                 ; Ring the bell
+         jmp LBL090
+LBL096:  sta $00,X                  ; Append a char to the buffer
+         inx
+         inx
+LBL095:  dex
+         stx CSTOP                  ; Set CSTOP to current buffer position
+         cmp #EOL                   ; Is it a CR?
+         bne LBL090                 ; No, continue inputting
+         jsr IL__NL                 ; Print a new line and ...
+	 
+	 .ENDIF
+;
+; TBIL SP (Stack Pop)
+;
+IL__SP:  jsr POPBYT                 ; Pop value from computation
+         sta WORK                   ;   stack onto WORK
+         jsr POPBYT
+         sta WORK+1
+         rts
+
+;
+; TBIL IL (Insert BASIC Line)
+;
+IL__IL:  jsr LBL098                 ; Swap TXTPTR and $2E
+         jsr FINDLN                 ; Find BASIC line with target line number
+         php
+	 
+;	 jsr SPACE
+;	 lda WORK+1
+;	 jsr puthex
+;	 lda WORK
+;	 jsr puthex
+;	 jsr SPACE
+;	 lda LINNUM+1
+;	 jsr puthex
+;	 lda LINNUM
+;	 jsr puthex
+	 
+         jsr LBL099		    ; Decrement TXTPTR by 2
+         sta $B8                    ; Set $B8 to TXTPTR
+         stx $B9
+         lda WORK                   ; Set $B6 to WORK (new line number)
+         sta $B6
+         lda WORK+1
+         sta $B7
+         ldx #$00
+         plp
+         bne LBL100
+	 
+         jsr GETNUM		;read first linenumber that is > WORK from program text, y=0 
+         dex
+         dex
+LBL101:  dex
+         jsr CHRGET
+	 cmp #EOL
+         bne LBL101
+	 
+LBL100:  sty LINNUM
+         sty LINNUM+1
+         jsr LBL098		    ; Swap TXTPTR and $2E
+	 
+         lda #EOL		;empty line entered?
+         cmp (TXTPTR),Y	
+         beq LBL102		;yes
+	 
+         inx
+         inx
+         inx
+	 
+;	 txa
+;	 jsr puthex
+;	 lda #EOL
+
+LBL103:  inx
+         iny
+         cmp (TXTPTR),Y
+         bne LBL103
+	 
+;	 lda #'X'
+;	 jsr CHROUT
+;	 txa
+;	 jsr puthex
+;	 tya
+;	 jsr puthex
+;	 lda TXTPTR+1
+;	 jsr puthex
+;	 lda TXTPTR
+;	 jsr puthex
+	 
+         lda $B6                    ; Set LINNUM to $B6 (new line number)
+         sta LINNUM
+         lda $B7
+         sta LINNUM+1
+	 
+LBL102:  lda $B8                    ; Set WORK to $B8 (program text, where to insert new line)
+         sta WORK
+         lda $B9
+         sta WORK+1
+	 
+         clc
+         ldy #$00
+         txa
+         beq LBL104
+         bpl LBL105		    ; X usually positive > 0
+	 
+         adc $2E
+         sta $B8
+         lda $2F
+         sbc #$00
+         sta $B9
+LBL109:  lda ($2E),Y
+         sta ($B8),Y
+         ldx $2E
+         cpx TEXTEND
+         bne LBL106
+         lda $2F
+         cmp TEXTEND+1
+         beq LBL107
+LBL106:  inx
+         stx $2E
+         bne LBL108
+         inc $2F
+LBL108:  inc $B8
+         bne LBL109
+         inc $B9
+         bne LBL109
+
+LBL105:  adc TEXTEND
+         sta $B8			;$28 = new text end
+         sta $2E			;$2E = new text end
+         tya
+         adc TEXTEND+1
+         sta $B9			;new Text end
+         sta $2F			;new Text end
+	 
+         lda $2E			; < GOSUB Stack?
+         sbc $C6
+         lda $2F
+         sbc $C7
+         bcc LBL110			;yes, ok!
+         dec PGMPTR
+         jmp PRERR
+	 
+LBL110:  lda (TEXTEND),Y
+         sta ($2E),Y
+         ldx TEXTEND                    ; Decrement TEXTEND by 1
+         bne LBL111
+         dec TEXTEND+1
+LBL111:  dec TEXTEND
+         ldx $2E                    ; Decrement $2E by 1
+         bne LBL112
+         dec $2F
+LBL112:  dex
+         stx $2E
+
+         cpx WORK                   ; Is $2E = WORK?
+         bne LBL110                 ; No, go to ...
+         ldx $2F
+         cpx WORK+1
+         bne LBL110                 ; No, go to ...
+	 
+LBL107:  lda $B8                    ; Set TEXTEND to $B8
+         sta TEXTEND
+         lda $B9
+         sta TEXTEND+1
+
+LBL104:  lda LINNUM                 ; Is LINNUM zero?
+         ora LINNUM+1
+         beq LBL113                 ; Yes, ...
+         lda LINNUM                 ; Else write LINNUM to (WORK)
+         sta (WORK),Y
+         iny
+         lda LINNUM+1
+         sta (WORK),Y
+LBL114:  iny
+         sty $B6
+         jsr CHRGET
+         php
+         ldy $B6
+         sta (WORK),Y
+         plp
+         bne LBL114
+
+LBL113:  jmp RESTRT
+;
+; TBIL DV (Divide)
+;
+IL__DV:  jsr POPNBR                 ; Entry point for
+         lda $03,X
+         and #$80
+         beq LBL116
+         lda #$FF
+LBL116:  sta WORK
+         sta WORK+1
+         pha
+         adc $02,X
+         sta $02,X
+         pla
+         pha
+         adc $03,X
+         sta $03,X
+         pla
+         eor $01,X
+         sta $BB
+         bpl LBL117
+         jsr LBL118
+LBL117:  ldy #$11
+         lda $00,X
+         ora $01,X
+         bne LBL119
+         jmp PRERR
+LBL119:  sec
+         lda WORK
+         sbc $00,X
+         pha
+         lda WORK+1
+         sbc $01,X
+         pha
+         eor WORK+1
+         bmi LBL120
+         pla
+         sta WORK+1
+         pla
+         sta WORK
+         sec
+         jmp LBL121
+LBL120:  pla
+         pla
+         clc
+LBL121:  rol $02,X
+         rol $03,X
+         rol WORK
+         rol WORK+1
+         dey
+         bne LBL119
+         lda $BB
+         bpl LBL122
+;
+; TBIL NE (Negate)
+;
+IL__NE:  ldx CSPTR                  ; Load computation stack pointer
+LBL118:  sec                        ; Negates the TOS by subtracting
+         tya                        ;   it from zero (Y is zero) and
+         sbc $00,X                  ;   replacing TOS with it
+         sta $00,X
+         tya
+         sbc $01,X
+         sta $01,X
+LBL122:  rts
+;
+; TBIL SU (Subtract)
+;
+IL__SU:		jsr IL__NE			; Negate the TOS and falls thru to...
+;
+; TBIL AD (Add)
+;
+IL__AD:		jsr POPNBR			; Add TOS to NOS and NOS becomes TOS
+		lda $00,X
+		adc $02,X
+		sta $02,X
+		lda $01,X
+		adc $03,X
+		sta $03,X
+		rts
+;
+; TBIL MP (Multiply)
+;
+IL__MP:		jsr POPNBR
+		ldy #$10  			; Loop 16 times
+		lda $02,X 			; Copy NOS to WORK
+		sta WORK			
+		lda $03,X			
+		sta WORK+1			
+@mult: 		asl $02,X 			; Shift WORK/NOS unit left by 1
+		rol $03,X			
+		rol WORK			
+		rol WORK+1			
+		bcc @skip3			
+		clc       			; Add TOS to NOS
+		lda $02,X
+		adc $00,X
+		sta $02,X
+		lda $03,X
+		adc $01,X
+		sta $03,X
+@skip3:		dey
+		bne @mult
+		rts
+;
+; TBIL FV (Fetch Variable)
+;
+IL__FV:		jsr POPBYT			; Pop a variable index into X
+		tax
+		lda $00,X
+		ldy $01,X
+		dec CSPTR
+		ldx CSPTR
+		sty $00,X
+		jmp PSHACC
+;
+; TBIL SV (Store Variable)
+;
+IL__SV:		ldx #$7D  			; Make sure the computation stack
+		jsr POPNB1			;   has at least three bytes on it
+		lda $01,X 			; Pop value and stask it on system stack
+		pha			
+		lda $00,X			
+		pha			
+		jsr POPBYT			; Pop a variable index into X
+		tax			
+		pla       			; Retrieve saved value and write it
+		sta $00,X 			;   into variable pointed to by X
+		pla
+		sta $01,X
+		rts
+;
+; TBIL RT (IL subroutine return)
+;
+IL__RT:		jsr LBL063			; Entry point for
+		lda WORK			; Set PGMPTR to WORK
+;		jsr puthex
+		sta PGMPTR
+		lda WORK+1
+;		jsr puthex
+		sta PGMPTR+1
+		rts
+;
+; TBIL SB (Save Basic Pointer)
+;
+IL__SB:		ldx #$2C			; Entry point for
+		bne LBL125			; go to common routine
+;
+; TBIL RB (Restore Basic Pointer)
+;
+IL__RB:		ldx #$2E			; Entry point for
+LBL125:		lda $00,X
+		cmp #$80
+		bcs LBL098
+		lda $01,X
+		cmp #>DPAGE			; direct page at $0a00 !!
+		bne LBL098
+		lda TXTPTR			; Set $2E to TXTPTR
+		sta $2E
+		lda TXTPTR+1
+		sta $2F
+		rts
+;
+; Swap TXTPTR and $2E
+;
+LBL098:		lda TXTPTR			; Swap TXTPTR and $2E
+		ldy $2E
+		sty TXTPTR
+		sta $2E
+		lda TXTPTR+1
+		ldy $2F
+		sty TXTPTR+1
+		sta $2F
+		ldy #$00
+		rts
+;
+; TBIL GS (Save GOSUB line)
+;
+IL__GS:		lda LINNUM			; Set WORK to LINNUM
+		sta WORK
+		lda LINNUM+1
+		sta WORK+1
+		jsr LBL126
+		lda $C6				; Set RETPTR to $C6
+		sta RETPTR
+		lda $C7
+LBL064:		sta RETPTR+1
+LBL129:		rts
+;
+;
+;
+LBL063:
+;		tya
+;		jsr puthex
+		lda ($C6) 			; ,Y Set WORK to ($C6)
+		sta WORK			
+		jsr @check			
+		lda ($C6)			; ,Y			
+		sta WORK+1			
+@check:		inc $C6     			; Increment $C6 by 1
+		bne @skip4			
+		inc $C7			
+@skip4:		lda HIGHST  			; Is HIGHST < $C6?
+		cmp $C6			
+		lda HIGHST+1			
+		sbc $C7			
+		bcs LBL129  			; No, exit
+		jmp PRERR   			; Error
+;
+; TBIL US (Machine Language Subroutine Call)
+;
+IL__US:		jsr @dousr			; Execute USR() function, then
+		sta WORK			;   push the accumulator onto
+		tya				;   the computation stack
+		jmp PSHWKA		
+		
+@dousr:		jsr IL__SP			; Copy low byte of third argument
+		lda WORK			;   ("A" register value) to $B6
+		sta $B6		
+		jsr IL__SP			; Copy high byte of second argument
+		lda WORK+1			;   ("X" register value) to $B7
+		sta $B7		
+		ldy WORK		
+		jsr IL__SP			; Copy first argument (machine
+		ldx $B7				;   code address) to WORK
+		lda $B6				; Load accumulator and X register with values
+		clc		
+		jmp (DPAGE+WORK)		; Invoke the machine routine
+;
+; TBIL LN (Push Literal Number)
+;
+IL__LN:		jsr IL__LB			; Read two bytes from the IL program table and push it
+;
+; TBIL LB (Push Literal Byte onto Stack) - Go read a byte from the IL table
+;
+IL__LB:		jsr PGMBYT			; Read a byte from the IL program table
+		jmp PSHACC			;   and push it on stack
+LBL085:		stx TXTPTR+1
+		cpx #$00
+		rts
+
+IL__SA:		ldx #$10
+		lda #OPEN
+		sta ICCOM,x
+		rep #M
+		lda ICBAL
+		adc #5
+		sta ICBAL,x
+		lda #8
+		sta ICAX1,x
+		sep #M
+		jsr CALLCIO
+		tya
+		bpl IL__SA1
+		jmp PRERR
+		
+IL__SA1:	lda #PUTCHR
+		sta ICCOM,x
+		rep #M
+		lda LOWEST
+		sta ICBAL,x
+		sec
+		lda TEXTEND
+		sbc LOWEST
+		sbc #2
+		sta ICBLL,x
+		sep #M
+		jsr CALLCIO
+		phy 
+
+		lda #CLOSE
+		sta ICCOM,x
+		jsr CALLCIO
+		
+		ply
+		bpl IL__SA2
+		jmp PRERR
+IL__SA2:	rts
+
+IL__LO:		ldx #$10
+		lda #OPEN
+		sta ICCOM,x
+		rep #M
+		lda ICBAL
+		adc #5
+		sta ICBAL,x
+		lda #4
+		sta ICAX1,x
+		sep #M
+		jsr CALLCIO
+		tya
+		bpl IL__LO1
+		jsr IL__LO3	;CLOSE IOCB
+		jmp PRERR
+
+IL__LO1:	lda #GETCHR
+		sta ICCOM,x
+		rep #M
+		lda LOWEST
+		sta ICBAL,x
+		lda #$FFFF
+		sta ICBLL,x
+		sep #M
+		jsr CALLCIO
+		cpy #EOFERR
+		beq IL__LO2
+		tya
+		bpl IL__LO2
+		jsr IL__LO3	;CLOSE IOCB
+		jmp PRERR
+		
+IL__LO2:	rep #M+CARRY
+		lda ICBAL,x
+		adc ICBLL,x
+		adc #2
+		sta TEXTEND
+		sep #M
+;		rts
+
+IL__LO3:	lda #CLOSE
+		sta ICCOM,x
+
+CALLCIO:	phd
+		pea $0000
+		pld
+		jsr CIOV
+		pld
+		rts
+
+;
+;
+;
+;ILRES2:  ldy #$02                   ; These two entry points are for code that
+;ILRES1:  sty WORK                   ;  does not seem to get called.  Need more research.
+;         ldy #$29                   ; My analysis: Set WORK to $2902, fetch a
+;         sty WORK+1                 ;   byte from it and if it is $08, go to
+;         ldy #$00                   ;   some code inside IL__DV (Divide) routine...?!?
+;         lda (WORK),Y               ; Why this code? Beats me
+;         cmp #$08
+;         bne LBL133
+;         jmp LBL117
+;LBL133:  rts
+;
+; Subroutine to decide which pad characters to print
+;
+;LBL089:  jsr OUT_V                  ; Entry point with a character to print first
+;LBL087:  lda #$FF                   ; Normal entry point - Set pad to $FF
+;         bit PCC                    ; Check if the pad flag is on
+;         bmi LBL134                 ; Skip it if not
+;         lda #$00                   ; set pad to $00
+;LBL134:  jmp OUT_V                  ; Go print it
+
+.macro  jump	lab
+	.byte $38+>(lab - start_of_il)
+	.byte <(lab - start_of_il)
+.endmacro
+
+.macro  jsub	lab
+	.byte $30+>(lab - start_of_il)
+	.byte <(lab - start_of_il)
+.endmacro
+
+.macro ifneol	lab
+	.byte $E0 + (lab - * - 1)
+.endmacro
+
+.macro ifnnum	lab
+	.byte $C0 + (lab - * - 1)
+.endmacro
+
+.macro ifnvar	lab
+	.byte $A0 + (lab - * - 1)
+.endmacro
+
+.macro ifnstr	lab
+	.byte $80 + (lab - * - 1)
+.endmacro
+
+.macro brback lab
+	.byte $40 + ((lab - *) & $1f)-1
+.endmacro
+
+.macro brforw lab
+	.byte $60 + (lab - * - 1)
+.endmacro
+
+ILTBL:
+;******************************************************************************
+; The IL interpreter commented
+;******************************************************************************
+;start_of_il:   .byte $24,'>',$11+$80			; PL    : print literal ":",XON
+
+
+start_of_il:	.byte $24,"Ready.",EOL+$80		; PL    : print literal ":",XON
+		.byte $27				; GL    : get input line
+		.byte $10				; SB    : save BASIC pointer
+		ifneol il_test_insert			; BE  01: if not eoln, branch to il_test_insert
+		brback start_of_il			; BR  19: branch to start_of_il
+
+	       
+il_test_insert:	ifnnum il_test_let			; BN  05: if not number, branch to il_test_let
+		.byte $2A            			; IL    : insert BASIC line
+ 		brback start_of_il			; BR  16: branch to start_of_il
+  
+il_run:		.byte $10            			; SB    : save BASIC pointer
+		.byte $11            			; RB    : restore BASIC pointer
+		.byte $2C            			; XC    : execute
+	       
+il_test_let:	ifnstr il_test_go			; BC  0B: if not "LET", branch to il_test_go
+		.byte "LE",'T'+$84			
+		.byte $A0            			; BV  00: if not variable, error
+		.byte $80,'='+$80    			; BC  00: if not "=", error
+il_let:		jsub il_expr				; call il_expr
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $13              			; SV    : store variable
+		.byte $1D              			; NX    : next BASIC statement
+	       
+il_test_go:	ifnstr il_test_pr
+		.byte 'G','O'+$80  			; BC  14: if not "GO", branch to il_test_pr
+		ifnstr il_test_sub
+		.byte 'T','O'+$80  			; BC  08: if not "TO", branch to il_test_sub
+		jsub il_expr			        ; JS 0BC: call il_expr
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $10              			; SB    : save BASIC pointer
+		.byte $11              			; RB    : restore BASIC pointer
+		.byte $16              			; GO    : GOTO
+	       
+il_test_sub:	ifnstr *+1
+		.byte 'S','U','B'+$80			; BC  00: if not "SUB", error
+		jsub il_expr			    	; JS 0BC: call il_expr
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $14            			; GS    : GOSUB save
+		.byte $16            			; GO    : GOTO
+il_test_pr:	ifnstr il_test_pr1
+		.byte '?'+$80
+		brforw il_print
+il_test_pr1:	ifnstr il_jump1
+		.byte 'P','R'+$80			; BC  10: if not "PR", branch to il_jump1
+		ifnstr il_print
+		.byte 'I','N','T'+$80			; BC  03: if not "INT", branch to il_print
+il_print:	ifneol il_pr_test_dq			; BE  05: if not eoln, branch to il_pr_test_dq
+		brforw il_pr_must_eoln			; BR  31: branch to il_pr_must_eoln
+		
+il_pr_test_semi:
+		ifnstr il_pr_test_com
+		.byte ';'+$80				; BC  08: if not ";", branch to il_pr_test_com
+		
+il_pr_eoln:	ifneol il_pr_test_dq			; BE  01: if not eoln, branch to il_pr_test_dq
+		.byte $1D            			; NX    : next BASIC statement
+
+il_pr_test_dq:	ifnstr il_pr_expr
+		.byte '"'+$80    			; BC  0F: if not dblquote, branch to il_pr_expr
+		.byte $21            			; PQ    : print    BASIC string
+		brback il_pr_test_semi			; BR  18: branch to il_pr_test_semi
+
+il_jump1:	brforw il_test_if			; BR  2F: branch to il_test_if
+il_pr_test_com:	ifnstr il_test_colon
+		.byte ','+$80   			; BC  03: if not ",", branch to il_test_colon
+		.byte $22            			; PT    : print TAB
+		brback il_pr_eoln			; BR  15: branch to il_pr_eoln
+il_test_colon:	ifnstr il_pr_must_eoln
+		.byte ':'+$80    			; BC  03: if not ":", branch to il_pr_must_eoln
+;		.byte $24,$13+$80    			; PR    : print literal XOFF
+il_pr_must_eoln:
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $23            			; NL    : new line
+		.byte $1D            			; NX    : next statement
+il_pr_expr:	jsub il_expr				; JS 0BC: call il_expr
+		.byte $20            			; PN    : print number
+		brback il_pr_test_semi			; BR  08: branch to il_pr_test_semi
+
+il_test_if:	ifnstr il_test_input
+		.byte 'I','F'+$80			; BC  11: if not "IF", branch to il_test_input
+		jsub il_expr				; JS 0BC: call il_expr
+	        jsub il_cmpop				; JS 134: call il_cmpop
+                jsub il_expr				; JS 0BC: call il_expr
+		ifnstr il_test_input
+		.byte 'T','H','E','N'+$80		; BC  04: if not "THEN", branch to il_test_input
+		.byte $1C   				; CP    : compare
+		.byte $1D   				; NX    : next BASIC statement
+		jump il_test_let			; J  00D: jump il_test_let
+		
+		
+il_test_input:	ifnstr il_test_return
+		.byte 'I','N','P','U','T'+$80		; BC  1A: if not "INPUT", branch to il_test_return
+il_in_more:	.byte $A0 				; BV  00: if not variable, error
+		.byte $10 				; SB    : save BASIC pointer
+		ifneol il_in_test_com			; BE  07: if not eoln, branch to il_in_test_com
+il_in_query:	.byte $24,'?',' '+$80			; PR    : print literal "? ",XON
+		.byte $27				; GL    : get input line
+		ifneol il_in_test_com			; BE  01: if not eoln, branch to il_in_test_com
+		brback il_in_query			; BR  19: branch to il_in_query
+		
+il_in_test_com:	ifnstr il_in_get
+		.byte ','+$80				; BC  01: if not ",", branch to il_in_get
+il_in_get:	jsub il_expr				; JS 0BC: call il_expr
+		.byte $13        			; SV    : store variable
+		.byte $11        			; RB    : restore BASIC pointer
+		ifnstr il_in_done
+		.byte ','+$80				; BC  02: if not ",", branch il_in_done
+		brback il_in_more			; BR  0D: branch to il_in_more
+il_in_done:	ifneol *+1				; BE  00: if not eoln, error
+		.byte $1D        			; NX    : next BASIC statement
+	       
+il_test_return:	ifnstr il_test_end
+		.byte "RETUR",'N'+$80			; BC  09: if not "RETURN", branch to il_test_end
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $15				; RS    : restore saved line
+		.byte $1D				; NX    : next BASIC statement
+	       
+il_test_end:	ifnstr il_test_list
+		.byte "EN",'D'+$80			; BC  05: if not "END", branch to il_test_list
+		ifneol *+1				; BE  00: if not eoln, error
+		.byte $2D				; WS    : stop
+	       
+il_test_list:	ifnstr il_test_run
+		.byte "LIS",'T'+$80			; BC  18: if not "LIST", branch to il_test_run
+ 		ifneol il_li_line			; BE  0C: if not eoln, branch to il_li_line
+;il_li_newline: .byte $24,0,0,0,0,$0A,0+$80		; PR    : print literal NUL,NUL,NUL,NUL,LF,NUL
+il_li_newline:	.byte $1F        			; LS    : list the program
+;               .byte $24,' '+$80			; PR    : print literal XOFF
+		.byte $23        			; NL    : newline
+		.byte $1D        			; NX    : next BASIC statement
+il_li_line:	jsub il_expr				; JS 0BC: call il_expr
+		.byte $E1        			; if not eoln, branch to il_li2
+		brback il_li_newline			; BR  17: branch to il_li_newline
+		.byte $80,','+$80			; BC  00: if not ",", error
+		brback il_li_line			; BR  19: branch to il_li_line
+
+il_test_run:	ifnstr il_test_clear
+		.byte 'R','U','N'+$80			; BC  05: if not "RUN", branch to il_test_clear
+		jump il_run				; J  00A: branch to il_run
+	       
+il_test_clear:	ifnstr il_test_rem
+		.byte 'C','L','E','A','R'+$80		; BC  06: if not "CLEAR", branch to il_test_rem
+		.byte $2B				; MT   : mark basic program space empty
+	       
+il_test_rem:	ifnstr il_test_quit
+		.byte 'R','E','M'+$80			; BC  04: if not "REM, branch to il_test_quit (il_assign)
+		.byte $1D        			; NX    : next BASIC statement
+	       
+il_test_quit:	ifnstr il_test_poke
+		.byte "QUI",'T'+$80			; BC  05: if not QUIT, branch to il_test_peek
+		.byte $1E				; QT
+		
+il_test_poke:	ifnstr il_test_save
+		.byte "POK",'E'+$80			; BC  05: if not POKE, branch to il_test_peek
+		jsub il_expr
+		.byte $80,','+$80			; BC  00: if not ",", error
+		jsub il_expr
+		.byte $26				; POKE
+		.byte $1D				; NX    : next BASIC statement
+
+il_test_save:	ifnstr il_test_load			; if not POKE, branch to il_assign
+		.byte "SAV",'E'+$80
+		ifneol il_test_save1
+		ifnstr *+1				; can't be space, so error
+		.byte ' '+$80				;
+il_test_save1:	.byte $29				; IL__SA SAVE
+		.byte $1D				; NX    : next BASIC statement
+		
+il_test_load:	ifnstr il_assign			; if not POKE, branch to il_assign
+		.byte "LOA",'D'+$80
+		ifneol il_test_load1
+		ifnstr *+1				; can't be space, so error
+		.byte ' '+$80				;
+		
+il_test_load1:	.byte $28				; IL__SA SAVE
+		.byte $1D				; NX    : next BASIC statement
+		
+il_assign:	.byte $A0        			; BV  00: if not variable, error
+		.byte $80,'='+$80			; BC  00: if not "=", error
+		jump il_let				; J  014: branch to il_let
+
+    
+il_expr:	ifnstr il_expr_plus
+		.byte '-'+$80				; if not "-", branch to il_expr_plus
+		jsub il_term				; JS 0D3: call il_term
+		.byte $17        			; NE    : negate
+		brforw il_expr1				; BR  04: branch to il_expr1
+il_expr_plus:	ifnstr il_expr0
+		.byte '+'+$80				; BC  01: if not "+", branch to il_expr0
+il_expr0:	jsub il_term				; JS 0D3: call il_term
+il_expr1:	ifnstr il_expr2
+		.byte '+'+$80				; BC  05: if not "+", branch to il_expr2
+		jsub il_term				; JS 0D3: call il_term
+		.byte $18        			; AD    : add
+		brback il_expr1				; BR  1A: branch to il_expr1
+il_expr2:	ifnstr il_expr3
+		.byte '-'+$80				; BC  05: if not "-", branch to il_term
+		jsub il_term				; JS 0D3: call il_term
+		.byte $19        			; SU    : subtract
+		brback il_expr1				; BR  14: branch to il_expr1
+il_expr3:	.byte $2F        			; RT    : return
+
+il_term:	jsub il_factor				; JS 0E2: call il_factor
+il_term0:	ifnstr il_term1
+		.byte '*'+$80				; BC 05: if not "*", branch to il_term1
+		jsub il_factor				; JS 0E2: call il_factor
+		.byte $1A        			; MP    : multiply
+		brback il_term0				; BR  1A: branch to il_term0
+il_term1:	ifnstr il_term2
+		.byte '/'+$80				; if not "/", branch to il_term2
+		jsub il_factor				; JS 0E2: call il_factor
+		.byte $1B        			; DV    : divide
+		brback il_term0				; BR  14: branch to il_term0
+il_term2:	.byte $2F        			; RT    : return
+il_factor:	ifnstr il_factor1
+		.byte 'R','N','D'+$80			; BC  18: if not RND, branch to il_factor1
+		.byte  $A,$80,$80			; LN    : push literal 0x8080
+		.byte $12        			; FV    : fetch variable rnd_seed
+		.byte  $A,$09,$29			; LN    : push literal 0x0929
+		.byte $1A        			; MP    : multiply
+		.byte  $A,$1A,$85			; LN    : push literal 0x1A85
+		.byte $18        			; AD    : add
+		.byte $13        			; SV    : store variable rnd_seed
+		.byte   9,$80    			; LB    : push literal byte 0x80
+		.byte $12        			; FV    : fetch variable rnd_seed
+		.byte   1        			; SX  01: stack    exchange
+		.byte  $B        			; DS    : duplicate stack top
+		jsub il_rn_paren			; JS 130: call il_rn_paren
+ 		brforw il_factor2			; BR  01: branch to il_factor2
+il_factor1: 	brforw il_usr				; BR  12: branch to il_usr
+il_factor2:	.byte  $B        			; DS    : duplicate stack top
+		.byte   4        			; SX  04: stack    exchange
+		.byte   2        			; SX  02: stack    exchange
+		.byte   3        			; SX  03: stack    exchange
+		.byte   5        			; SX  05: stack    exchange
+		.byte   3        			; SX  03: stack    exchange
+		.byte $1B        			; DV    : divide
+		.byte $1A        			; MP    : multiply
+		.byte $19        			; SU    : subtract
+		.byte  $B        			; DS    : duplicate stack top
+		.byte   9,$06    			; LB    : push literal byte 0x06
+		.byte  $A,$00,$00			; LN    : push literal number 0x0000
+		.byte $1C        			; CP    : compare
+		.byte $17        			; NE    : negate
+		.byte $2F        			; RT    : return
+il_usr:		ifnstr il_peek
+		.byte 'U','S','R'+$80			; BC  0F: if not "USR", branch to il_factor3
+		.byte $80,'('+$80         		; BC  00: if not "(", error
+;		.byte ifnvar il_usr1         		; if not variable, branch to il_usr1
+		jsub il_expr				; JS 0BC: call il_expr
+		jsub il_us_test_com			; JS 12A: call il_us_test_com
+		jsub il_us_test_com			; JS 12A: call il_us_test_com	       
+		.byte $80,')'+$80 			; BC  00: if not ")", error
+il_usr1:	.byte $2E         			; US    : machine language call
+		.byte $2F         			; RT    : return
+
+il_peek:	ifnstr il_factor3			;
+		.byte "PEE",'K'+$80
+		.byte $80,'('+$80         		; BC  00: if not "(", error
+		jsub il_expr				; JS 0BC: call il_expr
+		.byte $80,')'+$80 			; BC  00: if not ")", error
+		.byte $25				; PK    : peek(...)
+		.byte $2F         			; RT    : return
+		
+il_factor3:	ifnvar il_factor4			; BV  02: if not variable, branch to il_factor4
+		.byte $12         			; FV    : fetch    variable
+		.byte $2F         			; RT    : return
+il_factor4:	ifnnum il_lparen			; BN  01: if not number, branch    to il_lparen
+		.byte $2F         			; RT    : return
+il_lparen:	.byte $80,'('+$80 			; BC  00: if not "(", error
+il_factor5:	jsub il_expr				; JS 0BC: call il_expr
+		.byte $80,')'+$80 			; BC  00: if not ")", error
+		.byte $2F         			; RT    : return
+		
+il_us_test_com:	ifnstr il_us_dup
+		.byte ','+$80				; BC  03: if not ",", branch to il_us_dup
+		jump il_expr				; J  0BC: branch to il_expr
+il_us_dup:	.byte  $B         			; DS    : duplicate stack top
+		.byte $2F         			; RT    : return
+il_rn_paren:	.byte $80,'('+$80 			; BC  00: if not "(", error
+		brback il_factor5			; BR  12: branch to il_factor5
+		.byte $2F         			; RT    : return
+il_cmpop:	.byte $84,'='+$80 			; if not "=", branch to il_cmpop1
+		.byte   9,$02     			; LB    : push literal byte 0x02
+		.byte $2F         			; RT    ; return
+il_cmpop1:	ifnstr il_cmpop4
+		.byte '<'+$80				; BR  0E: if not "<", branch to il_cmpop4
+		ifnstr il_cmpop2
+		.byte '='+$80				; BR  04: if not "=", branch to il_cmpop2
+		.byte   9,$93     			; LB    : push literal byte 0x93
+		.byte $2F         			; RT    : return
+il_cmpop2:	ifnstr il_cmpop3
+		.byte '>'+$80				; BR  04: if not ">", branch to il_cmpop3
+		.byte   9,$05     			; LB    : push literal byte 0x05
+		.byte $2F         			; RT    : return
+il_cmpop3:	.byte   9,$91     			; LB    : push literal byte 0x91
+		.byte $2F         			; RT    : return
+il_cmpop4:	.byte $80,'>'+$80 			; BR  00: if not ">", error
+		ifnstr il_cmpop5
+		.byte '='+$80				; BR  04: if not "=", branch to il_cmpop5
+		.byte   9,$06     			; LB    : push literal byte 0x06
+		.byte $2F         			; RT    : return
+il_cmpop5:	ifnstr il_cmpop6
+		.byte '<'+$80				; BR  04: if not "<", branch to il_cmpop6
+		.byte   9,$95     			; LB    : push literal byte 0x95
+		.byte $2F         			; RT    : return
+il_cmpop6:	.byte   9,$04     			; LB    : push literal byte 0x04
+		.byte $2F         			; RT   :return
+		.byte 0
+		.byte 0
+	       
+;ILTBL:   .byte $24, '>', $91, $27, $10, $E1, $59, $C5, $2A, $56, $10, $11, $2C
+;         .byte $8B, 'L', 'E', 'T'+$80, $A0, $80, '='+$80, $30, $BC, $E0, $13, $1D
+;         .byte $94, 'G', 'O'+$80
+;         .byte $88, 'T', 'O'+$80, $30, $BC, $E0, $10, $11, $16
+;         .byte $80, 'S', 'U', 'B'+$80, $30, $BC, $E0, $14, $16
+;         .byte $90, 'P', 'R'+$80, $83, 'I', 'N', 'T'+$80, $E5, $71, $88, ';'+$80, $E1, $1D, $8F
+;         .byte $A2, $21, $58, $6F, $83, ','+$80, $22, $55, $83, ':'+$80, $24, $93, $E0, $23, $1D
+;         .byte $30, $BC, $20, $48
+;         .byte $91, 'I', 'F'+$80, $30, $BC, $31, $34, $30, $BC
+;         .byte $84, 'T', 'H', 'E', 'N'+$80, $1C, $1D, $38, $0D
+;         .byte $9A, 'I', 'N', 'P', 'U', 'T'+$80, $A0, $10
+;         .byte $E7, $24, $3F, $20, $91, $27, $E1, $59, $81, ','+$80, $30, $BC, $13, $11
+;         .byte $82, ','+$80, $4D, $E0, $1D
+;         .byte $89, 'R', 'E', 'T', 'U', 'R', 'N'+$80, $E0, $15, $1D
+;         .byte $85, 'E', 'N', 'D'+$80, $E0, $2D
+;         .byte $98, 'L', 'I', 'S', 'T'+$80, $EC, $24, $00, $00, $00
+;         .byte $00, $0A, $80, $1F, $24, $93, $23, $1D, $30, $BC, $E1, $50, $80, ','+$80, $59
+;         .byte $85, 'R', 'U', 'N'+$80, $38, $0A
+;         .byte $86, 'C', 'L', 'E', 'A', 'R'+$80, $2B
+;         .byte $84, 'R', 'E', 'M'+$80, $1D, $A0
+;         .byte $80, '='+$80, $38, $14
+;         .byte $85, '-'+$80, $30, $D3, $17, $64
+;         .byte $81, '+'+$80, $30, $D3
+;         .byte $85, '+'+$80, $30, $D3, $18, $5A
+;         .byte $85, '-'+$80, $30, $D3, $19, $54, $2F, $30, $E2
+;         .byte $85, '*'+$80, $30, $E2, $1A, $5A
+;         .byte $85, '/'+$80, $30, $E2, $1B, $54, $2F
+;         .byte $98, 'R', 'N', 'D'+$80, $0A, $80, $80, $12, $0A, $09, $29, $1A, $0A, $1A
+;         .byte $85, $18, $13, $09, $80, $12, $01, $0B, $31, $30, $61, $72, $0B, $04, $02
+;         .byte $03, $05, $03, $1B, $1A, $19, $0B, $09, $06, $0A, $00, $00, $1C, $17, $2F
+;         .byte $8F, 'U', 'S', 'R'+$80, $80, '('+$80, $30, $BC, $31, $2A, $31, $2A, $80, ')'+$80, $2E
+;         .byte $2F, $A2, $12, $2F, $C1, $2F, $80, '('+$80, $30, $BC, $80, ')'+$80, $2F, $83, ','+$80
+;         .byte $38, $BC, $0B, $2F, $80, '('+$80, $52, $2F, $84, '='+$80, $09, $02, $2F, $8E, '<'+$80
+;         .byte $84, '='+$80, $09, $93, $2F, $84, '>'+$80, $09, $05, $2F, $09, $91, $2F, $80, '>'+$80
+;         .byte $84, '='+$80, $09, $06, $2F, $84, '<'+$80, $09, $95, $2F, $09, $04, $2F, $00, $00
+;         .byte $00
+
+; ['24', '3E', '91',    '27', '10',   'E1', '59', 'C5', '2A', '56', '10',   '11',   '2C', '8B',    '4C', '45', 'D4', 'A0', '80',    'BD', '30', 'BC', 'E0', '13',   '1D',   '94',    '47', 'CF', '88',    '54', 'CF', '30', 'BC', 'E0', '10',   '11',   '16',   '80',    '53', '55', 'C2', '30', 'BC', 'E0', '14',   '16',   '90',    '50', 'D2', '83',    '49', '4E', 'D4', 'E5', '71', '88',    'BB', 'E1', '1D',   '8F',    'A2', '21', '58', '6F', '83',    'AC', '22', '55', '83',    'BA', '24', '93',    'E0', '23', '1D',   '30', 'BC', '20', '48', '91',    '49', 'C6', '30', 'BC', '31', '34', '30', 'BC', '84',    '54', '48', '45', 'CE', '1C',   '1D',   '38', '0D', '9A',    '49', '4E', '50', '55', 'D4', 'A0', '10',   'E7', '24', '3F', '20', '91',    '27', 'E1', '59', '81',    'AC', '30', 'BC', '13',   '11',   '82',   'AC', '4D', 'E0', '1D',   '89',  '52', '45', '54', '55', '52', 'CE', 'E0', '15',   '1D',   '85',    '45', '4E', 'C4', 'E0', '2D', '98',    '4C', '49', '53', 'D4', 'EC', '24', '00',   '00',   '00',   '00',   '0A', '80',    '1F',   '24', '93',    '23', '1D',   '30', 'BC', 'E1', '50', '80',    'AC', '59', '85',    '52', '55', 'CE', '38', '0A', '86',    '43', '4C', '45', '41', 'D2', '2B', '84',    '52', '45', 'CD', '1D',   'A0', '80',    'BD', '38', '14',   '85',    'AD', '30', 'D3', '17',   '64', '81',    'AB', '30', 'D3', '85',    'AB', '30', 'D3', '18',   '5A', '85',    'AD', '30', 'D3', '19',   '54', '2F', '30', 'E2', '85',    'AA', '30', 'E2', '1A',   '5A', '85',    'AF', '30', 'E2', '1B',   '54', '2F', '98',    '52', '4E', 'C4', '0A', '80',    '80',    '12',   '0A', '09', '29', '1A',   '0A', '1A',   '85',    '18',   '13',   '09', '80',    '12',   '01',   '0B',   '31', '30', '61', '72', '0B',   '04',   '02',   '03',   '05',   '03',   '1B',   '1A',   '19',   '0B',   '09', '06',   '0A', '00',   '00',   '1C',   '17',   '2F', '8F',    '55', '53', 'D2', '80',    'A8', '30', 'BC', '31', '2A', '31', '2A', '80',    'A9', '2E', '2F', 'A2', '12',   '2F', 'C1', '2F', '80',    'A8', '30', 'BC', '80',    'A9', '2F', '83',    'AC', '38', 'BC', '0B',   '2F', '80',    'A8', '52', '2F', '84',    'BD', '09', '02',   '2F', '8E',    'BC', '84',    'BD', '09', '93',    '2F', '84',    'BE', '09', '05',   '2F', '09', '91',    '2F', '80',    'BE', '84',    'BD', '09', '06',   '2F', '84',    'BC', '09', '95',    '2F', '09', '04',   '2F']
+; ['$',  '>',  '\x11*', "'",  '\x10', 'a*', 'Y',  'E*', '*',  'V',  '\x10', '\x11', ',',  '\x0b*', 'L',  'E',  'T*', ' *', '\x00*', '=*', '0',  '<*', '`*', '\x13', '\x1d', '\x14*', 'G',  'O*', '\x08*', 'T',  'O*', '0',  '<*', '`*', '\x10', '\x11', '\x16', '\x00*', 'S',  'U', 'B*',  '0',  '<*', '`*', '\x14', '\x16', '\x10*', 'P',  'R*', '\x03*', 'I',  'N',  'T*', 'e*', 'q',  '\x08*', ';*', 'a*', '\x1d', '\x0f*', '"*', '!',  'X',  'o',  '\x03*', ',*', '"',  'U',  '\x03*', ':*', '$',  '\x13*', '`*', '#',  '\x1d', '0',  '<*', ' ',  'H',  '\x11*', 'I',  'F*', '0',  '<*', '1',  '4',  '0',  '<*', '\x04*', 'T',  'H',  'E',  'N*', '\x1c', '\x1d', '8',  '\r', '\x1a*', 'I',  'N',  'P',  'U',  'T*', ' *', '\x10', 'g*', '$',  '?',  ' ',  '\x11*', "'",  'a*', 'Y',  '\x01*', ',*', '0',  '<*', '\x13', '\x11', '\x02*', ',*', 'M', '`*', '\x1d', '\t*', 'R',  'E',  'T',  'U',  'R',  'N*', '`*', '\x15', '\x1d', '\x05*', 'E',  'N',  'D*', '`*', '-',  '\x18*', 'L',  'I',  'S',  'T*', 'l*', '$',  '\x00', '\x00', '\x00', '\x00', '\n', '\x00*', '\x1f', '$',  '\x13*', '#',  '\x1d', '0',  '<*', 'a*', 'P',  '\x00*', ',*', 'Y',  '\x05*', 'R',  'U',  'N*', '8',  '\n', '\x06*', 'C',  'L',  'E',  'A',  'R*', '+',  '\x04*', 'R',  'E',  'M*', '\x1d', ' *', '\x00*', '=*', '8',  '\x14', '\x05*', '-*', '0',  'S*', '\x17', 'd',  '\x01*', '+*', '0',  'S*', '\x05*', '+*', '0',  'S*', '\x18', 'Z',  '\x05*', '-*', '0',  'S*', '\x19', 'T',  '/',  '0',  'b*', '\x05*', '**', '0',  'b*', '\x1a', 'Z',  '\x05*', '/*', '0',  'b*', '\x1b', 'T',  '/',  '\x18*', 'R',  'N',  'D*', '\n', '\x00*', '\x00*', '\x12', '\n', '\t', ')',  '\x1a', '\n', '\x1a', '\x05*', '\x18', '\x13', '\t', '\x00*', '\x12', '\x01', '\x0b', '1',  '0',  'a',  'r',  '\x0b', '\x04', '\x02', '\x03', '\x05', '\x03', '\x1b', '\x1a', '\x19', '\x0b', '\t', '\x06', '\n', '\x00', '\x00', '\x1c', '\x17', '/',  '\x0f*', 'U',  'S',  'R*', '\x00*', '(*', '0',  '<*', '1',  '*',  '1',  '*',  '\x00*', ')*', '.',  '/',  '"*', '\x12', '/',  'A*', '/',  '\x00*', '(*', '0',  '<*', '\x00*', ')*', '/',  '\x03*', ',*', '8',  '<*', '\x0b', '/',  '\x00*', '(*', 'R',  '/',  '\x04*', '=*', '\t', '\x02', '/',  '\x0e*', '<*', '\x04*', '=*', '\t', '\x13*', '/',  '\x04*', '>*', '\t', '\x05', '/',  '\t', '\x11*', '/',  '\x00*', '>*', '\x04*', '=*', '\t', '\x06', '/',  '\x04*', '<*', '\t', '\x15*', '/',  '\t', '\x04', '/']
+; http://www.nicholson.com/rhn/basic/basic.info.html#2
+
+;
+; End of Tiny Basic
+
+;         jsr SNDMSG                 ; Go print it
+;ST_LP:   jsr RCCHR                  ; Go get a character from the console
+;         cmp #'C'                   ; Check for 'C'
+;         bne IS_WRM                 ; If not branch to next check
+;         jmp COLD_S                 ; Otherwise cold-start Tiny Basic
+;IS_WRM:  cmp #'W'                   ; Check for 'W'
+;         bne PRMPT                  ; If not, branch to re-prompt them
+;         jmp WARM_S                 ; Otherwise warm-start Tiny Basic
+;PRMPT:   LDX #$22                   ; Offset of prompt in message block
+;         jsr SNDMSG                 ; Go print the prompt	 
+;         jmp ST_LP                  ; Go get the response
+
+;
+; The message block. It terminates with an FF.
+;
+MBLK:
+;	 .byte	 EOL
+         .byte   "TINY BASIC - (c) Tom Pitman, Roland Scholz"
+         .byte   EOL
+;         .byte   "Boot (C/W)? "
+         .byte   0			;	,$07, $FF
+
+;
+; Begin BIOS subroutines
+;
+
+;
+; Clear the screen
+;
+;CLRSC:	rts
+;	jsr CLEARSCRN
+;         jmp HOME
+
+;
+; Print a message.
+; This sub expects the message offset from MBLK in X.
+;
+;SNDMSG:  lda MBLK,X                 ; Get a character from the message block
+;         cmp #$FF                   ; Look for end of message marker
+;         beq EXSM                   ; Finish up if it is
+;         jsr CHROUT                 ; Otherwise send the character
+;         inx                        ; Increment the pointer
+;         jmp SNDMSG                 ; Go get next character
+;EXSM:    rts                        ; Return
+
+
+
+;
+; Get a character from the keyboard
+; Runs into SNDCHR to provide echo
+;
+RCCHR:   
+;sec                        ; Wait for keypress
+		jsr GETCH
+
+;
+; Send a character to the screen, preserve processor status & direct page
+;
+CHROUT:		php				; save processor flags
+		sep #M				; 8-bit accu
+		.A8
+
+CHROUT1:	phd
+		pea	$0000
+		pld
+		jsr	jchrout
+		pld
+		plp
+		rts				; Return
+
+;
+; Routine to print a new line.  It handles CR, LF
+; and adds pad characters to the ouput
+;
+IL__NL:
+P_NWLN:		php	
+		sep #M				; 8-bit accu
+		.A8
+		lda #EOL
+		bra CHROUT1
+		
+SPACE:		php
+		sep #M
+		.A8
+		lda #' '
+		bra CHROUT1
+
+;
+; Check break routine
+; Any keystroke will produce a break condition (carry set)
+; Note: BREAK is renamed CHKBREAK to prevent conflict with
+;       BREAK routine in SimpleMon program.
+;
+CHKBREAK:
+		lda IRQPS2S			;load keyboard status
+		bne CHKBREAKEX			;<> 0, no key pressed
+		lda IRQPS2D			;load key code
+		cmp #ESC			;is ESC?
+		bne CHKBREAKEX			;no
+		inc IRQPS2S			;reset key-avail flag
+		sec				;yes, set carry, cause break
+		rts		
+CHKBREAKEX:		
+		clc				;no break
+		rts
+GETCH:
+		phd
+		pea $0000
+		pld
+;		stz DEVICNO
+		jsr jchrin
+		pld
+		rts
+
+		pha
+		txa
+		pha
+		clc                        ; set no waiting flag
+		jsr jchrin                 ; if key pressed, carry is set; otherwise it is clear
+		pla
+		tax
+		pla
+		rts
+
+puthex:
+		phd
+		pea $0000
+		pld
+;		stz DEVICNO
+		jsr jprinthex
+		pld
+		rts
+	

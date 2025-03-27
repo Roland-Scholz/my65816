@@ -1,0 +1,61 @@
+MDF Database:  version 1.0
+MDF_INFO | ym2612 | XC9536-15-PC44
+MACROCELL | 0 | 17 | clk<0>
+ATTRIBUTES | 4358912 | 0
+OUTPUTMC | 1 | 0 | 1
+INPUTS | 0
+EQ | 2 | 
+   clk<0>.T = Vcc;
+   !clk<0>.CLK = CLK14M;	// GCK
+GLOBALS | 1 | 2 | CLK14M
+
+MACROCELL | 0 | 1 | CLK3M6_OBUF
+ATTRIBUTES | 8815362 | 0
+INPUTS | 1 | clk<0>
+INPUTMC | 1 | 0 | 17
+EQ | 2 | 
+   CLK3M6.D = clk<0>;
+   !CLK3M6.CLK = CLK14M;	// GCK
+GLOBALS | 1 | 2 | CLK14M
+
+MACROCELL | 0 | 5 | CS_OBUF
+ATTRIBUTES | 396034 | 0
+INPUTS | 13 | PHI2  | A<9>  | A<8>  | A<7>  | A<5>  | A<4>  | A<11>  | A<10>  | A<14>  | A<15>  | A<12>  | A<13>  | A<6>
+INPUTP | 13 | 5 | 38 | 37 | 36 | 34 | 33 | 40 | 39 | 44 | 1 | 42 | 43 | 35
+EQ | 2 | 
+   !CS = PHI2 & A<9> & A<8> & A<7> & A<5> & A<4> & 
+	A<11> & A<10> & !A<14> & A<15> & A<12> & A<13> & !A<6>;
+
+MACROCELL | 0 | 0 | RD_OBUF
+ATTRIBUTES | 396034 | 0
+INPUTS | 1 | RW
+INPUTP | 1 | 29
+EQ | 1 | 
+   RD = !RW;
+
+MACROCELL | 0 | 3 | WR_OBUF$BUF0
+ATTRIBUTES | 396034 | 0
+INPUTS | 1 | RW
+INPUTP | 1 | 29
+EQ | 1 | 
+   WR = RW;
+
+PIN | PHI2 | 64 | 0 | N/A | 5 | 1 | 0 | 5
+PIN | A<9> | 64 | 0 | N/A | 38 | 1 | 0 | 5
+PIN | A<8> | 64 | 0 | N/A | 37 | 1 | 0 | 5
+PIN | A<7> | 64 | 0 | N/A | 36 | 1 | 0 | 5
+PIN | A<5> | 64 | 0 | N/A | 34 | 1 | 0 | 5
+PIN | A<4> | 64 | 0 | N/A | 33 | 1 | 0 | 5
+PIN | A<11> | 64 | 0 | N/A | 40 | 1 | 0 | 5
+PIN | A<10> | 64 | 0 | N/A | 39 | 1 | 0 | 5
+PIN | A<14> | 64 | 0 | N/A | 44 | 1 | 0 | 5
+PIN | CLK14M | 8192 | 0 | N/A | 6 | 2 | 0 | 17 | 0 | 1
+PIN | A<15> | 64 | 0 | N/A | 1 | 1 | 0 | 5
+PIN | A<12> | 64 | 0 | N/A | 42 | 1 | 0 | 5
+PIN | A<13> | 64 | 0 | N/A | 43 | 1 | 0 | 5
+PIN | A<6> | 64 | 0 | N/A | 35 | 1 | 0 | 5
+PIN | RW | 64 | 0 | N/A | 29 | 2 | 0 | 0 | 0 | 3
+PIN | CLK3M6 | 536871040 | 0 | N/A | 3
+PIN | CS | 536871040 | 0 | N/A | 8
+PIN | RD | 536871040 | 0 | N/A | 2
+PIN | WR | 536871040 | 0 | N/A | 4

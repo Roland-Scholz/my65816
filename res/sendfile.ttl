@@ -1,0 +1,40 @@
+timeout = 5
+setflowctrl 2
+
+fname = 'TEST816.EXE'
+
+;getdir currdir
+;sprintf2 str 'Current Directory=%s' currdir
+;messagebox str 'directory'
+
+setdir '..\release'
+getdir curdir
+sprintf2 fullfname '%s\%s' curdir fname
+
+filestat fname size time drive
+
+if result = -1 then
+	messagebox 'file open error' 'filestat'
+else
+;	sprintf2 str 'File size=%d Time modified=%s Drive=%s' size time drive
+;	messagebox str 'filestat'
+
+	sprintf2 str 'open D:%s %d%c' fname size 10
+	send str
+
+	wait 'OK' 'ERROR'
+	if result <> 1 goto ende
+
+;	messagebox result 'OPEN'
+	
+	sendfile fullfname 1
+
+;	pause 1
+;	send 'close'#10
+;	pause 1
+	send 'exit'#10
+	
+endif
+
+:ende
+;	messagebox 'Ende' 'Ende'

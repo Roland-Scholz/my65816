@@ -1,0 +1,62 @@
+***********************************************
+* Megadrive VGM music package                 *
+* http://project2612.org/                     *
+***********************************************
+
+Game name:           Streets of Rage 2(U/E) /
+                     Bare Knuckle II
+System:              Sega Genesis
+Complete music dump: Yes
+
+Original authors:    Yuzo Koshiro
+                     Motohiro Kawashima
+Publisher:           Sega
+Package created by:  Dark Pulse
+Package version:     1.10
+
+Files, in Player Select/Level Music/Other Music order:
+
+Name                                Length:
+                                    Total  Loop
+Player Select                       0:20   0:19
+Go Straight                         1:44   1:29
+In the Bar                          0:36   0:36
+Never Return Alive                  1:45   1:44
+Spin on the Bridge                  2:08   2:08
+Ready Funk                          0:54   0:44
+Dreamer                             1:09   0:59
+Alien Powe                          1:29   1:29
+Under Logic                         1:00   0:44
+Too Deep                            1:44   1:44
+Slow Moon                           1:07   1:07
+Wave 131                            1:29   1:29
+Jungle Base                         1:44   1:44
+Back to the Industry                0:29   0:29
+Expander                            1:11   1:10
+SOR Super Mix                       1:53   1:33
+Max Man                             0:57   0:57
+Revenge of Mr. X                    0:46   0:29
+Good Ending                         1:07   0:38
+Level Complete                      0:09   -
+Game Over                           0:04   -
+Go Straight (Beatmix)               1:29   1:14
+Walking Bottom                      0:57   0:57
+Little Money Avenue                 1:34   1:25
+
+
+Notes:
+Hi-Hats sound off. As before, this is due to the
+sounds, being recorded at 22 KHz and being their
+being played back at 44.1 KHz, and there's not
+a damn thing I can do about it.
+
+Go Straight (Beatmix) is a bonus track not used
+ingame. Ditto for Little Money Avenue.
+
+Walking Bottom is from the Bare Knuckle 2 Beta.
+
+
+Zing!
+-DP
+
+1.10 - Corrected a few track credits, all according to the OST.

@@ -1,0 +1,499 @@
+		.include "homebrew.inc"
+
+RSTART		= 28
+CLSHIFT		= $12
+CRSHIFT		= $59
+
+CCAPS		= $58
+
+CESC		= 27
+
+CMD0		= $40
+CMD1		= $41
+CMD8		= $48
+CMD9		= $49
+CMD17		= 17 + $40
+CMD41		= 41 + $40
+CMD55		= 55 + $40
+CMD58		= 58 + $40
+
+CMD0CHK		= $95
+CMD1CHK		= $F9
+CMD8CHK		= $87
+
+R1_IDLE_STATE	= 1
+R1_ILLEGAL_COMMAND = 4
+
+		.org $400
+
+		sei
+		
+keyloop:	lda $f790
+		bpl keyloop
+		lda $f791
+
+		cmp #$f0
+		beq break
+		cmp #$e0
+		beq break
+		
+		cmp #CLSHIFT
+		beq doshift
+		cmp #CRSHIFT
+		bne keyloop2
+
+doshift:	lda skipone
+		sta shift
+
+keyloop2:	ldx skipone
+		beq keyloop1
+		ldx #0
+		stx skipone
+		beq keyloop
+		
+keyloop1:	cmp #CCAPS
+		beq caps
+		
+;		jsr jprinthex
+;		jsr jspace
+		ldx shift
+		beq keyupper
+		
+		tax
+		lda CHARTABLE_NOSHIFT,x
+keyloop3:	beq keyloop
+		jsr jchrout
+		cmp #CESC
+		beq keyloop4
+		jmp keyloop
+keyloop4:	jmp jkernel
+		
+keyupper:	tax
+		lda CHARTABLE_SHIFT,x
+		jmp keyloop3
+		
+break:		sta skipone
+		jmp keyloop
+			
+caps:		lda shift
+		beq caps1
+		lda #0
+		sta shift
+		jmp keyloop
+		
+caps1:		inc shift
+		jmp keyloop
+		
+skipone:	.byte 0
+shift:		.byte 1
+
+CHARTABLE_NOSHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,   0, '?',   0	; 00
+		.byte     0,   0,   0,   0,   0, 'q', '1',   0,   0,   0, 'y', 's', 'a', 'w', '2',   0	; 10
+		.byte	  0, 'c', 'x', 'd', 'e', '4', '3',   0,   0, ' ', 'v', 'f', 't', 'r', '5',   0	; 20 
+		.byte	  0, 'n', 'b', 'h', 'g', 'z', '6',   0,   0,   0, 'm', 'j', 'u', '7', '*',   0	; 30 
+		.byte	  0, ',', 'k', 'i', 'o', '0', '9',   0,   0, ':', '-', 'l',0F6h, 'p',0DFh,   0	; 40 
+		.byte	  0,   0,0C4h,   0,0FCh, '`',   0,   0,   0,   0,  NL, '+',   0, '#',   0,   0	; 50 
+		.byte	  0, '<',   0,   0,   0,   0,   0,   0,   0, '1',   0, '4', '7',   0,   0,   0	; 60 
+		.byte	'0', '.', '2', '5', '6', '8',   27,   0,  11, '+', '3', '-', '*', '9',   0,   0	; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0	; 80
+
+CHARTABLE_SHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,   0, '^',   0	; 00
+		.byte     0,   0,   0,   0,   0, 'Q', '!',   0,   0,   0, 'Y', 'S', 'A', 'W', '"',   0	; 10
+		.byte	  0, 'C', 'X', 'D', 'E', '$',0A7h,   0,   0, ' ', 'V', 'F', 'T', 'R', '%',   0	; 20 
+		.byte	  0, 'N', 'B', 'H', 'G', 'Z', '&',   0,   0,   0, 'M', 'J', 'U', '/', '+',   0	; 30 
+		.byte	  0, ';', 'K', 'I', 'O', '=', ')',   0,   0, '.', '_', 'L',0D6h, 'P', '?',   0	; 40 
+		.byte	  0,   0,0E4h,   0,0DCh, '?',   0,   0,   0,   0,  NL, '+',   0,027h,   0,   0	; 50 
+		.byte	  0, '>',   0,   0,   0,   0,   0,   0,   0, '1',   0, '4', '7',   0,   0,   0	; 60 
+		.byte	'0', '.', '2', '5', '6', '8',   0,   0,  11, '+', '3', '-', '*', '9',   0,   0	; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,    0,   0	; 80		
+		
+		
+start:		ldy #0
+		sty ptr
+		lda #$20
+		sta ptr + 1
+		sta (ptr),y
+		sta (ptr),y
+		
+		
+loop:		lda #0
+		sta (ptr),y
+		tya
+		sta (ptr),y
+		sta $7000,y
+		iny
+		bne loop
+		inc ptr + 1
+		lda ptr	+ 1
+		cmp #$30
+		bne loop
+		
+		lda #$20
+		sta ptr + 1
+
+loop1:		lda #$49
+		sta ColBorder
+loop2:		lda (ptr),y
+		sta $1000,y
+		cmp $7000,y
+		beq loop4
+		lda #$ff
+		sta ColBorder
+		jmp (RESET)
+;		lda ptr + 1
+;		jsr jprinthex
+;		tya
+;		jsr jprinthex
+loop4:
+;		jsr jtime
+		iny
+		bne loop1
+		jmp start
+		
+;		ldx #10
+;loop5:		jsr jtime
+;		dex
+;		bpl loop5		
+
+		inc ColBackground
+		
+		ldy #0
+		tya
+loop5:		sta $1000,y
+		iny
+		bne loop5
+		
+		inc ptr + 1
+		lda ptr	+ 1
+		jsr jprinthex
+		lda #NL
+		jsr jchrout
+		lda ptr	+ 1
+		cmp #$30
+		bne loop1
+		
+		lda #$20
+		sta ptr + 1
+
+		jmp loop1
+		
+		
+		
+		inc deviceno
+		ldx #<testtxt
+		ldy #>testtxt
+		jsr jprint
+		dec deviceno
+
+		lda #1
+		sta Dcontrol
+		lda #80
+		sta HChars
+		lda #15
+		sta HDmaStart
+		lda #129
+		sta HScreenStartLo
+		lda #0
+		sta HScreenStartHi
+		lda #1
+		sta HScreenEndLo
+		lda #3
+		sta HScreenEndHi
+		lda #$3a
+		sta HRaster
+		
+		lda #CHARS80
+		sta charsline
+		jsr jcrtCls
+		
+;	R0 Hchars = 80 = 0x50
+;	R4 HDmaStart = 24 = 0x18
+;	R5 HScreenStartPx = 201 = 0xD1
+;	R7 HScreenEndPx = 849 = 0x351
+		
+sdInit:		jsr deselect
+		
+		lda #100
+		sta SPICONTROL
+
+		jsr jnewline
+	
+		ldx #10
+		jsr readByteX
+		
+		jsr jtime
+
+;
+; CMD0 - Go Idle
+;
+		jsr clradr
+		lda #CMD0CHK
+		sta sdchk
+		lda #CMD0
+		jsr cardcmd
+		
+		cmp #R1_IDLE_STATE
+		beq sdInit2		
+		rts
+;
+; try CMD8
+;
+sdInit2:	jsr clradr
+		lda #01
+		sta sdadr+2
+		lda #$aa
+		sta sdadr+3
+		lda #CMD8CHK
+		sta sdchk
+		lda #CMD8
+		jsr cardcmd
+		
+		and #4
+		cmp #R1_ILLEGAL_COMMAND		
+		beq sdInit3
+		
+		ldx #3
+		jsr readByteX
+		
+;		
+; ACMD41 = CMD55 + CMD41
+;
+sdInit3:	jsr clradr
+		lda #CMD55	
+		jsr cardcmd
+		
+		lda #$40
+		sta sdadr
+		lda #CMD41
+		jsr cardcmd
+		and #1
+		bne sdInit3
+
+sdInit4:	lda #CMD58
+		sta sdcmd
+		jsr cardcmd
+		bne sdInit9
+
+		ldx #3
+		jsr readByteX
+
+;
+; CMD9 - Read CSD
+;		
+sdInit5:	lda #CMD9
+		jsr cardcmd
+		
+		jsr waitdata
+		
+		ldx #15
+		jsr readByteX
+	
+;		jsr readBlock
+	
+sdInit9:	jsr deselect
+
+		lda #<irq
+		sta irqvec
+		lda #>irq
+		sta irqvec+1
+		
+		lda #RSTART+8
+		sta Raster
+		lda #$31
+		sta Dcontrol
+		
+		cli
+		ldx #1
+		jsr jchrin
+		jmp jmenu
+		
+irq:		pha
+		bit Status
+		bvs vbi
+		
+rasterIRQ:	txa
+		pha
+
+		ldx colpos
+		lda rasterList,x
+		bne rasterIRQ1
+		ldx #0
+		lda rasterList
+rasterIRQ1:	sta Raster
+		
+		lda VList,x
+		sta VScreenStart
+				
+;		and #7
+;		tax
+
+;		lda color,x
+;		sta ColBackground
+;		lda Dcontrol
+;		and #%11111011
+;		ora color+8,x
+;		sta Dcontrol
+
+;		lda color+16,x
+;		sta Raster
+		
+		inx
+		stx colpos
+
+		lda Status
+		and #%01111111
+		sta Status
+
+		pla
+		tax
+		pla
+		rti
+
+vbi:		lda Status
+		and #%10111111
+		sta Status
+		lda #$49
+		sta ColBorder
+
+		inc clock0
+		bne vbiend
+		inc clock1
+		bne vbiend
+		inc clock2
+
+vbiend:		pla
+		rti
+
+color:		.byte 0
+		.byte %10010010 
+		.byte %11011011
+		.byte %00100100
+		.byte %01101101
+		.byte %10110110
+		.byte %11111111
+		.byte 0
+		
+colorHi:	.byte 0, 0, 0, 4, 4, 4, 4, 0
+rasterList:	.byte RSTART+100, RSTART+16, 0
+		.byte RSTART+16, RSTART+24
+		.byte RSTART+32, RSTART+40, RSTART+48, RSTART+56, RSTART
+VList:		.byte 100, 28
+		
+colpos:		.byte 0
+
+;
+;
+;		
+readBlock:	jsr clradr
+		lda #CMD17
+		jsr cardcmd
+
+		jsr waitdata
+		
+		ldx #0
+readB1:		jsr readbyte
+		sta $600,x
+		inx
+		bne readB1
+		
+readB2:		jsr readbyte
+		sta $700,x
+		inx
+		bne readB2
+		
+		ldx #1
+		jsr readByteX
+		jsr deselect
+		jmp jkernel
+		
+		
+waitready:	jsr readbyte
+		cmp #$ff
+		bne waitready
+		rts
+
+waitdata:	jsr readbyte
+		and #1
+		bne waitdata
+		rts
+		
+cardcmd:	sta sdcmd
+		jsr select
+
+		jsr waitready	
+
+		ldx #0
+cardcmd1:	lda sdcmd,x
+		jsr sendbyte
+		inx
+		cpx #6
+		bne cardcmd1
+	
+cardcmd2:	lda #$ff
+		jsr sendbyte
+		and #$80
+		bne cardcmd2
+		
+		jsr debug
+		
+		lda SPIDATA
+		rts
+
+		
+		
+readByteX:	jsr readbyte
+		jsr jprinthex
+		jsr jspace
+		dex
+		bpl readByteX
+		jmp jnewline
+		rts
+		
+readbyte:	lda #$ff		
+sendbyte:	sta SPIDATA
+sendbyte1:	lda SPISTATUS
+		bne sendbyte1
+		lda SPIDATA
+		sta sdres
+		rts
+		
+deselect:	lda SPISS
+		ora #1
+		sta SPISS
+		rts
+		
+select:		lda SPISS
+		and #$fe
+		sta SPISS
+		rts
+		
+debug:		ldx #0
+debug1:		lda sdcmd,x
+		jsr jprinthex
+		jsr jspace
+		inx
+		cpx #7
+		bne debug1
+		jsr jnewline
+		rts
+
+clradr:		ldx #3
+		lda #0
+clradr1:	sta sdadr,x
+		dex
+		bpl clradr1
+		rts
+		
+testtxt:	.byte 1,"        1         2         3         ",1,"         5         6         7         ",1
+		.byte "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+		.byte 0
+		
+sdcmd:		.byte 0
+sdadr:		.byte 0,0,0,0
+sdchk:		.byte 0
+sdres:		.byte 0
+csd:		.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

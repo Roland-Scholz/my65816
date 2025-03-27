@@ -1,0 +1,29 @@
+***********************************************
+* Genesis VGM music package                   *
+* http://project2612.org/                     *
+***********************************************
+
+Game name:           Arch Rivals
+System:              Sega Genesis/Mega Drive
+Complete music dump: Yes
+
+Original author:     Dan Forden, Mark Cooksey
+Publisher:           Flying Edge
+Package created by:  Doommaster1994
+Package version:     1.00
+
+Files, in approximate game order:
+
+Name                                Length:
+                                    Total  Loop
+Title Screen                        0:02   0:02
+Game Theme                          1:43   1:42
+Fanfare 1                           0:01   -
+Fanfare 2                           0:03   -
+Fanfare 3                           0:03   -
+End of Period                       0:09   -
+End of Game                         0:27   0:21
+
+
+Notes:
+Dan Forden composed the original arcade music.

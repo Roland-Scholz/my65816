@@ -1,0 +1,569 @@
+		.include "homebrew.inc"
+
+		.org $0500
+		
+		lda #0
+		sta extended
+		sta skipone
+		
+		
+;loop:		jsr KGB		
+;		jsr jchrout
+;		jmp loop	
+		jsr sdInit
+		rts
+		
+		
+sdInit:		jsr deselect
+
+		jsr jnewline
+	
+		ldx #10
+		jsr readByteX
+		
+;		jsr jtime
+
+;
+; CMD0 - Go Idle
+;
+		jsr clradr
+		lda #CMD0CHK
+		sta sdchk
+		lda #CMD0
+		jsr cardcmd
+sdInit1:
+;		jsr jprinthex
+		cmp #0
+		beq sdInit2
+		cmp #R1_IDLE_STATE
+		beq sdInit2
+		jsr readbyte
+		jmp sdInit1 
+		rts
+;
+; try CMD8
+;
+sdInit2:	jsr clradr
+		lda #01
+		sta sdadr+2
+		lda #$aa
+		sta sdadr+3
+		lda #CMD8CHK
+		sta sdchk
+		lda #CMD8
+		jsr cardcmd
+		
+		and #4
+		cmp #R1_ILLEGAL_COMMAND		
+		beq sdInit3
+		
+		ldx #3
+		jsr readByteX
+		
+;		
+; ACMD41 = CMD55 + CMD41
+;
+sdInit3:	jsr clradr
+		lda #CMD55	
+		jsr cardcmd
+		
+		lda #$40
+		sta sdadr
+		lda #CMD41
+		jsr cardcmd
+		and #1
+		bne sdInit3
+
+sdInit4:	lda #CMD58
+		sta sdcmd
+		jsr cardcmd
+		bne sdInit9
+
+		ldx #3
+		jsr readByteX
+
+;
+; CMD9 - Read CSD
+;		
+sdInit5:	lda #CMD9
+		jsr cardcmd
+		
+		jsr waitdata
+		
+		ldx #15
+		jsr readByteX
+	
+;		jsr readSector
+	
+sdInit9:	jsr deselect
+		rts
+;
+;
+;
+setSector:	stx SECPTR
+		sta SECPTR+1
+		ldx #0
+		ldy #2
+setSector1:	lda (SECPTR),y
+		sta sdadr,x
+		dey
+		inx
+		cpx #3
+		bne setSector1
+	
+		lda #0
+		sta sdadr+3
+		asl sdadr+2
+		rol sdadr+1
+		rol sdadr
+		
+;		jsr jnewline
+;		lda #'S'
+;		jsr jchrout
+;		jsr jspace		
+		rts
+;
+;
+;
+printSDadr:	ldx #0
+printSDadr1:	lda sdadr,x
+		jsr jprinthex
+		inx
+		cpx #4
+		bne printSDadr1
+		jmp jspace
+		
+printBuf:	ldx #0
+printBuf1:	lda SECPTR+1
+		jsr jprinthex
+		lda SECPTR
+		jsr jprinthex
+		jmp jspace
+;
+;
+;		
+readSector:	stx SECPTR
+		sta SECPTR+1
+
+		jsr jnewline
+		lda #'R'
+		jsr jchrout
+		jsr jspace
+		jsr printSDadr
+		
+		lda #CMD17
+		jsr cardcmd
+
+		jsr waitdata
+		
+		ldy #0
+readB1:		jsr readbyte
+		sta (SECPTR),y
+		iny
+		bne readB1
+		
+		inc SECPTR+1
+		
+readB2:		jsr readbyte
+		sta (SECPTR),y
+		iny
+		bne readB2
+		
+		ldx #1
+		jsr readByteX
+		jsr deselect
+		ldy #0
+		rts
+		
+;
+;
+;		
+writeSector:	stx SECPTR
+		sta SECPTR+1
+
+		jsr jnewline
+		lda #'W'
+		jsr jchrout
+		jsr jspace
+		jsr printSDadr
+		
+		lda #CMD24		; write Sector
+		jsr cardcmd
+
+		lda #DATA_START_BLOCK
+		jsr sendbyte
+
+		
+		ldy #0
+writeSector1:	lda (SECPTR),y
+		jsr sendbyte
+		iny
+		bne writeSector1
+		
+		inc SECPTR+1
+		
+writeSector2:	lda (SECPTR),y
+		jsr sendbyte
+		iny
+		bne writeSector2
+		
+		jsr readbyte		; send two bytes CRC
+		jsr readbyte
+		jsr readbyte		; get data-response token
+		and #DATA_RES_MASK
+		cmp #DATA_RES_ACCEPTED	; "00000101" = 5 ?
+		bne writeerror		; no -> error
+		
+		lda #CMD13		; get Status
+		jsr cardcmd		
+		jsr readbyte
+		bne writeerror
+
+		jsr deselect		; all OK, deselect card
+		clc			; and quit with carry clear
+		rts
+
+writeerror:	jsr deselect		; an error occured
+		sec			; quit with carry set
+		rts
+
+waitready:	jsr readbyte		; read until sdcard
+;		jsr jprinthex
+		cmp #$ff		; sends #$FF
+		bne waitready
+		rts
+
+waitdata:	jsr readbyte
+		and #1
+		bne waitdata
+		rts
+	
+;
+;
+;	
+cardcmd:	sta sdcmd
+		jsr select
+
+		jsr waitready	
+	
+;		inc SPICLK
+		ldy #0
+		sty SPICLK
+cardcmd1:	lda sdcmd,y
+		jsr sendbyte	
+		iny
+		cpy #6
+		bne cardcmd1
+;		inc SPICLK
+	
+;cardcmd2:	ldy #128
+cardcmd5:	jsr readbyte
+		bmi cardcmd5
+
+		sta sdres
+		jsr debug
+		lda sdres
+		
+cardcmd4:	rts
+
+		
+;
+; read Reg-X number of bytes  
+;		
+readByteX:	jsr readbyte
+		jsr jprinthex
+		jsr jspace
+		dex
+		bpl readByteX
+		jmp jnewline
+		rts
+	
+readbyte:	lda #1
+		sta SPICLK
+		lsr
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		asl
+		ora SPIDATA
+		rts
+	
+sendbyte:	sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		asl
+		sta SPIDATA
+		rts
+
+deselect:	lda #1
+		sta PS2STATUS
+		jmp readbyte
+		
+select:		lda #0
+		sta PS2STATUS
+		rts
+		
+debug:		ldx #0
+debug1:		lda sdcmd,x
+		jsr jprinthex
+		jsr jspace
+		inx
+		cpx #7
+		bne debug1
+		jsr jnewline
+		rts
+
+clradr:		ldx #3
+		lda #0
+clradr1:	sta sdadr,x
+		dex
+		bpl clradr1
+		rts
+		
+sdcmd:		.byte 0
+sdadr:		.byte 0,0,0,0
+sdchk:		.byte 0
+sdres:		.byte 0
+csd:		.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+		
+KGB:
+;		bpl KGBLOOP
+;		lda $f791
+		
+		sta PS2DATA
+KGBLOOP:	lda PS2STATUS	;key available?
+		bne KGBLOOP	;Bit 7 = 0, no =>
+		lda PS2DATA	;read scancode
+		ldx #0
+KGB6:		dex
+		bne KGB6
+		sta PS2DATA	;reset PS2
+		
+		cmp #$f0	;break scancode?
+		beq KGBBREAK	;yes
+		
+		cmp #$e0	;extended scancode
+		bne KGB5	;no =>
+		sta extended
+		beq KGBLOOP
+		
+KGBBREAK:	sta skipone	;skipone <> 0 denotes 
+		jmp KGBLOOP	;ignore next key
+		
+KGB5:		cmp #CLSHIFT	;process left-shift
+		beq KGB1	;yes =>
+		cmp #CRSHIFT	;process right-shift
+		bne KGB2	;no =>
+
+KGB1:		lda skipone	;make key = 0
+		sta shift	;shift = 0 denotes shift pressed!
+
+KGB2:		ldx skipone	;make-key?
+		beq KGB3	;yes =>
+		
+		ldx #0		;hence break-key, clear break
+		stx skipone	
+		stx extended
+		beq KGBLOOP	;read next key
+		
+KGB3:		cmp #CCAPS	;CAPS-LOCK?
+		beq KGBCAPS	;yes =>
+
+;
+; special keys have been processed, now tranform scancode into ASCII
+;
+		ldx extended
+		bne KGBEXTEND
+
+		ldx shift	;shift = 0, upper case
+		beq KGBUPPER
+		
+		tax		;read ASCII-char lower-case
+		lda CHARTABLE_NOSHIFT,x
+KGB4:		beq KGBLOOP	;if undefined, read next key
+		sta ATACHR
+		rts
+;		jmp SST
+
+KGBUPPER:	tax		;read ASCII-char upper-case
+		lda CHARTABLE_SHIFT,x
+		jmp KGB4
+			
+KGBCAPS:	lda shift	;shift = 0?
+		beq KGBCAPS1	
+		lda #0
+		sta shift
+		jmp KGBLOOP	;read next key
+		
+KGBCAPS1:	inc shift	;shift := 1
+		jmp KGBLOOP	;read next key
+
+KGBEXTEND:	ldx #(EXT_TABLE - EXT_TABLE_IND - 1)
+KGBEXTEND1:	cmp EXT_TABLE_IND,x
+		beq KGBEXTFND
+		dex
+		bpl KGBEXTEND1
+		bmi KGBLOOP
+KGBEXTFND:	lda EXT_TABLE,x
+		jmp KGB4
+
+shift:		.byte 0
+		
+chrout:	
+RPUT:		PHA
+		LDA #4
+RPUT1:		BIT SB+STATA
+		BEQ RPUT1
+		PLA
+		STA SB+TRANSA
+		RTS
+
+RGET:		LDA #1	
+RGET1:		BIT SB+STATA
+		BEQ RGET1
+		LDA SB+RECA
+		RTS
+		
+SERINIT:	LDA #$4A		;RX+TX AUS
+		STA SB+COMMA		;RES ERROR
+		STA SB+COMMB
+	
+		LDA #$30		;RES TRANS
+		STA SB+COMMA
+		STA SB+COMMB
+	
+		LDA #$20		;RES RECV
+		STA SB+COMMA
+		STA SB+COMMB
+	
+		LDA #$10		;RES MODE
+		STA SB+COMMA
+		STA SB+COMMB
+	
+		LDA #$E0
+		STA SB+AUXCTRL
+	
+		LDA #0			;57600 BAUD
+		STA SB+CNTMSB
+		LDA #2
+		STA SB+CNTLSB
+	
+		LDA #$DD		;TIMER BAUD
+		STA SB+CLOCKA
+		LDA #$66		;1200 BAUD
+		STA SB+CLOCKB
+	
+		LDA #$93		;8N1
+		STA SB+MODEA
+		LDA #$93	
+		STA SB+MODEB
+	
+		LDA #$17
+		STA SB+MODEA
+		STA SB+MODEB
+	
+		LDA #0
+		STA SB+OPCTRL
+	
+		LDA #255-3
+		STA SB+OPRES
+		
+		LDA #0			;IRQS AUS
+		STA SB+IMR
+		
+		LDA #5			;RX+TX AN
+		STA SB+COMMA
+		STA SB+COMMB
+
+		RTS
+
+PUTHEX:		STA 	TMPA
+		STX 	TMPX
+		STY 	TMPY
+		LSR	
+		LSR	
+		LSR	
+		LSR	
+		JSR 	PUTNIB
+		LDA 	TMPA
+		AND 	#15
+		JSR 	PUTNIB
+PUTHEX1:	LDA 	TMPA
+		LDX 	TMPX
+		LDY 	TMPY
+		RTS		
+	
+PUTNIB:		CMP 	#10
+		BCC 	PUTNIB1
+		ADC 	#6
+PUTNIB1:	ADC 	#48
+		JMP 	chrout
+
+TMPA:		.byte 0
+TMPX:		.byte 0
+TMPY:		.byte 0
+
+CHARTABLE_NOSHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,   0, '?',   0	; 00
+		.byte     0,   0,   0,   0,   0, 'q', '1',   0,   0,   0, 'y', 's', 'a', 'w', '2',   0	; 10
+		.byte	  0, 'c', 'x', 'd', 'e', '4', '3',   0,   0, ' ', 'v', 'f', 't', 'r', '5',   0	; 20 
+		.byte	  0, 'n', 'b', 'h', 'g', 'z', '6',   0,   0,   0, 'm', 'j', 'u', '7', '*',   0	; 30 
+		.byte	  0, ',', 'k', 'i', 'o', '0', '9',   0,   0, '.', '-', 'l',0F6h, 'p',0DFh,   0	; 40 
+		.byte	  0,   0,0C4h,   0,0FCh, '`',   0,   0,   0,   0, EOL, '+',   0, '#',   0,   0	; 50 
+		.byte	  0, '<',   0,   0,   0,   0,BACK,   0,   0, '1',   0,CCLF, '7',   0,   0,   0	; 60 
+		.byte	 '0', '.',CCDN, '5',CCRT,CCUP, 27,   0,  11, '+', '3', '-', '*', '9',CCSC,   0	; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0	; 80
+
+CHARTABLE_SHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,   0, '^',   0	; 00
+		.byte     0,   0,   0,   0,   0, 'Q', '!',   0,   0,   0, 'Y', 'S', 'A', 'W', '"',   0	; 10
+		.byte	  0, 'C', 'X', 'D', 'E', '$',0A7h,   0,   0, ' ', 'V', 'F', 'T', 'R', '%',   0	; 20 
+		.byte	  0, 'N', 'B', 'H', 'G', 'Z', '&',   0,   0,   0, 'M', 'J', 'U', '/', '+',   0	; 30 
+		.byte	  0, ';', 'K', 'I', 'O', '=', ')',   0,   0, ':', '_', 'L',0D6h, 'P', '?',   0	; 40 
+		.byte	  0,   0,0E4h,   0,0DCh, '?',   0,   0,   0,   0,  EOL, '+',   0,027h,   0,   0	; 50 
+		.byte	  0, '>',   0,   0,   0,   0,CDCH,   0,   0, '1',   0, '4', '7',   0,   0,   0	; 60 
+		.byte	'0', '.', '2', '5', '6', '8',   0,   0,  11, '+', '3', '-', '*', '9',   0,   0	; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,    0,   0	; 80
+		
+EXT_TABLE_IND:
+		.byte	$6B	; LEFT
+		.byte	$6C	; HOME
+		.byte	$70	; INS
+		.byte	$71	; DEL
+		.byte	$72	; DOWN
+		.byte	$74	; RIGHT
+		.byte	$75	; Up
+		.byte	$7A	; PAGE DOWN
+		.byte	$7D	; PAGE UP
+		
+EXT_TABLE:	.byte	CCLF
+		.byte	0
+		.byte	CICH
+		.byte	CDCH
+		.byte	CCDN
+		.byte	CCRT
+		.byte	CCUP
+		.byte	0
+		.byte	0

@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!DOCTYPE ibis [
+<!ELEMENT ibis (part, pin+)>
+<!ELEMENT part EMPTY>
+<!ELEMENT pin EMPTY>
+<!ATTLIST part
+  arch   CDATA #REQUIRED
+  device CDATA #REQUIRED
+  spg    CDATA #REQUIRED
+  pkg    CDATA #REQUIRED>
+<!ATTLIST pin
+  nm     CDATA #REQUIRED
+  no     CDATA #REQUIRED
+  iostd  (TTL|LVTTL|LVCMOS2|NA) "NA"
+  sr     (SLOW|FAST|slow|fast) "SLOW"
+  dir    (BIDIR|bidir|INPUT|input|OUTPUT|output) "BIDIR">
+]>
+<ibis><part arch="xc9500" device="XC9536" pkg="PC44" spg="-15"/><pin dir="input" nm="PHI2" no="6"/><pin dir="input" nm="A&lt;9&gt;" no="12"/><pin dir="input" nm="A&lt;8&gt;" no="13"/><pin dir="input" nm="A&lt;15&gt;" no="2"/><pin dir="input" nm="A&lt;13&gt;" no="4"/><pin dir="input" nm="A&lt;12&gt;" no="8"/><pin dir="input" nm="A&lt;11&gt;" no="9"/><pin dir="input" nm="A&lt;10&gt;" no="11"/><pin dir="input" nm="A&lt;7&gt;" no="14"/><pin dir="input" nm="A&lt;6&gt;" no="18"/><pin dir="input" nm="A&lt;4&gt;" no="20"/><pin dir="input" nm="AL&lt;1&gt;" no="42"/><pin dir="input" nm="RW" no="7"/><pin dir="input" nm="A&lt;14&gt;" no="3"/><pin dir="input" nm="A&lt;5&gt;" no="19"/><pin dir="input" nm="AL&lt;0&gt;" no="40"/><pin dir="input" nm="RES" no="39"/><pin dir="input" nm="MISO" no="1"/><pin dir="input" nm="PS2CLK" no="24"/><pin dir="input" nm="PS2DAT" no="22"/><pin dir="output" nm="D&lt;2&gt;" no="29" sr="fast"/><pin dir="output" nm="D&lt;3&gt;" no="33" sr="fast"/><pin dir="output" nm="D&lt;4&gt;" no="34" sr="fast"/><pin dir="output" nm="D&lt;5&gt;" no="35" sr="fast"/><pin dir="output" nm="D&lt;6&gt;" no="36" sr="fast"/><pin dir="output" nm="MOSI" no="43" sr="fast"/><pin dir="output" nm="LATCH" no="26" sr="fast"/><pin dir="output" nm="IRQ" no="5" sr="fast"/><pin dir="output" nm="CSSER" no="25" sr="fast"/><pin dir="bidir" nm="D&lt;1&gt;" no="28" sr="fast"/><pin dir="bidir" nm="D&lt;7&gt;" no="37" sr="fast"/><pin dir="bidir" nm="D&lt;0&gt;" no="27" sr="fast"/><pin dir="bidir" nm="SCLK" no="44" sr="fast"/><pin dir="bidir" nm="SPICS" no="38" sr="fast"/></ibis>

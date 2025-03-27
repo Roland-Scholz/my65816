@@ -1,0 +1,100 @@
+***********************************************
+* Megadrive VGM music package                 *
+* http://project2612.org/                     *
+***********************************************
+
+Game name:           Phantasy Star IV:
+                     The End of the Millennium
+System:              Sega Genesis
+Complete music dump: Yes
+
+Original authors:    Izuho Takeuchi &
+                     Masaki Nakagaki
+Publisher:           Sega
+Package created by:  Dark Pulse
+Package version:     2.00
+
+Files, in Sound Test Order:
+
+Name                                Length:
+                                    Total  Loop
+Intro - The End of the Millennium   0:49   0:41
+Motavia Town                        0:48   0:48
+Suspicion                           0:44   0:44
+Inn                                 0:12   0:12
+Field Motavia                       1:12   1:09
+Meet Them Head-On!                  1:12   1:07
+Winners!                            0:01   -
+Motavia Village                     1:29   1:17
+Now on Sale                         0:40   0:32
+Terrible Sight                      1:07   1:00
+Rune                                1:19   1:14
+Tonoe de Pon                        1:16   1:15
+In the Cave                         1:22   1:16
+Defeat at a Blow!                   0:34   0:32
+A Happy Settlement                  0:46   0:40
+Behind the Circuit                  1:07   1:05
+Rika                                0:40   0:40
+Pain                                0:28   0:28
+Her Last Breath                     1:40   0:57
+Organic Beat                        1:23   1:02
+PS1 Dungeon Arrange 1               0:28   0:54
+PS1 Dungeon Arrange 2               0:52   0:39
+Machine Center                      0:38   0:23
+Land Master AXV-25                  0:52   0:51
+Cybernetic Carnival                 0:53   0:43
+The Black Blood                     1:02   0:56
+Laughter                            2:22   2:01
+Take Off! Landale                   1:04   0:40
+Red Alert                           0:22   0:22
+Dezolis Field 1                     1:16   1:16
+Dezolis Town 1                      1:50   1:38
+Jijy no Rag                         1:23   1:12
+Dezolis Field 2                     1:32   1:26
+Dezolis Town 2                      0:31   0:31
+Requiem for Lutz                    1:33   1:33
+Dezolis de Don                      0:03   -
+Gumbious Temple                     1:05   0:59
+The King of Terrors                 1:17   1:14
+Rykros Field                        0:51   0:51
+Tower                               1:28   1:25
+The Age of Fables                   1:23   1:05
+Edge of Darkness                    0:53   0:51
+Abyss                               1:43   1:14
+Ooze                                3:56   1:44
+The Promising Future 1              2:28   -
+The Promising Future 2              3:41   -
+Staff Roll                          2:10   1:05
+Pao-Pao!                            1:11   0:54
+
+Notes:
+Another Mammoth rip, and for one of the finest
+RPGs ever made by man - a genuine classic of
+the 16 Bit Era. It lives on here.
+
+I've taken the liberty of cleaning up the names
+a bit - No "Red Alart" for you purists, sorry.
+:) If you really want the old names that bad,
+switch to Japanese View. That won't work for
+spelling errors though (Red Alart, The
+Promissing Future, etc...)
+
+Pao-Pao is actually from Fantasy Zone.
+
+This one's for DJSW, Brotha.
+
+1.01 Update fixes a small tag issue that was
+present in one song.
+
+1.10 Removed "Ippo" from Izuho Takeuchi and
+replaced M. "Gaki-Chan" Nakagaki with Masaki
+Nakagaki. -dissident93
+
+2.00 Relogged The End of the Millennium, it
+looped too early. -Valley Bell
+
+The Inquisitorial vengeance
+had been hurried by my two-fold escape,
+And there was to be no more dallying
+with The King of Terrors...
+-DP

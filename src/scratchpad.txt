@@ -1,0 +1,206 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <unistd.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
+#include "freeRTOS.h"
+#include "task.h"
+#include <homebrew.h>
+
+static char s[80];
+#define 
+typedef struct bmpHeader {
+	char bfType[2];
+	int bfSize;
+	char dummy0[6];
+	int bfOffBits;
+	char dummy1[2];
+	int biSize;
+	char dummy2[2];
+	int biWidth;
+	char dummy3[2];
+	int biHeight;
+	char dummy4[4];
+	int biBitCount;
+	char biCompression;
+	char dummy6[15];
+	char biClrUsed;
+	char dummy7[3];
+	char biClrImportant;
+	char dummy8[2];
+	char colors;
+	
+} bmpHeader;
+
+
+void printBMPinfo(bmpHeader* bh) {
+	
+	sprintf(s, "header length: %d\r", sizeof(bmpHeader));
+	putrec(0, s);
+	sprintf(s, "bfSize: %d\r", bh->bfSize);
+	putrec(0, s);
+	sprintf(s, "bfOffBits: %d\r", bh->bfOffBits);
+	putrec(0, s);
+	sprintf(s, "biSize: %d\r", bh->biSize);
+	putrec(0, s);
+	sprintf(s, "biWidth: %d\r", bh->biWidth);
+	putrec(0, s);
+	sprintf(s, "biHeight: %d\r", bh->biHeight);
+	putrec(0, s);
+	sprintf(s, "biBitCount: %d\r", bh->biBitCount);
+	putrec(0, s);
+	sprintf(s, "biCompression: %d\r", bh->biCompression);
+	putrec(0, s);	
+	sprintf(s, "biClrUsed: %d\r", bh->biClrUsed);
+	putrec(0, s);	
+	sprintf(s, "biClrImportant: %d\r", bh->biClrImportant);
+	putrec(0, s);	
+	
+}
+
+void printColorTable(bmpHeader* bh) {
+	
+	char b[4], i, c;
+	char colors = 1 << bh->biBitCount;
+	
+	if (bh->biClrUsed != 0) {
+		colors = bh->biClrUsed;
+	} 
+	
+	bh->colors = colors;
+	
+	sprintf(s, "colors: %d\r", colors);
+	putrec(0, s);
+	
+	for (i = 0; i < colors; i++) {
+		
+		getchr(1, b, 4);
+		
+		c =  ((b[0] >> 6) << 2);		// blue
+		c |= ((b[1] >> 6) << 4);		// green
+		c |= (b[2] >> 6);			// red
+		
+		switch(i) {
+			case 0:
+				COLOR0 = c;
+				break;
+			case 1:
+				COLOR2 = c;
+				break;
+			case 2:
+				COLOR1 = c;
+				break;
+			case 3:
+				COLOR3 = c;
+				break;
+			default:
+				break;
+		}
+				
+		sprintf(s, "color %d: %03d %03d %03d\r", i, b[0], b[1], b[2]);
+		putrec(0, s);
+	}
+	
+	
+}
+
+static void loadBMP(bmpHeader* bh) {
+	
+	int y;
+	
+	gx = (char *) ((int)graph + 24*640 + 7);
+	
+	for (y = 0; y < bh->biHeight; y += 8) {
+
+		getchr(1, s, sizeof(s));
+		src = s;
+
+		for (y1 = 0; y1 < 8; y1++) {
+						
+			__asm__ ("ldx #0");				
+			__asm__ ("ldy #0");
+			
+			xloop:
+				__asm__ ("lda (%v),y", src);
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+		
+				__asm__ ("iny");
+				__asm__ ("lda (%v),y", src);
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+				__asm__ ("asl");
+				__asm__ ("rol %v", b);
+	
+				__asm__ ("lda %v", b);
+				__asm__ ("sta (%v,x)", gx);
+				
+				__asm__ ("clc");
+				__asm__ ("lda %v", gx);
+				__asm__ ("adc #8");			
+				__asm__ ("sta %v", gx);
+				__asm__ ("bcc %g", xloop1);
+				__asm__ ("inc %v", gxhi);
+			xloop1:
+				__asm__ ("iny");
+				__asm__	("cpy #160");
+				__asm__ ("bcc %g", xloop);
+
+			src += 160;
+
+			gx -= 641;
+		}
+		
+		gx -= 632;
+	}
+}
+
+void main() {
+	
+	bmpHeader bh;
+	
+	newline();
+			
+	if (open(1, "D:PERSIA.BMP", 4, 0) == 1) {
+		
+		getchr(1, (char *)&bh, sizeof(bmpHeader));
+		
+		printBMPinfo(&bh);
+		printColorTable(&bh);
+		
+		CRTCTL = 0x80;
+		
+		loadBMP(&bh);
+		
+		close(1);
+		
+		kgetc();
+		
+		CRTCTL = 0;
+		COLOR0 = 0x14;
+		COLOR1 = 0xFF;
+		COLOR3 = 0x11;
+	}	
+}

@@ -1,0 +1,571 @@
+<html><body>
+<pre>
+ 
+cpldfit:  version P.20131013                        Xilinx Inc.
+                                  Fitter Report
+Design Name: MultiIO                             Date: 10-17-2019,  5:27PM
+Device Used: XC9536-15-PC44
+Fitting Status: Successful
+
+*************************  Mapped Resource Summary  **************************
+
+Macrocells     Product Terms    Function Block   Registers      Pins           
+Used/Tot       Used/Tot         Inps Used/Tot    Used/Tot       Used/Tot       
+34 /36  ( 94%) 97  /180  ( 54%) 72 /72  (100%)   20 /36  ( 56%) 34 /34  (100%)
+
+** Function Block Resources **
+
+Function    Mcells      FB Inps     Signals     Pterms      IO          
+Block       Used/Tot    Used/Tot    Used        Used/Tot    Used/Tot    
+FB1          16/18       36/36*      36          63/90       1/17
+FB2          18/18*      36/36*      38          34/90      13/17
+             -----       -----                   -----       -----     
+             34/36       72/72                   97/180     14/34 
+
+* - Resource is exhausted
+
+** Global Control Resources **
+
+The complement of 'PHI2' mapped onto global clock net GCK2.
+Global output enable net(s) unused.
+The complement of 'RES' mapped onto global set/reset net GSR.
+
+** Pin Resources **
+
+Signal Type    Required     Mapped  |  Pin Type            Used    Total 
+------------------------------------|------------------------------------
+Input         :   18          18    |  I/O              :    28      28
+Output        :    9           9    |  GCK/IO           :     3       3
+Bidirectional :    5           5    |  GTS/IO           :     2       2
+GCK           :    1           1    |  GSR/IO           :     1       1
+GTS           :    0           0    |
+GSR           :    1           1    |
+                 ----        ----
+        Total     34          34
+
+** Power Data **
+
+There are 34 macrocells in high performance mode (MCHP).
+There are 0 macrocells in low power mode (MCLP).
+End of Mapped Resource Summary
+**************************  Errors and Warnings  ***************************
+
+WARNING:Cpld - Unable to retrieve the path to the iSE Project Repository. Will
+   use the default filename of 'MultiIO.ise'.
+WARNING:Cpld:896 - Unable to map all desired signals into function block, FB2,
+   because too many function block product terms are required. Buffering output
+   signal D<0> to allow all signals assigned to this function block to be
+   placed.
+*************************  Summary of Mapped Logic  ************************
+
+** 14 Outputs **
+
+Signal                            Total Total Loc     Pin  Pin     Pin     Pwr  Slew Reg Init
+Name                              Pts   Inps          No.  Type    Use     Mode Rate State
+IRQ                               1     1     FB1_3   5    GCK/I/O O       STD  FAST 
+SCLK                              3     5     FB2_2   44   I/O     I/O     STD  FAST RESET
+MOSI                              1     3     FB2_4   43   I/O     O       STD  FAST 
+SPICS                             2     18    FB2_7   38   I/O     I/O     STD  FAST RESET
+D<7>                              2     17    FB2_8   37   I/O     I/O     STD  FAST 
+D<6>                              2     17    FB2_9   36   I/O     O       STD  FAST 
+D<5>                              2     17    FB2_10  35   I/O     O       STD  FAST 
+D<4>                              2     17    FB2_11  34   I/O     O       STD  FAST 
+D<3>                              2     17    FB2_12  33   I/O     O       STD  FAST 
+D<2>                              2     17    FB2_13  29   I/O     O       STD  FAST 
+D<1>                              2     17    FB2_14  28   I/O     I/O     STD  FAST 
+D<0>                              2     15    FB2_15  27   I/O     I/O     STD  FAST 
+LATCH                             1     14    FB2_16  26   I/O     O       STD  FAST 
+CSSER                             1     13    FB2_17  25   I/O     O       STD  FAST 
+
+** 20 Buried Nodes **
+
+Signal                            Total Total Loc     Pwr  Reg Init
+Name                              Pts   Inps          Mode State
+D<0>_BUFR                         18    20    FB1_1   STD  
+PS2Data<8>/PS2Data<8>_SETF__$INT  1     2     FB1_4   STD  
+SPIData1                          2     18    FB1_5   STD  RESET
+SPIData                           2     18    FB1_6   STD  RESET
+PS2Read                           2     17    FB1_7   STD  RESET
+PS2CLKIN<0>                       2     2     FB1_8   STD  RESET
+PS2Data<8>                        3     4     FB1_9   STD  RESET
+PS2Data<7>                        4     5     FB1_10  STD  RESET
+PS2Data<6>                        4     5     FB1_11  STD  RESET
+PS2Data<5>                        4     5     FB1_12  STD  RESET
+PS2Data<4>                        4     5     FB1_13  STD  RESET
+PS2Data<3>                        4     5     FB1_14  STD  RESET
+PS2Data<2>                        4     5     FB1_15  STD  RESET
+PS2Data<1>                        4     5     FB1_16  STD  RESET
+PS2Data<0>                        4     5     FB1_17  STD  RESET
+SPIAccess                         2     16    FB2_1   STD  RESET
+PS2EdgeL                          2     3     FB2_3   STD  RESET
+PS2CLKIN<1>                       2     2     FB2_5   STD  RESET
+PHI2L<1>                          2     3     FB2_6   STD  RESET
+PHI2L<0>                          2     3     FB2_18  STD  RESET
+
+** 20 Inputs **
+
+Signal                            Loc     Pin  Pin     Pin     
+Name                                      No.  Type    Use     
+A<15>                             FB1_1   2    I/O     I
+A<14>                             FB1_2   3    I/O     I
+A<13>                             FB1_4   4    I/O     I
+PHI2                              FB1_5   6    GCK/I/O GCK/I
+A<12>                             FB1_6   8    I/O     I
+RW                                FB1_7   7    GCK/I/O I
+A<11>                             FB1_8   9    I/O     I
+A<10>                             FB1_9   11   I/O     I
+A<9>                              FB1_10  12   I/O     I
+A<8>                              FB1_11  13   I/O     I
+A<7>                              FB1_12  14   I/O     I
+A<6>                              FB1_13  18   I/O     I
+A<5>                              FB1_14  19   I/O     I
+A<4>                              FB1_15  20   I/O     I
+PS2DAT                            FB1_16  22   I/O     I
+PS2CLK                            FB1_17  24   I/O     I
+MISO                              FB2_1   1    I/O     I
+AL<1>                             FB2_3   42   GTS/I/O I
+AL<0>                             FB2_5   40   GTS/I/O I
+RES                               FB2_6   39   GSR/I/O GSR/I
+
+Legend:
+Pin No. - ~ - User Assigned
+**************************  Function Block Details  ************************
+Legend:
+Total Pt     - Total product terms used by the macrocell signal
+Imp Pt       - Product terms imported from other macrocells
+Exp Pt       - Product terms exported to other macrocells
+               in direction shown
+Unused Pt    - Unused local product terms remaining in macrocell
+Loc          - Location where logic was mapped in device
+Pin Type/Use - I  - Input             GCK - Global Clock
+               O  - Output            GTS - Global Output Enable
+              (b) - Buried macrocell  GSR - Global Set/Reset
+X(@)         - Signal used as input (wire-AND input) to the macrocell logic.
+               The number of Signals Used may exceed the number of FB Inputs
+               Used due to wire-ANDing in the switch matrix.
+Pin No.      - ~  - User Assigned
+*********************************** FB1  ***********************************
+Number of function block inputs used/remaining:               36/0
+Number of signals used by logic mapping into function block:  36
+Signal              Total   Imp   Exp Unused  Loc     Pin   Pin     Pin
+Name                Pt      Pt    Pt  Pt               #    Type    Use
+D<0>_BUFR            18      13<-   0   0     FB1_1   2     I/O     I
+(unused)              0       0   /\5   0     FB1_2   3     I/O     I
+IRQ                   1       0   /\2   2     FB1_3   5     GCK/I/O O
+PS2Data<8>/PS2Data<8>_SETF__$INT
+                      1       0     0   4     FB1_4   4     I/O     I
+SPIData1              2       0     0   3     FB1_5   6     GCK/I/O GCK/I
+SPIData               2       0     0   3     FB1_6   8     I/O     I
+PS2Read               2       0     0   3     FB1_7   7     GCK/I/O I
+PS2CLKIN<0>           2       0     0   3     FB1_8   9     I/O     I
+PS2Data<8>            3       0     0   2     FB1_9   11    I/O     I
+PS2Data<7>            4       0     0   1     FB1_10  12    I/O     I
+PS2Data<6>            4       0     0   1     FB1_11  13    I/O     I
+PS2Data<5>            4       0     0   1     FB1_12  14    I/O     I
+PS2Data<4>            4       0     0   1     FB1_13  18    I/O     I
+PS2Data<3>            4       0     0   1     FB1_14  19    I/O     I
+PS2Data<2>            4       0     0   1     FB1_15  20    I/O     I
+PS2Data<1>            4       0     0   1     FB1_16  22    I/O     I
+PS2Data<0>            4       0   \/1   0     FB1_17  24    I/O     I
+(unused)              0       0   \/5   0     FB1_18        (b)     (b)
+
+Signals Used by Logic in Function Block
+  1: AL<0>             13: A<8>              25: PS2Data<4> 
+  2: AL<1>             14: A<9>              26: PS2Data<5> 
+  3: A<10>             15: MISO              27: PS2Data<6> 
+  4: A<11>             16: D<0>.PIN          28: PS2Data<7> 
+  5: A<12>             17: D<7>.PIN          29: PS2Data<8> 
+  6: A<13>             18: PHI2              30: PS2Data<8>/PS2Data<8>_SETF__$INT 
+  7: A<14>             19: PS2CLK            31: PS2EdgeL 
+  8: A<15>             20: PS2DAT            32: PS2Read 
+  9: A<4>              21: PS2Data<0>        33: RES 
+ 10: A<5>              22: PS2Data<1>        34: RW 
+ 11: A<6>              23: PS2Data<2>        35: SPIData 
+ 12: A<7>              24: PS2Data<3>        36: SPIData1 
+
+Signal                        1         2         3         4 Signals FB
+Name                0----+----0----+----0----+----0----+----0 Used    Inputs
+D<0>_BUFR            XXXXXXXXXXXXXXX..X.........XX....X.X.... 20      20
+IRQ                  ............................X........... 1       1
+PS2Data<8>/PS2Data<8>_SETF__$INT 
+                     ...............................XX....... 2       2
+SPIData1             XXXXXXXXXXXXXX.X.X...............X.X.... 18      18
+SPIData              XXXXXXXXXXXXXX..XX...............XX..... 18      18
+PS2Read              XXXXXXXXXXXXXX...X.............X.X...... 17      17
+PS2CLKIN<0>          ..................X..........X.......... 2       2
+PS2Data<8>           ...........................XXXX......... 4       4
+PS2Data<7>           ..........................XXXXX......... 5       5
+PS2Data<6>           .........................XX.XXX......... 5       5
+PS2Data<5>           ........................XX..XXX......... 5       5
+PS2Data<4>           .......................XX...XXX......... 5       5
+PS2Data<3>           ......................XX....XXX......... 5       5
+PS2Data<2>           .....................XX.....XXX......... 5       5
+PS2Data<1>           ....................XX......XXX......... 5       5
+PS2Data<0>           ...................XX.......XXX......... 5       5
+                    0----+----1----+----2----+----3----+----4
+                              0         0         0         0
+*********************************** FB2  ***********************************
+Number of function block inputs used/remaining:               36/0
+Number of signals used by logic mapping into function block:  38
+Signal              Total   Imp   Exp Unused  Loc     Pin   Pin     Pin
+Name                Pt      Pt    Pt  Pt               #    Type    Use
+SPIAccess             2       0     0   3     FB2_1   1     I/O     I
+SCLK                  3       0     0   2     FB2_2   44    I/O     I/O
+PS2EdgeL              2       0     0   3     FB2_3   42    GTS/I/O I
+MOSI                  1       0     0   4     FB2_4   43    I/O     O
+PS2CLKIN<1>           2       0     0   3     FB2_5   40    GTS/I/O I
+PHI2L<1>              2       0     0   3     FB2_6   39    GSR/I/O GSR/I
+SPICS                 2       0     0   3     FB2_7   38    I/O     I/O
+D<7>                  2       0     0   3     FB2_8   37    I/O     I/O
+D<6>                  2       0     0   3     FB2_9   36    I/O     O
+D<5>                  2       0     0   3     FB2_10  35    I/O     O
+D<4>                  2       0     0   3     FB2_11  34    I/O     O
+D<3>                  2       0     0   3     FB2_12  33    I/O     O
+D<2>                  2       0     0   3     FB2_13  29    I/O     O
+D<1>                  2       0     0   3     FB2_14  28    I/O     I/O
+D<0>                  2       0     0   3     FB2_15  27    I/O     I/O
+LATCH                 1       0     0   4     FB2_16  26    I/O     O
+CSSER                 1       0     0   4     FB2_17  25    I/O     O
+PHI2L<0>              2       0     0   3     FB2_18        (b)     (b)
+
+Signals Used by Logic in Function Block
+  1: AL<0>             14: A<9>              27: PS2Data<4> 
+  2: AL<1>             15: D<0>_BUFR         28: PS2Data<5> 
+  3: A<10>             16: FC_0_.OUT         29: PS2Data<6> 
+  4: A<11>             17: D<1>.PIN          30: PS2Data<8>/PS2Data<8>_SETF__$INT 
+  5: A<12>             18: PHI2L<0>          31: PS2EdgeL 
+  6: A<13>             19: PHI2L<1>          32: RES 
+  7: A<14>             20: PHI2              33: RW 
+  8: A<15>             21: PS2CLKIN<0>       34: SCLK.PIN 
+  9: A<4>              22: PS2CLKIN<1>       35: SPIAccess 
+ 10: A<5>              23: PS2Data<0>        36: SPICS.PIN 
+ 11: A<6>              24: PS2Data<1>        37: SPIData 
+ 12: A<7>              25: PS2Data<2>        38: SPIData1 
+ 13: A<8>              26: PS2Data<3>       
+
+Signal                        1         2         3         4 Signals FB
+Name                0----+----0----+----0----+----0----+----0 Used    Inputs
+SPIAccess            XXXXXXXXXXXXXX.....X..............X..... 16      16
+SCLK                 .................XX............X.XX..... 5       5
+PS2EdgeL             ....................XX........X......... 3       3
+MOSI                 ...............X....................@@.. 3       1
+PS2CLKIN<1>          ....................X........X.......... 2       2
+PHI2L<1>             .................XX...............X..... 3       3
+SPICS                XXXXXXXXXXXXXX..X..X............X..X.... 18      18
+D<7>                 XXXXXXXXXXXXXX.....X..X.........X....... 17      17
+D<6>                 XXXXXXXXXXXXXX.....X...X........X....... 17      17
+D<5>                 XXXXXXXXXXXXXX.....X....X.......X....... 17      17
+D<4>                 XXXXXXXXXXXXXX.....X.....X......X....... 17      17
+D<3>                 XXXXXXXXXXXXXX.....X......X.....X....... 17      17
+D<2>                 XXXXXXXXXXXXXX.....X.......X....X....... 17      17
+D<1>                 XXXXXXXXXXXXXX.....X........X...X....... 17      17
+D<0>                 ..XXXXXXXXXXXXX....X............X....... 15      15
+LATCH                ..XXXXXXXXXXXX.....X............X....... 14      14
+CSSER                ..XXXXXXXXXXXX.....X.................... 13      13
+PHI2L<0>             .................XX...............X..... 3       3
+                    0----+----1----+----2----+----3----+----4
+                              0         0         0         0
+*******************************  Equations  ********************************
+
+********** Mapped Logic **********
+
+
+CSSER <= NOT ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND A(5) AND NOT A(14)));
+
+
+D(0)_BUFR <= ((N0.EXP)
+	OR (NOT A(15) AND SPIData1)
+	OR (NOT A(12) AND SPIData1)
+	OR (NOT RW AND SPIData1)
+	OR (A(14) AND SPIData1)
+	OR (AL(1) AND AL(0) AND SPIData1)
+	OR (PS2Data(0).EXP)
+	OR (NOT A(9) AND SPIData1)
+	OR (NOT A(8) AND SPIData1)
+	OR (NOT A(13) AND SPIData1)
+	OR (NOT A(7) AND SPIData1)
+	OR (A(5) AND SPIData1)
+	OR (NOT PHI2 AND SPIData1)
+	OR (NOT A(11) AND SPIData1)
+	OR (NOT A(10) AND SPIData1)
+	OR (NOT A(6) AND SPIData1)
+	OR (NOT A(4) AND SPIData1));
+
+
+D_I(0) <= D(0)_BUFR;
+D(0) <= D_I(0) when D_OE(0) = '1' else 'Z';
+D_OE(0) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(1) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(6) AND RW AND NOT A(14) AND NOT AL(0));
+D(1) <= D_I(1) when D_OE(1) = '1' else 'Z';
+D_OE(1) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(2) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(5) AND RW AND NOT A(14) AND NOT AL(0));
+D(2) <= D_I(2) when D_OE(2) = '1' else 'Z';
+D_OE(2) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(3) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(4) AND RW AND NOT A(14) AND NOT AL(0));
+D(3) <= D_I(3) when D_OE(3) = '1' else 'Z';
+D_OE(3) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(4) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(3) AND RW AND NOT A(14) AND NOT AL(0));
+D(4) <= D_I(4) when D_OE(4) = '1' else 'Z';
+D_OE(4) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(5) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(2) AND RW AND NOT A(14) AND NOT AL(0));
+D(5) <= D_I(5) when D_OE(5) = '1' else 'Z';
+D_OE(5) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(6) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(1) AND RW AND NOT A(14) AND NOT AL(0));
+D(6) <= D_I(6) when D_OE(6) = '1' else 'Z';
+D_OE(6) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+D_I(7) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	PS2Data(0) AND RW AND NOT A(14) AND NOT AL(0));
+D(7) <= D_I(7) when D_OE(7) = '1' else 'Z';
+D_OE(7) <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND RW AND 
+	NOT A(14));
+
+
+
+
+
+
+IRQ_I <= '0';
+IRQ <= IRQ_I when IRQ_OE = '1' else 'Z';
+IRQ_OE <= NOT PS2Data(8);
+
+
+LATCH <= (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND NOT A(4) AND A(5) AND NOT RW AND 
+	NOT A(14));
+
+
+MOSI <= NOT (FC_0_.OUT);
+
+FDCPE_PHI2L0: FDCPE port map (PHI2L(0),PHI2L_D(0),NOT PHI2,SPIAccess,NOT RES);
+PHI2L_D(0) <= (PHI2L(0) AND NOT PHI2L(1));
+
+FDCPE_PHI2L1: FDCPE port map (PHI2L(1),PHI2L_D(1),NOT PHI2,SPIAccess,NOT RES);
+PHI2L_D(1) <= (NOT PHI2L(0) AND NOT PHI2L(1));
+
+FDCPE_PS2CLKIN0: FDCPE port map (PS2CLKIN(0),PS2CLK,NOT PHI2,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+
+FDCPE_PS2CLKIN1: FDCPE port map (PS2CLKIN(1),PS2CLKIN(0),NOT PHI2,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+
+FDCPE_PS2Data0: FDCPE port map (PS2Data(0),PS2Data_D(0),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(0) <= ((PS2Data(8) AND PS2DAT)
+	OR (NOT PS2Data(8) AND PS2Data(0)));
+
+FDCPE_PS2Data1: FDCPE port map (PS2Data(1),PS2Data_D(1),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(1) <= ((PS2Data(8) AND PS2Data(0))
+	OR (NOT PS2Data(8) AND PS2Data(1)));
+
+FDCPE_PS2Data2: FDCPE port map (PS2Data(2),PS2Data_D(2),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(2) <= ((PS2Data(8) AND PS2Data(1))
+	OR (NOT PS2Data(8) AND PS2Data(2)));
+
+FDCPE_PS2Data3: FDCPE port map (PS2Data(3),PS2Data_D(3),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(3) <= ((PS2Data(8) AND PS2Data(2))
+	OR (NOT PS2Data(8) AND PS2Data(3)));
+
+FDCPE_PS2Data4: FDCPE port map (PS2Data(4),PS2Data_D(4),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(4) <= ((PS2Data(8) AND PS2Data(3))
+	OR (NOT PS2Data(8) AND PS2Data(4)));
+
+FDCPE_PS2Data5: FDCPE port map (PS2Data(5),PS2Data_D(5),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(5) <= ((PS2Data(8) AND PS2Data(4))
+	OR (NOT PS2Data(8) AND PS2Data(5)));
+
+FDCPE_PS2Data6: FDCPE port map (PS2Data(6),PS2Data_D(6),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(6) <= ((PS2Data(8) AND PS2Data(5))
+	OR (NOT PS2Data(8) AND PS2Data(6)));
+
+FDCPE_PS2Data7: FDCPE port map (PS2Data(7),PS2Data_D(7),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(7) <= ((PS2Data(8) AND PS2Data(6))
+	OR (NOT PS2Data(8) AND PS2Data(7)));
+
+FDCPE_PS2Data8: FDCPE port map (PS2Data(8),PS2Data_D(8),PS2EdgeL,'0',NOT PS2Data(8)/PS2Data(8)_SETF__$INT);
+PS2Data_D(8) <= (PS2Data(8) AND PS2Data(7));
+
+
+PS2Data(8)/PS2Data(8)_SETF__$INT <= (RES AND NOT PS2Read);
+
+FDCPE_PS2EdgeL: FDCPE port map (PS2EdgeL,'1',PS2EdgeL_C,PS2EdgeL_CLR,'0');
+PS2EdgeL_C <= (NOT PS2CLKIN(0) AND NOT PS2CLKIN(1));
+PS2EdgeL_CLR <= (PS2CLKIN(0) AND PS2CLKIN(1) AND PS2EdgeL);
+
+FDCPE_PS2Read: FDCPE port map (PS2Read,PS2Read_D,NOT PHI2,'0','0');
+PS2Read_D <= ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND NOT A(14) AND 
+	PS2Read)
+	OR (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND NOT AL(0)));
+
+FDCPE_SCLK: FDCPE port map (SCLK,SCLK_D,NOT PHI2,'0','0');
+SCLK_D <= ((NOT RES AND NOT SCLK.PIN)
+	OR (SPIAccess AND NOT SCLK.PIN)
+	OR (RES AND PHI2L(0) AND PHI2L(1) AND NOT SPIAccess));
+
+FDCPE_SPIAccess: FDCPE port map (SPIAccess,SPIAccess_D,NOT PHI2,'0','0');
+SPIAccess_D <= ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND NOT A(5) AND NOT A(14) AND 
+	SPIAccess)
+	OR (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT A(14) AND NOT AL(0)));
+
+FTCPE_SPICS: FTCPE port map (SPICS,SPICS_T,NOT PHI2,'0','0');
+SPICS_T <= ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND AL(0) AND D(1).PIN AND NOT SPICS.PIN)
+	OR (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND AL(0) AND NOT D(1).PIN AND SPICS.PIN));
+
+FTCPE_SPIData: FTCPE port map (SPIData,SPIData_T,NOT PHI2,'0','0');
+SPIData_T <= ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND NOT AL(0) AND SPIData AND NOT D(7).PIN)
+	OR (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND NOT AL(0) AND NOT SPIData AND D(7).PIN));
+
+FTCPE_SPIData1: FTCPE port map (SPIData1,SPIData1_T,NOT PHI2,'0','0');
+SPIData1_T <= ((PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND AL(0) AND SPIData1 AND NOT D(0).PIN)
+	OR (PHI2 AND A(9) AND A(8) AND A(15) AND A(13) AND A(12) AND 
+	A(11) AND A(10) AND A(7) AND A(6) AND A(4) AND AL(1) AND NOT A(5) AND 
+	NOT RW AND NOT A(14) AND AL(0) AND NOT SPIData1 AND D(0).PIN));
+
+Register Legend:
+ FDCPE (Q,D,C,CLR,PRE); 
+ FTCPE (Q,D,C,CLR,PRE); 
+ LDCP  (Q,D,G,CLR,PRE); 
+
+******************************  Device Pin Out *****************************
+
+Device : XC9536-15-PC44
+
+
+   --------------------------------  
+  /6  5  4  3  2  1  44 43 42 41 40 \
+ | 7                             39 | 
+ | 8                             38 | 
+ | 9                             37 | 
+ | 10                            36 | 
+ | 11        XC9536-15-PC44      35 | 
+ | 12                            34 | 
+ | 13                            33 | 
+ | 14                            32 | 
+ | 15                            31 | 
+ | 16                            30 | 
+ | 17                            29 | 
+ \ 18 19 20 21 22 23 24 25 26 27 28 /
+   --------------------------------  
+
+
+Pin Signal                         Pin Signal                        
+No. Name                           No. Name                          
+  1 MISO                             23 GND                           
+  2 A<15>                            24 PS2CLK                        
+  3 A<14>                            25 CSSER                         
+  4 A<13>                            26 LATCH                         
+  5 IRQ                              27 D<0>                          
+  6 PHI2                             28 D<1>                          
+  7 RW                               29 D<2>                          
+  8 A<12>                            30 TDO                           
+  9 A<11>                            31 GND                           
+ 10 GND                              32 VCC                           
+ 11 A<10>                            33 D<3>                          
+ 12 A<9>                             34 D<4>                          
+ 13 A<8>                             35 D<5>                          
+ 14 A<7>                             36 D<6>                          
+ 15 TDI                              37 D<7>                          
+ 16 TMS                              38 SPICS                         
+ 17 TCK                              39 RES                           
+ 18 A<6>                             40 AL<0>                         
+ 19 A<5>                             41 VCC                           
+ 20 A<4>                             42 AL<1>                         
+ 21 VCC                              43 MOSI                          
+ 22 PS2DAT                           44 SCLK                          
+
+
+Legend :  NC  = Not Connected, unbonded pin
+         PGND = Unused I/O configured as additional Ground pin
+         TIE  = Unused I/O floating -- must tie to VCC, GND or other signal
+         VCC  = Dedicated Power Pin
+         GND  = Dedicated Ground Pin
+         TDI  = Test Data In, JTAG pin
+         TDO  = Test Data Out, JTAG pin
+         TCK  = Test Clock, JTAG pin
+         TMS  = Test Mode Select, JTAG pin
+  PROHIBITED  = User reserved pin
+****************************  Compiler Options  ****************************
+
+Following is a list of all global compiler options used by the fitter run.
+
+Device(s) Specified                         : xc9536-15-PC44
+Optimization Method                         : SPEED
+Multi-Level Logic Optimization              : ON
+Ignore Timing Specifications                : OFF
+Default Register Power Up Value             : LOW
+Keep User Location Constraints              : ON
+What-You-See-Is-What-You-Get                : OFF
+Exhaustive Fitting                          : OFF
+Keep Unused Inputs                          : OFF
+Slew Rate                                   : FAST
+Power Mode                                  : STD
+Ground on Unused IOs                        : OFF
+Global Clock Optimization                   : ON
+Global Set/Reset Optimization               : ON
+Global Ouput Enable Optimization            : ON
+FASTConnect/UIM optimzation                 : ON
+Local Feedback                              : ON
+Pin Feedback                                : ON
+Input Limit                                 : 36
+Pterm Limit                                 : 25
+</pre>
+<form><span class="pgRef"><table width="90%" align="center"><tr>
+<td align="left"><input type="button" onclick="javascript:parent.leftnav.showTop()" onmouseover="window.status='goto top of page'; return true;" onmouseout="window.status=''" value="back to top"></td>
+<td align="right"><input type="button" onclick="window.print()" onmouseover="window.status='print page'; return true;" onmouseout="window.status=''" value="print page"></td>
+</tr></table></span></form>
+</body></html>

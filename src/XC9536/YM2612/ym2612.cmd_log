@@ -1,0 +1,30 @@
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+ngdbuild -intstyle ise -dd _ngo -i -p xc9536-PC44-15 ym2612.ngc ym2612.ngd  
+cpldfit -intstyle ise -p xc9536-15-PC44 -ofmt vhdl -optimize speed -htmlrpt -loc on -slew fast -init low -inputs 36 -pterms 25 -power std -localfbk -pinfbk ym2612.ngd 
+XSLTProcess ym2612_build.xml 
+tsim -intstyle ise ym2612 ym2612.nga 
+taengine -intstyle ise -f ym2612 -w --format html1 -l ym2612_html/tim/timing_report.htm 
+hprep6 -s IEEE1149 -n ym2612 -i ym2612 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+ngdbuild -intstyle ise -dd _ngo -uc ym2612.ucf -p xc9536-PC44-15 ym2612.ngc ym2612.ngd  
+cpldfit -intstyle ise -p xc9536-15-PC44 -ofmt vhdl -optimize speed -htmlrpt -loc on -slew fast -init low -inputs 36 -pterms 25 -power std -localfbk -pinfbk ym2612.ngd 
+XSLTProcess ym2612_build.xml 
+tsim -intstyle ise ym2612 ym2612.nga 
+hprep6 -s IEEE1149 -n ym2612 -i ym2612 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+ngdbuild -intstyle ise -dd _ngo -uc ym2612.ucf -p xc9536-PC44-15 ym2612.ngc ym2612.ngd  
+cpldfit -intstyle ise -p xc9536-15-PC44 -ofmt vhdl -optimize speed -htmlrpt -loc on -slew fast -init low -inputs 36 -pterms 25 -power std -localfbk -pinfbk ym2612.ngd 
+XSLTProcess ym2612_build.xml 
+tsim -intstyle ise ym2612 ym2612.nga 
+hprep6 -s IEEE1149 -n ym2612 -i ym2612 
+xst -intstyle ise -ifn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.xst" -ofn "C:/atarigit/My6502/src/XC9536/YM2612/ym2612.syr" 
+ngdbuild -intstyle ise -dd _ngo -uc ym2612.ucf -p xc9536-PC44-15 ym2612.ngc ym2612.ngd  
+cpldfit -intstyle ise -p xc9536-15-PC44 -ofmt vhdl -optimize speed -htmlrpt -loc on -slew fast -init low -inputs 36 -pterms 25 -power std -localfbk -pinfbk ym2612.ngd 
+XSLTProcess ym2612_build.xml 
+tsim -intstyle ise ym2612 ym2612.nga 
+hprep6 -s IEEE1149 -n ym2612 -i ym2612 

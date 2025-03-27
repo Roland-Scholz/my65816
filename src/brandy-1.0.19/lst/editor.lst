@@ -1,0 +1,3835 @@
+  Sun Jan  9 2022 20:52                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        	data
+     7                        ~~startmark:
+     8 00:0000: C5 C7 C1 D7  	db	$C5,$C7,$C1,$D7
+     9 00:0004:              	ends
+    10                        	data
+    11                        ~~endline:
+    12 00:0004: 00 00 08 00  	db	$0,$0,$8,$0,$6,$0,$A3,$0
+       00:0008: 06 00 A3 00 
+    13 00:000C:              	ends
+    14                        	code
+    15                        	xdef	~~mark_end
+    16                        	func
+    17                        ~~mark_end:
+    18                        	longa	on
+    19                        	longi	on
+    20 00:0000: 3B           	tsc
+    21 00:0001: 38           	sec
+    22 00:0002: E9 04 00     	sbc	#L2
+    23 00:0005: 1B           	tcs
+    24 00:0006: 0B           	phd
+    25 00:0007: 5B           	tcd
+    26             00000004   p_0	set	4
+    27 00:0008: F4 00 00     	pea	#^$8
+    28 00:000B: F4 08 00     	pea	#<$8
+    29 00:000E: A9 xx xx     	lda	#<~~endline
+    30 00:0011: 85 01        	sta	<R0
+    31                        	xref	_BEG_DATA
+    32 00:0013: A9 xx xx     	lda	#_BEG_DATA>>16
+    33 00:0016: 85 03        	sta	<R0+2
+    34 00:0018: D4 03        	pei	<R0+2
+    35 00:001A: D4 01        	pei	<R0
+    36 00:001C: D4 0A        	pei	<L2+p_0+2
+    37 00:001E: D4 08        	pei	<L2+p_0
+    38 00:0020: 22 xx xx xx  	jsl	~~memcpy
+    39 00:0024: F4 00 FF     	pea	#<$ff00
+    40 00:0027: D4 0A        	pei	<L2+p_0+2
+    41 00:0029: D4 08        	pei	<L2+p_0
+    42 00:002B: 22 xx xx xx  	jsl	~~save_lineno
+    43                        L4:
+    44 00:002F: A5 06        	lda	<L2+2
+    45 00:0031: 85 0A        	sta	<L2+2+4
+    46 00:0033: A5 05        	lda	<L2+1
+    47 00:0035: 85 09        	sta	<L2+1+4
+    48 00:0037: 2B           	pld
+    49 00:0038: 3B           	tsc
+    50 00:0039: 18           	clc
+    51 00:003A: 69 08 00     	adc	#L2+4
+  Sun Jan  9 2022 20:52                                                Page 2
+
+
+    52 00:003D: 1B           	tcs
+    53 00:003E: 6B           	rtl
+    54             00000004   L2	equ	4
+    55             00000005   L3	equ	5
+    56                        	ends
+    57                        	efunc
+    58                        	code
+    59                        	func
+    60                        ~~preserve:
+    61                        	longa	on
+    62                        	longi	on
+    63 00:003F: 3B           	tsc
+    64 00:0040: 38           	sec
+    65 00:0041: E9 06 00     	sbc	#L5
+    66 00:0044: 1B           	tcs
+    67 00:0045: 0B           	phd
+    68 00:0046: 5B           	tcd
+    69             00000000   n_1	set	0
+    70 00:0047: 64 05        	stz	<L6+n_1
+    71                        L10003:
+    72 00:0049: AD xx xx     	lda	|~~basicvars+22
+    73 00:004C: 85 01        	sta	<R0
+    74 00:004E: AD xx xx     	lda	|~~basicvars+22+2
+    75 00:0051: 85 03        	sta	<R0+2
+    76 00:0053: E2 20        	sep	#$20
+    77                        	longa	off
+    78 00:0055: A4 05        	ldy	<L6+n_1
+    79 00:0057: B7 01        	lda	[<R0],Y
+    80 00:0059: A6 05        	ldx	<L6+n_1
+    81 00:005B: 9D xx xx     	sta	|~~basicvars+439,X
+    82 00:005E: C2 20        	rep	#$20
+    83                        	longa	on
+    84                        L10001:
+    85 00:0060: E6 05        	inc	<L6+n_1
+    86 00:0062: 38           	sec
+    87 00:0063: A5 05        	lda	<L6+n_1
+    88 00:0065: E9 08 00     	sbc	#<$8
+    89 00:0068: 70 03        	bvs	L7
+    90 00:006A: 49 00 80     	eor	#$8000
+    91                        L7:
+    92 00:006D: 30 03        	bmi	L8
+    93 00:006F: 82 D7 FF     	brl	L10003
+    94                        L8:
+    95                        L10002:
+    96 00:0072: A9 04 00     	lda	#$4
+    97 00:0075: 0C xx xx     	tsb	~~basicvars+437
+    98                        L9:
+    99 00:0078: 2B           	pld
+   100 00:0079: 3B           	tsc
+   101 00:007A: 18           	clc
+   102 00:007B: 69 06 00     	adc	#L5
+   103 00:007E: 1B           	tcs
+   104 00:007F: 6B           	rtl
+   105             00000006   L5	equ	6
+   106             00000005   L6	equ	5
+   107                        	ends
+   108                        	efunc
+   109                        	code
+  Sun Jan  9 2022 20:52                                                Page 3
+
+
+   110                        	func
+   111                        ~~reinstate:
+   112                        	longa	on
+   113                        	longi	on
+   114 00:0080: 3B           	tsc
+   115 00:0081: 38           	sec
+   116 00:0082: E9 06 00     	sbc	#L10
+   117 00:0085: 1B           	tcs
+   118 00:0086: 0B           	phd
+   119 00:0087: 5B           	tcd
+   120             00000000   n_1	set	0
+   121 00:0088: 64 05        	stz	<L11+n_1
+   122                        L10006:
+   123 00:008A: AD xx xx     	lda	|~~basicvars+22
+   124 00:008D: 85 01        	sta	<R0
+   125 00:008F: AD xx xx     	lda	|~~basicvars+22+2
+   126 00:0092: 85 03        	sta	<R0+2
+   127 00:0094: E2 20        	sep	#$20
+   128                        	longa	off
+   129 00:0096: A6 05        	ldx	<L11+n_1
+   130 00:0098: BD xx xx     	lda	|~~basicvars+439,X
+   131 00:009B: A4 05        	ldy	<L11+n_1
+   132 00:009D: 97 01        	sta	[<R0],Y
+   133 00:009F: C2 20        	rep	#$20
+   134                        	longa	on
+   135                        L10004:
+   136 00:00A1: E6 05        	inc	<L11+n_1
+   137 00:00A3: 38           	sec
+   138 00:00A4: A5 05        	lda	<L11+n_1
+   139 00:00A6: E9 08 00     	sbc	#<$8
+   140 00:00A9: 70 03        	bvs	L12
+   141 00:00AB: 49 00 80     	eor	#$8000
+   142                        L12:
+   143 00:00AE: 30 03        	bmi	L13
+   144 00:00B0: 82 D7 FF     	brl	L10006
+   145                        L13:
+   146                        L10005:
+   147                        L14:
+   148 00:00B3: 2B           	pld
+   149 00:00B4: 3B           	tsc
+   150 00:00B5: 18           	clc
+   151 00:00B6: 69 06 00     	adc	#L10
+   152 00:00B9: 1B           	tcs
+   153 00:00BA: 6B           	rtl
+   154             00000006   L10	equ	6
+   155             00000005   L11	equ	5
+   156                        	ends
+   157                        	efunc
+   158                        	code
+   159                        	xdef	~~clear_program
+   160                        	func
+   161                        ~~clear_program:
+   162                        	longa	on
+   163                        	longi	on
+   164 00:00BB: 3B           	tsc
+   165 00:00BC: 38           	sec
+   166 00:00BD: E9 04 00     	sbc	#L15
+   167 00:00C0: 1B           	tcs
+  Sun Jan  9 2022 20:52                                                Page 4
+
+
+   168 00:00C1: 0B           	phd
+   169 00:00C2: 5B           	tcd
+   170 00:00C3: 22 xx xx xx  	jsl	~~clear_varlists
+   171 00:00C7: 22 xx xx xx  	jsl	~~clear_strings
+   172 00:00CB: 22 xx xx xx  	jsl	~~clear_heap
+   173 00:00CF: 18           	clc
+   174 00:00D0: A9 04 00     	lda	#$4
+   175 00:00D3: 6D xx xx     	adc	|~~basicvars+18
+   176 00:00D6: 8D xx xx     	sta	|~~basicvars+26
+   177 00:00D9: A9 00 00     	lda	#$0
+   178 00:00DC: 6D xx xx     	adc	|~~basicvars+18+2
+   179 00:00DF: 8D xx xx     	sta	|~~basicvars+26+2
+   180 00:00E2: AD xx xx     	lda	|~~basicvars+26
+   181 00:00E5: 8D xx xx     	sta	|~~basicvars+22
+   182 00:00E8: AD xx xx     	lda	|~~basicvars+26+2
+   183 00:00EB: 8D xx xx     	sta	|~~basicvars+22+2
+   184 00:00EE: F4 00 00     	pea	#^$4
+   185 00:00F1: F4 04 00     	pea	#<$4
+   186 00:00F4: A9 xx xx     	lda	#<~~startmark
+   187 00:00F7: 85 01        	sta	<R0
+   188                        	xref	_BEG_DATA
+   189 00:00F9: A9 xx xx     	lda	#_BEG_DATA>>16
+   190 00:00FC: 85 03        	sta	<R0+2
+   191 00:00FE: D4 03        	pei	<R0+2
+   192 00:0100: D4 01        	pei	<R0
+   193 00:0102: AD xx xx     	lda	|~~basicvars+18+2
+   194 00:0105: 48           	pha
+   195 00:0106: AD xx xx     	lda	|~~basicvars+18
+   196 00:0109: 48           	pha
+   197 00:010A: 22 xx xx xx  	jsl	~~memmove
+   198 00:010E: 22 xx xx xx  	jsl	~~preserve
+   199 00:0112: AD xx xx     	lda	|~~basicvars+26+2
+   200 00:0115: 48           	pha
+   201 00:0116: AD xx xx     	lda	|~~basicvars+26
+   202 00:0119: 48           	pha
+   203 00:011A: 22 xx xx xx  	jsl	~~mark_end
+   204 00:011E: 18           	clc
+   205 00:011F: A9 08 00     	lda	#$8
+   206 00:0122: 6D xx xx     	adc	|~~basicvars+26
+   207 00:0125: 8D xx xx     	sta	|~~basicvars+34
+   208 00:0128: A9 00 00     	lda	#$0
+   209 00:012B: 6D xx xx     	adc	|~~basicvars+26+2
+   210 00:012E: 8D xx xx     	sta	|~~basicvars+34+2
+   211 00:0131: AD xx xx     	lda	|~~basicvars+34
+   212 00:0134: 8D xx xx     	sta	|~~basicvars+30
+   213 00:0137: AD xx xx     	lda	|~~basicvars+34+2
+   214 00:013A: 8D xx xx     	sta	|~~basicvars+30+2
+   215 00:013D: 18           	clc
+   216 00:013E: A9 00 01     	lda	#$100
+   217 00:0141: 6D xx xx     	adc	|~~basicvars+26
+   218 00:0144: 8D xx xx     	sta	|~~basicvars+38
+   219 00:0147: A9 00 00     	lda	#$0
+   220 00:014A: 6D xx xx     	adc	|~~basicvars+26+2
+   221 00:014D: 8D xx xx     	sta	|~~basicvars+38+2
+   222 00:0150: AD xx xx     	lda	|~~basicvars+50
+   223 00:0153: 8D xx xx     	sta	|~~basicvars+42
+   224 00:0156: AD xx xx     	lda	|~~basicvars+50+2
+   225 00:0159: 8D xx xx     	sta	|~~basicvars+42+2
+  Sun Jan  9 2022 20:52                                                Page 5
+
+
+   226 00:015C: AD xx xx     	lda	|~~basicvars+22
+   227 00:015F: 8D xx xx     	sta	|~~basicvars+498
+   228 00:0162: AD xx xx     	lda	|~~basicvars+22+2
+   229 00:0165: 8D xx xx     	sta	|~~basicvars+498+2
+   230 00:0168: 9C xx xx     	stz	|~~basicvars+399
+   231 00:016B: 9C xx xx     	stz	|~~basicvars+399+2
+   232 00:016E: 9C xx xx     	stz	|~~basicvars+411
+   233 00:0171: 9C xx xx     	stz	|~~basicvars+411+2
+   234 00:0174: 9C xx xx     	stz	|~~basicvars+228
+   235 00:0177: 9C xx xx     	stz	|~~basicvars+230
+   236 00:017A: 9C xx xx     	stz	|~~basicvars+233
+   237 00:017D: 9C xx xx     	stz	|~~basicvars+233+2
+   238 00:0180: E2 20        	sep	#$20
+   239                        	longa	off
+   240 00:0182: 9C xx xx     	stz	|~~basicvars+489
+   241 00:0185: C2 20        	rep	#$20
+   242                        	longa	on
+   243 00:0187: A9 01 00     	lda	#$1
+   244 00:018A: 1C xx xx     	trb	~~basicvars+437
+   245 00:018D: A9 01 00     	lda	#$1
+   246 00:0190: 1C xx xx     	trb	~~basicvars+423
+   247 00:0193: A9 20 00     	lda	#$20
+   248 00:0196: 1C xx xx     	trb	~~basicvars+423
+   249 00:0199: A9 40 00     	lda	#$40
+   250 00:019C: 1C xx xx     	trb	~~basicvars+423
+   251 00:019F: A9 00 01     	lda	#$100
+   252 00:01A2: 0C xx xx     	tsb	~~basicvars+423
+   253 00:01A5: A9 80 00     	lda	#$80
+   254 00:01A8: 1C xx xx     	trb	~~basicvars+423
+   255 00:01AB: 9C xx xx     	stz	|~~basicvars+427
+   256 00:01AE: A9 02 00     	lda	#$2
+   257 00:01B1: 1C xx xx     	trb	~~basicvars+425
+   258 00:01B4: A9 08 00     	lda	#$8
+   259 00:01B7: 1C xx xx     	trb	~~basicvars+425
+   260 00:01BA: A9 04 00     	lda	#$4
+   261 00:01BD: 1C xx xx     	trb	~~basicvars+425
+   262 00:01C0: A9 10 00     	lda	#$10
+   263 00:01C3: 1C xx xx     	trb	~~basicvars+425
+   264 00:01C6: A9 20 00     	lda	#$20
+   265 00:01C9: 0C xx xx     	tsb	~~basicvars+425
+   266 00:01CC: A9 0A 09     	lda	#$90a
+   267 00:01CF: 8D xx xx     	sta	|~~basicvars+520
+   268 00:01D2: 9C xx xx     	stz	|~~basicvars+447
+   269 00:01D5: 9C xx xx     	stz	|~~basicvars+494
+   270 00:01D8: 9C xx xx     	stz	|~~basicvars+496
+   271 00:01DB: E2 20        	sep	#$20
+   272                        	longa	off
+   273 00:01DD: 9C xx xx     	stz	|~~basicvars+1354
+   274 00:01E0: C2 20        	rep	#$20
+   275                        	longa	on
+   276 00:01E2: 9C xx xx     	stz	|~~basicvars+502
+   277 00:01E5: 9C xx xx     	stz	|~~last_added
+   278 00:01E8: 9C xx xx     	stz	|~~last_added+2
+   279 00:01EB: 22 xx xx xx  	jsl	~~init_stack
+   280                        L17:
+   281 00:01EF: 2B           	pld
+   282 00:01F0: 3B           	tsc
+   283 00:01F1: 18           	clc
+  Sun Jan  9 2022 20:52                                                Page 6
+
+
+   284 00:01F2: 69 04 00     	adc	#L15
+   285 00:01F5: 1B           	tcs
+   286 00:01F6: 6B           	rtl
+   287             00000004   L15	equ	4
+   288             00000005   L16	equ	5
+   289                        	ends
+   290                        	efunc
+   291                        	code
+   292                        	func
+   293                        ~~adjust_heaplimits:
+   294                        	longa	on
+   295                        	longi	on
+   296 00:01F7: 3B           	tsc
+   297 00:01F8: 38           	sec
+   298 00:01F9: E9 04 00     	sbc	#L18
+   299 00:01FC: 1B           	tcs
+   300 00:01FD: 0B           	phd
+   301 00:01FE: 5B           	tcd
+   302 00:01FF: 18           	clc
+   303 00:0200: A9 08 00     	lda	#$8
+   304 00:0203: 6D xx xx     	adc	|~~basicvars+26
+   305 00:0206: 85 01        	sta	<R0
+   306 00:0208: A9 00 00     	lda	#$0
+   307 00:020B: 6D xx xx     	adc	|~~basicvars+26+2
+   308 00:020E: 85 03        	sta	<R0+2
+   309 00:0210: D4 03        	pei	<R0+2
+   310 00:0212: D4 01        	pei	<R0
+   311 00:0214: 22 xx xx xx  	jsl	~~alignaddr
+   312 00:0218: 8D xx xx     	sta	|~~basicvars+34
+   313 00:021B: 8E xx xx     	stx	|~~basicvars+34+2
+   314 00:021E: AD xx xx     	lda	|~~basicvars+34
+   315 00:0221: 8D xx xx     	sta	|~~basicvars+30
+   316 00:0224: AD xx xx     	lda	|~~basicvars+34+2
+   317 00:0227: 8D xx xx     	sta	|~~basicvars+30+2
+   318 00:022A: 18           	clc
+   319 00:022B: A9 00 01     	lda	#$100
+   320 00:022E: 6D xx xx     	adc	|~~basicvars+34
+   321 00:0231: 8D xx xx     	sta	|~~basicvars+38
+   322 00:0234: A9 00 00     	lda	#$0
+   323 00:0237: 6D xx xx     	adc	|~~basicvars+34+2
+   324 00:023A: 8D xx xx     	sta	|~~basicvars+38+2
+   325                        L20:
+   326 00:023D: 2B           	pld
+   327 00:023E: 3B           	tsc
+   328 00:023F: 18           	clc
+   329 00:0240: 69 04 00     	adc	#L18
+   330 00:0243: 1B           	tcs
+   331 00:0244: 6B           	rtl
+   332             00000004   L18	equ	4
+   333             00000005   L19	equ	5
+   334                        	ends
+   335                        	efunc
+   336                        	code
+   337                        	func
+   338                        ~~isvalidprog:
+   339                        	longa	on
+   340                        	longi	on
+   341 00:0245: 3B           	tsc
+  Sun Jan  9 2022 20:52                                                Page 7
+
+
+   342 00:0246: 38           	sec
+   343 00:0247: E9 0B 00     	sbc	#L21
+   344 00:024A: 1B           	tcs
+   345 00:024B: 0B           	phd
+   346 00:024C: 5B           	tcd
+   347             00000000   lastline_1	set	0
+   348             00000002   p_1	set	2
+   349             00000006   isnotfirst_1	set	6
+   350 00:024D: 64 05        	stz	<L22+lastline_1
+   351 00:024F: E2 20        	sep	#$20
+   352                        	longa	off
+   353 00:0251: 64 0B        	stz	<L22+isnotfirst_1
+   354 00:0253: C2 20        	rep	#$20
+   355                        	longa	on
+   356 00:0255: AD xx xx     	lda	|~~basicvars+22
+   357 00:0258: 85 07        	sta	<L22+p_1
+   358 00:025A: AD xx xx     	lda	|~~basicvars+22+2
+   359 00:025D: 85 09        	sta	<L22+p_1+2
+   360                        L10007:
+   361 00:025F: E2 20        	sep	#$20
+   362                        	longa	off
+   363 00:0261: A0 01 00     	ldy	#$1
+   364 00:0264: B7 07        	lda	[<L22+p_1],Y
+   365 00:0266: C9 FF        	cmp	#<$ff
+   366 00:0268: C2 20        	rep	#$20
+   367                        	longa	on
+   368 00:026A: D0 03        	bne	L23
+   369 00:026C: 82 78 00     	brl	L10008
+   370                        L23:
+   371 00:026F: D4 09        	pei	<L22+p_1+2
+   372 00:0271: D4 07        	pei	<L22+p_1
+   373 00:0273: 22 xx xx xx  	jsl	~~isvalid
+   374 00:0277: 29 FF 00     	and	#$ff
+   375 00:027A: D0 03        	bne	L25
+   376 00:027C: 82 23 00     	brl	L24
+   377                        L25:
+   378 00:027F: A5 0B        	lda	<L22+isnotfirst_1
+   379 00:0281: 29 FF 00     	and	#$ff
+   380 00:0284: D0 03        	bne	L26
+   381 00:0286: 82 26 00     	brl	L10009
+   382                        L26:
+   383 00:0289: D4 09        	pei	<L22+p_1+2
+   384 00:028B: D4 07        	pei	<L22+p_1
+   385 00:028D: 22 xx xx xx  	jsl	~~get_lineno
+   386 00:0291: 85 01        	sta	<R0
+   387 00:0293: 38           	sec
+   388 00:0294: A5 05        	lda	<L22+lastline_1
+   389 00:0296: E5 01        	sbc	<R0
+   390 00:0298: 70 03        	bvs	L27
+   391 00:029A: 49 00 80     	eor	#$8000
+   392                        L27:
+   393 00:029D: 30 03        	bmi	L28
+   394 00:029F: 82 0D 00     	brl	L10009
+   395                        L28:
+   396                        L24:
+   397 00:02A2: A9 00 00     	lda	#$0
+   398                        L29:
+   399 00:02A5: A8           	tay
+  Sun Jan  9 2022 20:52                                                Page 8
+
+
+   400 00:02A6: 2B           	pld
+   401 00:02A7: 3B           	tsc
+   402 00:02A8: 18           	clc
+   403 00:02A9: 69 0B 00     	adc	#L21
+   404 00:02AC: 1B           	tcs
+   405 00:02AD: 98           	tya
+   406 00:02AE: 6B           	rtl
+   407                        L10009:
+   408 00:02AF: D4 09        	pei	<L22+p_1+2
+   409 00:02B1: D4 07        	pei	<L22+p_1
+   410 00:02B3: 22 xx xx xx  	jsl	~~get_lineno
+   411 00:02B7: 85 05        	sta	<L22+lastline_1
+   412 00:02B9: E2 20        	sep	#$20
+   413                        	longa	off
+   414 00:02BB: A9 01        	lda	#$1
+   415 00:02BD: 85 0B        	sta	<L22+isnotfirst_1
+   416 00:02BF: C2 20        	rep	#$20
+   417                        	longa	on
+   418 00:02C1: D4 09        	pei	<L22+p_1+2
+   419 00:02C3: D4 07        	pei	<L22+p_1
+   420 00:02C5: 22 xx xx xx  	jsl	~~get_linelen
+   421 00:02C9: 85 01        	sta	<R0
+   422 00:02CB: A0 00 00     	ldy	#$0
+   423 00:02CE: A5 01        	lda	<R0
+   424 00:02D0: 10 01        	bpl	L30
+   425 00:02D2: 88           	dey
+   426                        L30:
+   427 00:02D3: 85 01        	sta	<R0
+   428 00:02D5: 84 03        	sty	<R0+2
+   429 00:02D7: 18           	clc
+   430 00:02D8: A5 07        	lda	<L22+p_1
+   431 00:02DA: 65 01        	adc	<R0
+   432 00:02DC: 85 07        	sta	<L22+p_1
+   433 00:02DE: A5 09        	lda	<L22+p_1+2
+   434 00:02E0: 65 03        	adc	<R0+2
+   435 00:02E2: 85 09        	sta	<L22+p_1+2
+   436 00:02E4: 82 78 FF     	brl	L10007
+   437                        L10008:
+   438 00:02E7: 64 01        	stz	<R0
+   439 00:02E9: E2 20        	sep	#$20
+   440                        	longa	off
+   441 00:02EB: A0 01 00     	ldy	#$1
+   442 00:02EE: B7 07        	lda	[<L22+p_1],Y
+   443 00:02F0: C9 FF        	cmp	#<$ff
+   444 00:02F2: C2 20        	rep	#$20
+   445                        	longa	on
+   446 00:02F4: F0 03        	beq	L32
+   447 00:02F6: 82 02 00     	brl	L31
+   448                        L32:
+   449 00:02F9: E6 01        	inc	<R0
+   450                        L31:
+   451 00:02FB: A5 01        	lda	<R0
+   452 00:02FD: 29 FF 00     	and	#$ff
+   453 00:0300: 82 A2 FF     	brl	L29
+   454             0000000B   L21	equ	11
+   455             00000005   L22	equ	5
+   456                        	ends
+   457                        	efunc
+  Sun Jan  9 2022 20:52                                                Page 9
+
+
+   458                        	code
+   459                        	xdef	~~recover_program
+   460                        	func
+   461                        ~~recover_program:
+   462                        	longa	on
+   463                        	longi	on
+   464 00:0303: 3B           	tsc
+   465 00:0304: 38           	sec
+   466 00:0305: E9 08 00     	sbc	#L33
+   467 00:0308: 1B           	tcs
+   468 00:0309: 0B           	phd
+   469 00:030A: 5B           	tcd
+   470             00000000   bp_1	set	0
+   471 00:030B: AD xx xx     	lda	|~~basicvars+437
+   472 00:030E: 89 04 00     	bit	#$4
+   473 00:0311: D0 03        	bne	L35
+   474 00:0313: 82 35 00     	brl	L10010
+   475                        L35:
+   476 00:0316: 22 xx xx xx  	jsl	~~reinstate
+   477 00:031A: AD xx xx     	lda	|~~basicvars+22
+   478 00:031D: 85 05        	sta	<L34+bp_1
+   479 00:031F: AD xx xx     	lda	|~~basicvars+22+2
+   480 00:0322: 85 07        	sta	<L34+bp_1+2
+   481 00:0324: 22 xx xx xx  	jsl	~~isvalidprog
+   482 00:0328: E2 20        	sep	#$20
+   483                        	longa	off
+   484 00:032A: 85 01        	sta	<R0
+   485 00:032C: C2 20        	rep	#$20
+   486                        	longa	on
+   487 00:032E: A5 01        	lda	<R0
+   488 00:0330: 29 FF 00     	and	#$ff
+   489 00:0333: 85 01        	sta	<R0
+   490 00:0335: 06 01        	asl	<R0
+   491 00:0337: 06 01        	asl	<R0
+   492 00:0339: A5 01        	lda	<R0
+   493 00:033B: 29 04 00     	and	#<$4
+   494 00:033E: 85 01        	sta	<R0
+   495 00:0340: A9 04 00     	lda	#$4
+   496 00:0343: 1C xx xx     	trb	|~~basicvars+437
+   497 00:0346: A5 01        	lda	<R0
+   498 00:0348: 0C xx xx     	tsb	|~~basicvars+437
+   499                        L10010:
+   500 00:034B: AD xx xx     	lda	|~~basicvars+437
+   501 00:034E: 89 04 00     	bit	#$4
+   502 00:0351: D0 03        	bne	L36
+   503 00:0353: 82 47 00     	brl	L10011
+   504                        L36:
+   505                        L10012:
+   506 00:0356: E2 20        	sep	#$20
+   507                        	longa	off
+   508 00:0358: A0 01 00     	ldy	#$1
+   509 00:035B: B7 05        	lda	[<L34+bp_1],Y
+   510 00:035D: C9 FF        	cmp	#<$ff
+   511 00:035F: C2 20        	rep	#$20
+   512                        	longa	on
+   513 00:0361: D0 03        	bne	L37
+   514 00:0363: 82 26 00     	brl	L10013
+   515                        L37:
+  Sun Jan  9 2022 20:52                                                Page 10
+
+
+   516 00:0366: D4 07        	pei	<L34+bp_1+2
+   517 00:0368: D4 05        	pei	<L34+bp_1
+   518 00:036A: 22 xx xx xx  	jsl	~~get_linelen
+   519 00:036E: 85 01        	sta	<R0
+   520 00:0370: A0 00 00     	ldy	#$0
+   521 00:0373: A5 01        	lda	<R0
+   522 00:0375: 10 01        	bpl	L38
+   523 00:0377: 88           	dey
+   524                        L38:
+   525 00:0378: 85 01        	sta	<R0
+   526 00:037A: 84 03        	sty	<R0+2
+   527 00:037C: 18           	clc
+   528 00:037D: A5 05        	lda	<L34+bp_1
+   529 00:037F: 65 01        	adc	<R0
+   530 00:0381: 85 05        	sta	<L34+bp_1
+   531 00:0383: A5 07        	lda	<L34+bp_1+2
+   532 00:0385: 65 03        	adc	<R0+2
+   533 00:0387: 85 07        	sta	<L34+bp_1+2
+   534 00:0389: 82 CA FF     	brl	L10012
+   535                        L10013:
+   536 00:038C: A5 05        	lda	<L34+bp_1
+   537 00:038E: 8D xx xx     	sta	|~~basicvars+26
+   538 00:0391: A5 07        	lda	<L34+bp_1+2
+   539 00:0393: 8D xx xx     	sta	|~~basicvars+26+2
+   540 00:0396: 22 xx xx xx  	jsl	~~adjust_heaplimits
+   541 00:039A: 82 5A 00     	brl	L10014
+   542                        L10011:
+   543 00:039D: 22 xx xx xx  	jsl	~~clear_varlists
+   544 00:03A1: 22 xx xx xx  	jsl	~~clear_strings
+   545 00:03A5: 22 xx xx xx  	jsl	~~clear_heap
+   546 00:03A9: A9 01 00     	lda	#$1
+   547 00:03AC: 0C xx xx     	tsb	~~basicvars+437
+   548 00:03AF: F4 00 FF     	pea	#<$ff00
+   549 00:03B2: AD xx xx     	lda	|~~basicvars+22+2
+   550 00:03B5: 48           	pha
+   551 00:03B6: AD xx xx     	lda	|~~basicvars+22
+   552 00:03B9: 48           	pha
+   553 00:03BA: 22 xx xx xx  	jsl	~~save_lineno
+   554 00:03BE: 18           	clc
+   555 00:03BF: A9 04 00     	lda	#$4
+   556 00:03C2: 6D xx xx     	adc	|~~basicvars+18
+   557 00:03C5: 8D xx xx     	sta	|~~basicvars+26
+   558 00:03C8: A9 00 00     	lda	#$0
+   559 00:03CB: 6D xx xx     	adc	|~~basicvars+18+2
+   560 00:03CE: 8D xx xx     	sta	|~~basicvars+26+2
+   561 00:03D1: AD xx xx     	lda	|~~basicvars+26
+   562 00:03D4: 8D xx xx     	sta	|~~basicvars+407
+   563 00:03D7: AD xx xx     	lda	|~~basicvars+26+2
+   564 00:03DA: 8D xx xx     	sta	|~~basicvars+407+2
+   565 00:03DD: AD xx xx     	lda	|~~basicvars+26
+   566 00:03E0: 8D xx xx     	sta	|~~basicvars+62
+   567 00:03E3: AD xx xx     	lda	|~~basicvars+26+2
+   568 00:03E6: 8D xx xx     	sta	|~~basicvars+62+2
+   569 00:03E9: 22 xx xx xx  	jsl	~~adjust_heaplimits
+   570 00:03ED: F4 07 00     	pea	#<$7
+   571 00:03F0: F4 04 00     	pea	#4
+   572 00:03F3: 22 xx xx xx  	jsl	~~error
+   573                        L10014:
+  Sun Jan  9 2022 20:52                                                Page 11
+
+
+   574                        L39:
+   575 00:03F7: 2B           	pld
+   576 00:03F8: 3B           	tsc
+   577 00:03F9: 18           	clc
+   578 00:03FA: 69 08 00     	adc	#L33
+   579 00:03FD: 1B           	tcs
+   580 00:03FE: 6B           	rtl
+   581             00000008   L33	equ	8
+   582             00000005   L34	equ	5
+   583                        	ends
+   584                        	efunc
+   585                        	code
+   586                        	func
+   587                        ~~clear_refs:
+   588                        	longa	on
+   589                        	longi	on
+   590 00:03FF: 3B           	tsc
+   591 00:0400: 38           	sec
+   592 00:0401: E9 14 00     	sbc	#L40
+   593 00:0404: 1B           	tcs
+   594 00:0405: 0B           	phd
+   595 00:0406: 5B           	tcd
+   596             00000000   bp_1	set	0
+   597             00000004   lp_1	set	4
+   598 00:0407: AD xx xx     	lda	|~~basicvars+423
+   599 00:040A: 89 40 00     	bit	#$40
+   600 00:040D: D0 03        	bne	L42
+   601 00:040F: 82 0C 00     	brl	L10015
+   602                        L42:
+   603 00:0412: 22 xx xx xx  	jsl	~~clear_varlists
+   604 00:0416: 22 xx xx xx  	jsl	~~clear_heap
+   605 00:041A: 22 xx xx xx  	jsl	~~clear_strings
+   606                        L10015:
+   607 00:041E: AD xx xx     	lda	|~~basicvars+423
+   608 00:0421: 89 20 00     	bit	#$20
+   609 00:0424: D0 03        	bne	L43
+   610 00:0426: 82 D5 00     	brl	L10016
+   611                        L43:
+   612 00:0429: AD xx xx     	lda	|~~basicvars+22
+   613 00:042C: 85 0D        	sta	<L41+bp_1
+   614 00:042E: AD xx xx     	lda	|~~basicvars+22+2
+   615 00:0431: 85 0F        	sta	<L41+bp_1+2
+   616                        L10017:
+   617 00:0433: E2 20        	sep	#$20
+   618                        	longa	off
+   619 00:0435: A0 01 00     	ldy	#$1
+   620 00:0438: B7 0D        	lda	[<L41+bp_1],Y
+   621 00:043A: C9 FF        	cmp	#<$ff
+   622 00:043C: C2 20        	rep	#$20
+   623                        	longa	on
+   624 00:043E: D0 03        	bne	L44
+   625 00:0440: 82 2E 00     	brl	L10018
+   626                        L44:
+   627 00:0443: D4 0F        	pei	<L41+bp_1+2
+   628 00:0445: D4 0D        	pei	<L41+bp_1
+   629 00:0447: 22 xx xx xx  	jsl	~~clear_linerefs
+   630 00:044B: D4 0F        	pei	<L41+bp_1+2
+   631 00:044D: D4 0D        	pei	<L41+bp_1
+  Sun Jan  9 2022 20:52                                                Page 12
+
+
+   632 00:044F: 22 xx xx xx  	jsl	~~get_linelen
+   633 00:0453: 85 01        	sta	<R0
+   634 00:0455: A0 00 00     	ldy	#$0
+   635 00:0458: A5 01        	lda	<R0
+   636 00:045A: 10 01        	bpl	L45
+   637 00:045C: 88           	dey
+   638                        L45:
+   639 00:045D: 85 01        	sta	<R0
+   640 00:045F: 84 03        	sty	<R0+2
+   641 00:0461: 18           	clc
+   642 00:0462: A5 0D        	lda	<L41+bp_1
+   643 00:0464: 65 01        	adc	<R0
+   644 00:0466: 85 0D        	sta	<L41+bp_1
+   645 00:0468: A5 0F        	lda	<L41+bp_1+2
+   646 00:046A: 65 03        	adc	<R0+2
+   647 00:046C: 85 0F        	sta	<L41+bp_1+2
+   648 00:046E: 82 C2 FF     	brl	L10017
+   649                        L10018:
+   650 00:0471: AD xx xx     	lda	|~~basicvars+415
+   651 00:0474: 85 11        	sta	<L41+lp_1
+   652 00:0476: AD xx xx     	lda	|~~basicvars+415+2
+   653 00:0479: 85 13        	sta	<L41+lp_1+2
+   654                        L10019:
+   655 00:047B: A5 11        	lda	<L41+lp_1
+   656 00:047D: 05 13        	ora	<L41+lp_1+2
+   657 00:047F: D0 03        	bne	L46
+   658 00:0481: 82 7A 00     	brl	L10020
+   659                        L46:
+   660 00:0484: A0 08 00     	ldy	#$8
+   661 00:0487: B7 11        	lda	[<L41+lp_1],Y
+   662 00:0489: 85 0D        	sta	<L41+bp_1
+   663 00:048B: A0 0A 00     	ldy	#$a
+   664 00:048E: B7 11        	lda	[<L41+lp_1],Y
+   665 00:0490: 85 0F        	sta	<L41+bp_1+2
+   666                        L10021:
+   667 00:0492: E2 20        	sep	#$20
+   668                        	longa	off
+   669 00:0494: A0 01 00     	ldy	#$1
+   670 00:0497: B7 0D        	lda	[<L41+bp_1],Y
+   671 00:0499: C9 FF        	cmp	#<$ff
+   672 00:049B: C2 20        	rep	#$20
+   673                        	longa	on
+   674 00:049D: D0 03        	bne	L47
+   675 00:049F: 82 46 00     	brl	L10022
+   676                        L47:
+   677 00:04A2: D4 0F        	pei	<L41+bp_1+2
+   678 00:04A4: D4 0D        	pei	<L41+bp_1
+   679 00:04A6: 22 xx xx xx  	jsl	~~clear_linerefs
+   680 00:04AA: A0 02 00     	ldy	#$2
+   681 00:04AD: B7 0D        	lda	[<L41+bp_1],Y
+   682 00:04AF: 29 FF 00     	and	#$ff
+   683 00:04B2: 85 01        	sta	<R0
+   684 00:04B4: A0 03 00     	ldy	#$3
+   685 00:04B7: B7 0D        	lda	[<L41+bp_1],Y
+   686 00:04B9: 29 FF 00     	and	#$ff
+   687 00:04BC: 85 09        	sta	<R2
+   688 00:04BE: A5 09        	lda	<R2
+   689 00:04C0: EB           	xba
+  Sun Jan  9 2022 20:52                                                Page 13
+
+
+   690 00:04C1: 29 00 FF     	and	#$ff00
+   691 00:04C4: 85 05        	sta	<R1
+   692 00:04C6: A5 05        	lda	<R1
+   693 00:04C8: 05 01        	ora	<R0
+   694 00:04CA: 85 09        	sta	<R2
+   695 00:04CC: A0 00 00     	ldy	#$0
+   696 00:04CF: A5 09        	lda	<R2
+   697 00:04D1: 10 01        	bpl	L48
+   698 00:04D3: 88           	dey
+   699                        L48:
+   700 00:04D4: 85 01        	sta	<R0
+   701 00:04D6: 84 03        	sty	<R0+2
+   702 00:04D8: 18           	clc
+   703 00:04D9: A5 0D        	lda	<L41+bp_1
+   704 00:04DB: 65 01        	adc	<R0
+   705 00:04DD: 85 0D        	sta	<L41+bp_1
+   706 00:04DF: A5 0F        	lda	<L41+bp_1+2
+   707 00:04E1: 65 03        	adc	<R0+2
+   708 00:04E3: 85 0F        	sta	<L41+bp_1+2
+   709 00:04E5: 82 AA FF     	brl	L10021
+   710                        L10022:
+   711 00:04E8: A7 11        	lda	[<L41+lp_1]
+   712 00:04EA: 85 01        	sta	<R0
+   713 00:04EC: A0 02 00     	ldy	#$2
+   714 00:04EF: B7 11        	lda	[<L41+lp_1],Y
+   715 00:04F1: 85 03        	sta	<R0+2
+   716 00:04F3: A5 01        	lda	<R0
+   717 00:04F5: 85 11        	sta	<L41+lp_1
+   718 00:04F7: A5 03        	lda	<R0+2
+   719 00:04F9: 85 13        	sta	<L41+lp_1+2
+   720 00:04FB: 82 7D FF     	brl	L10019
+   721                        L10020:
+   722                        L10016:
+   723 00:04FE: 9C xx xx     	stz	|~~basicvars+411
+   724 00:0501: 9C xx xx     	stz	|~~basicvars+411+2
+   725 00:0504: A9 20 00     	lda	#$20
+   726 00:0507: 1C xx xx     	trb	~~basicvars+423
+   727 00:050A: A9 40 00     	lda	#$40
+   728 00:050D: 1C xx xx     	trb	~~basicvars+423
+   729                        L49:
+   730 00:0510: 2B           	pld
+   731 00:0511: 3B           	tsc
+   732 00:0512: 18           	clc
+   733 00:0513: 69 14 00     	adc	#L40
+   734 00:0516: 1B           	tcs
+   735 00:0517: 6B           	rtl
+   736             00000014   L40	equ	20
+   737             0000000D   L41	equ	13
+   738                        	ends
+   739                        	efunc
+   740                        	code
+   741                        	func
+   742                        ~~insert_line:
+   743                        	longa	on
+   744                        	longi	on
+   745 00:0518: 3B           	tsc
+   746 00:0519: 38           	sec
+   747 00:051A: E9 1A 00     	sbc	#L50
+  Sun Jan  9 2022 20:52                                                Page 14
+
+
+   748 00:051D: 1B           	tcs
+   749 00:051E: 0B           	phd
+   750 00:051F: 5B           	tcd
+   751             00000004   line_0	set	4
+   752             00000000   lendiff_1	set	0
+   753             00000002   newline_1	set	2
+   754             00000004   newlength_1	set	4
+   755             00000006   bp_1	set	6
+   756             0000000A   prev_1	set	10
+   757 00:0520: D4 20        	pei	<L50+line_0+2
+   758 00:0522: D4 1E        	pei	<L50+line_0
+   759 00:0524: 22 xx xx xx  	jsl	~~get_lineno
+   760 00:0528: 85 0F        	sta	<L51+newline_1
+   761 00:052A: D4 20        	pei	<L50+line_0+2
+   762 00:052C: D4 1E        	pei	<L50+line_0
+   763 00:052E: 22 xx xx xx  	jsl	~~get_linelen
+   764 00:0532: 85 11        	sta	<L51+newlength_1
+   765 00:0534: AD xx xx     	lda	|~~last_added
+   766 00:0537: 0D xx xx     	ora	|~~last_added+2
+   767 00:053A: D0 03        	bne	L52
+   768 00:053C: 82 2A 00     	brl	L10023
+   769                        L52:
+   770 00:053F: AD xx xx     	lda	|~~last_added+2
+   771 00:0542: 48           	pha
+   772 00:0543: AD xx xx     	lda	|~~last_added
+   773 00:0546: 48           	pha
+   774 00:0547: 22 xx xx xx  	jsl	~~get_lineno
+   775 00:054B: 85 01        	sta	<R0
+   776 00:054D: 38           	sec
+   777 00:054E: A5 0F        	lda	<L51+newline_1
+   778 00:0550: E5 01        	sbc	<R0
+   779 00:0552: 70 03        	bvs	L53
+   780 00:0554: 49 00 80     	eor	#$8000
+   781                        L53:
+   782 00:0557: 30 03        	bmi	L54
+   783 00:0559: 82 0D 00     	brl	L10023
+   784                        L54:
+   785 00:055C: AD xx xx     	lda	|~~last_added
+   786 00:055F: 85 13        	sta	<L51+bp_1
+   787 00:0561: AD xx xx     	lda	|~~last_added+2
+   788 00:0564: 85 15        	sta	<L51+bp_1+2
+   789 00:0566: 82 0A 00     	brl	L10024
+   790                        L10023:
+   791 00:0569: AD xx xx     	lda	|~~basicvars+22
+   792 00:056C: 85 13        	sta	<L51+bp_1
+   793 00:056E: AD xx xx     	lda	|~~basicvars+22+2
+   794 00:0571: 85 15        	sta	<L51+bp_1+2
+   795                        L10024:
+   796 00:0573: 64 17        	stz	<L51+prev_1
+   797 00:0575: 64 19        	stz	<L51+prev_1+2
+   798                        L10025:
+   799 00:0577: D4 15        	pei	<L51+bp_1+2
+   800 00:0579: D4 13        	pei	<L51+bp_1
+   801 00:057B: 22 xx xx xx  	jsl	~~get_lineno
+   802 00:057F: 85 01        	sta	<R0
+   803 00:0581: 38           	sec
+   804 00:0582: A5 0F        	lda	<L51+newline_1
+   805 00:0584: E5 01        	sbc	<R0
+  Sun Jan  9 2022 20:52                                                Page 15
+
+
+   806 00:0586: 70 03        	bvs	L55
+   807 00:0588: 49 00 80     	eor	#$8000
+   808                        L55:
+   809 00:058B: 30 03        	bmi	L56
+   810 00:058D: 82 2E 00     	brl	L10026
+   811                        L56:
+   812 00:0590: A5 13        	lda	<L51+bp_1
+   813 00:0592: 85 17        	sta	<L51+prev_1
+   814 00:0594: A5 15        	lda	<L51+bp_1+2
+   815 00:0596: 85 19        	sta	<L51+prev_1+2
+   816 00:0598: D4 15        	pei	<L51+bp_1+2
+   817 00:059A: D4 13        	pei	<L51+bp_1
+   818 00:059C: 22 xx xx xx  	jsl	~~get_linelen
+   819 00:05A0: 85 01        	sta	<R0
+   820 00:05A2: A0 00 00     	ldy	#$0
+   821 00:05A5: A5 01        	lda	<R0
+   822 00:05A7: 10 01        	bpl	L57
+   823 00:05A9: 88           	dey
+   824                        L57:
+   825 00:05AA: 85 01        	sta	<R0
+   826 00:05AC: 84 03        	sty	<R0+2
+   827 00:05AE: 18           	clc
+   828 00:05AF: A5 13        	lda	<L51+bp_1
+   829 00:05B1: 65 01        	adc	<R0
+   830 00:05B3: 85 13        	sta	<L51+bp_1
+   831 00:05B5: A5 15        	lda	<L51+bp_1+2
+   832 00:05B7: 65 03        	adc	<R0+2
+   833 00:05B9: 85 15        	sta	<L51+bp_1+2
+   834 00:05BB: 82 B9 FF     	brl	L10025
+   835                        L10026:
+   836 00:05BE: A5 17        	lda	<L51+prev_1
+   837 00:05C0: 05 19        	ora	<L51+prev_1+2
+   838 00:05C2: D0 03        	bne	L58
+   839 00:05C4: 82 EC 00     	brl	L10027
+   840                        L58:
+   841 00:05C7: D4 19        	pei	<L51+prev_1+2
+   842 00:05C9: D4 17        	pei	<L51+prev_1
+   843 00:05CB: 22 xx xx xx  	jsl	~~get_lineno
+   844 00:05CF: 85 01        	sta	<R0
+   845 00:05D1: A5 01        	lda	<R0
+   846 00:05D3: C5 0F        	cmp	<L51+newline_1
+   847 00:05D5: F0 03        	beq	L59
+   848 00:05D7: 82 D9 00     	brl	L10027
+   849                        L59:
+   850 00:05DA: D4 19        	pei	<L51+prev_1+2
+   851 00:05DC: D4 17        	pei	<L51+prev_1
+   852 00:05DE: 22 xx xx xx  	jsl	~~get_linelen
+   853 00:05E2: 85 01        	sta	<R0
+   854 00:05E4: 38           	sec
+   855 00:05E5: A5 11        	lda	<L51+newlength_1
+   856 00:05E7: E5 01        	sbc	<R0
+   857 00:05E9: 85 0D        	sta	<L51+lendiff_1
+   858 00:05EB: A5 0D        	lda	<L51+lendiff_1
+   859 00:05ED: D0 03        	bne	L60
+   860 00:05EF: 82 98 00     	brl	L10028
+   861                        L60:
+   862 00:05F2: A0 00 00     	ldy	#$0
+   863 00:05F5: A5 0D        	lda	<L51+lendiff_1
+  Sun Jan  9 2022 20:52                                                Page 16
+
+
+   864 00:05F7: 10 01        	bpl	L61
+   865 00:05F9: 88           	dey
+   866                        L61:
+   867 00:05FA: 85 01        	sta	<R0
+   868 00:05FC: 84 03        	sty	<R0+2
+   869 00:05FE: 18           	clc
+   870 00:05FF: AD xx xx     	lda	|~~basicvars+26
+   871 00:0602: 65 01        	adc	<R0
+   872 00:0604: 85 05        	sta	<R1
+   873 00:0606: AD xx xx     	lda	|~~basicvars+26+2
+   874 00:0609: 65 03        	adc	<R0+2
+   875 00:060B: 85 07        	sta	<R1+2
+   876 00:060D: A5 05        	lda	<R1
+   877 00:060F: CD xx xx     	cmp	|~~basicvars+50
+   878 00:0612: A5 07        	lda	<R1+2
+   879 00:0614: ED xx xx     	sbc	|~~basicvars+50+2
+   880 00:0617: B0 03        	bcs	L62
+   881 00:0619: 82 0A 00     	brl	L10029
+   882                        L62:
+   883 00:061C: F4 59 00     	pea	#<$59
+   884 00:061F: F4 04 00     	pea	#4
+   885 00:0622: 22 xx xx xx  	jsl	~~error
+   886                        L10029:
+   887 00:0626: 38           	sec
+   888 00:0627: AD xx xx     	lda	|~~basicvars+26
+   889 00:062A: E5 13        	sbc	<L51+bp_1
+   890 00:062C: 85 01        	sta	<R0
+   891 00:062E: AD xx xx     	lda	|~~basicvars+26+2
+   892 00:0631: E5 15        	sbc	<L51+bp_1+2
+   893 00:0633: 85 03        	sta	<R0+2
+   894 00:0635: 18           	clc
+   895 00:0636: A9 08 00     	lda	#$8
+   896 00:0639: 65 01        	adc	<R0
+   897 00:063B: 85 05        	sta	<R1
+   898 00:063D: A9 00 00     	lda	#$0
+   899 00:0640: 65 03        	adc	<R0+2
+   900 00:0642: 85 07        	sta	<R1+2
+   901 00:0644: D4 07        	pei	<R1+2
+   902 00:0646: D4 05        	pei	<R1
+   903 00:0648: D4 15        	pei	<L51+bp_1+2
+   904 00:064A: D4 13        	pei	<L51+bp_1
+   905 00:064C: A0 00 00     	ldy	#$0
+   906 00:064F: A5 11        	lda	<L51+newlength_1
+   907 00:0651: 10 01        	bpl	L63
+   908 00:0653: 88           	dey
+   909                        L63:
+   910 00:0654: 85 01        	sta	<R0
+   911 00:0656: 84 03        	sty	<R0+2
+   912 00:0658: 18           	clc
+   913 00:0659: A5 17        	lda	<L51+prev_1
+   914 00:065B: 65 01        	adc	<R0
+   915 00:065D: 85 09        	sta	<R2
+   916 00:065F: A5 19        	lda	<L51+prev_1+2
+   917 00:0661: 65 03        	adc	<R0+2
+   918 00:0663: 85 0B        	sta	<R2+2
+   919 00:0665: D4 0B        	pei	<R2+2
+   920 00:0667: D4 09        	pei	<R2
+   921 00:0669: 22 xx xx xx  	jsl	~~memmove
+  Sun Jan  9 2022 20:52                                                Page 17
+
+
+   922 00:066D: A0 00 00     	ldy	#$0
+   923 00:0670: A5 0D        	lda	<L51+lendiff_1
+   924 00:0672: 10 01        	bpl	L64
+   925 00:0674: 88           	dey
+   926                        L64:
+   927 00:0675: 85 01        	sta	<R0
+   928 00:0677: 84 03        	sty	<R0+2
+   929 00:0679: 18           	clc
+   930 00:067A: AD xx xx     	lda	|~~basicvars+26
+   931 00:067D: 65 01        	adc	<R0
+   932 00:067F: 8D xx xx     	sta	|~~basicvars+26
+   933 00:0682: AD xx xx     	lda	|~~basicvars+26+2
+   934 00:0685: 65 03        	adc	<R0+2
+   935 00:0687: 8D xx xx     	sta	|~~basicvars+26+2
+   936                        L10028:
+   937 00:068A: A0 00 00     	ldy	#$0
+   938 00:068D: A5 11        	lda	<L51+newlength_1
+   939 00:068F: 10 01        	bpl	L65
+   940 00:0691: 88           	dey
+   941                        L65:
+   942 00:0692: 85 01        	sta	<R0
+   943 00:0694: 84 03        	sty	<R0+2
+   944 00:0696: D4 03        	pei	<R0+2
+   945 00:0698: D4 01        	pei	<R0
+   946 00:069A: D4 20        	pei	<L50+line_0+2
+   947 00:069C: D4 1E        	pei	<L50+line_0
+   948 00:069E: D4 19        	pei	<L51+prev_1+2
+   949 00:06A0: D4 17        	pei	<L51+prev_1
+   950 00:06A2: 22 xx xx xx  	jsl	~~memmove
+   951 00:06A6: A5 17        	lda	<L51+prev_1
+   952 00:06A8: 8D xx xx     	sta	|~~last_added
+   953 00:06AB: A5 19        	lda	<L51+prev_1+2
+   954 00:06AD: 8D xx xx     	sta	|~~last_added+2
+   955 00:06B0: 82 BE 00     	brl	L10030
+   956                        L10027:
+   957 00:06B3: A0 00 00     	ldy	#$0
+   958 00:06B6: A5 11        	lda	<L51+newlength_1
+   959 00:06B8: 10 01        	bpl	L66
+   960 00:06BA: 88           	dey
+   961                        L66:
+   962 00:06BB: 85 01        	sta	<R0
+   963 00:06BD: 84 03        	sty	<R0+2
+   964 00:06BF: 18           	clc
+   965 00:06C0: AD xx xx     	lda	|~~basicvars+26
+   966 00:06C3: 65 01        	adc	<R0
+   967 00:06C5: 85 05        	sta	<R1
+   968 00:06C7: AD xx xx     	lda	|~~basicvars+26+2
+   969 00:06CA: 65 03        	adc	<R0+2
+   970 00:06CC: 85 07        	sta	<R1+2
+   971 00:06CE: A5 05        	lda	<R1
+   972 00:06D0: CD xx xx     	cmp	|~~basicvars+50
+   973 00:06D3: A5 07        	lda	<R1+2
+   974 00:06D5: ED xx xx     	sbc	|~~basicvars+50+2
+   975 00:06D8: B0 03        	bcs	L67
+   976 00:06DA: 82 0A 00     	brl	L10031
+   977                        L67:
+   978 00:06DD: F4 59 00     	pea	#<$59
+   979 00:06E0: F4 04 00     	pea	#4
+  Sun Jan  9 2022 20:52                                                Page 18
+
+
+   980 00:06E3: 22 xx xx xx  	jsl	~~error
+   981                        L10031:
+   982 00:06E7: 38           	sec
+   983 00:06E8: AD xx xx     	lda	|~~basicvars+26
+   984 00:06EB: E5 13        	sbc	<L51+bp_1
+   985 00:06ED: 85 01        	sta	<R0
+   986 00:06EF: AD xx xx     	lda	|~~basicvars+26+2
+   987 00:06F2: E5 15        	sbc	<L51+bp_1+2
+   988 00:06F4: 85 03        	sta	<R0+2
+   989 00:06F6: 18           	clc
+   990 00:06F7: A9 08 00     	lda	#$8
+   991 00:06FA: 65 01        	adc	<R0
+   992 00:06FC: 85 05        	sta	<R1
+   993 00:06FE: A9 00 00     	lda	#$0
+   994 00:0701: 65 03        	adc	<R0+2
+   995 00:0703: 85 07        	sta	<R1+2
+   996 00:0705: D4 07        	pei	<R1+2
+   997 00:0707: D4 05        	pei	<R1
+   998 00:0709: D4 15        	pei	<L51+bp_1+2
+   999 00:070B: D4 13        	pei	<L51+bp_1
+  1000 00:070D: A0 00 00     	ldy	#$0
+  1001 00:0710: A5 11        	lda	<L51+newlength_1
+  1002 00:0712: 10 01        	bpl	L68
+  1003 00:0714: 88           	dey
+  1004                        L68:
+  1005 00:0715: 85 01        	sta	<R0
+  1006 00:0717: 84 03        	sty	<R0+2
+  1007 00:0719: 18           	clc
+  1008 00:071A: A5 13        	lda	<L51+bp_1
+  1009 00:071C: 65 01        	adc	<R0
+  1010 00:071E: 85 09        	sta	<R2
+  1011 00:0720: A5 15        	lda	<L51+bp_1+2
+  1012 00:0722: 65 03        	adc	<R0+2
+  1013 00:0724: 85 0B        	sta	<R2+2
+  1014 00:0726: D4 0B        	pei	<R2+2
+  1015 00:0728: D4 09        	pei	<R2
+  1016 00:072A: 22 xx xx xx  	jsl	~~memmove
+  1017 00:072E: A0 00 00     	ldy	#$0
+  1018 00:0731: A5 11        	lda	<L51+newlength_1
+  1019 00:0733: 10 01        	bpl	L69
+  1020 00:0735: 88           	dey
+  1021                        L69:
+  1022 00:0736: 85 01        	sta	<R0
+  1023 00:0738: 84 03        	sty	<R0+2
+  1024 00:073A: D4 03        	pei	<R0+2
+  1025 00:073C: D4 01        	pei	<R0
+  1026 00:073E: D4 20        	pei	<L50+line_0+2
+  1027 00:0740: D4 1E        	pei	<L50+line_0
+  1028 00:0742: D4 15        	pei	<L51+bp_1+2
+  1029 00:0744: D4 13        	pei	<L51+bp_1
+  1030 00:0746: 22 xx xx xx  	jsl	~~memmove
+  1031 00:074A: A0 00 00     	ldy	#$0
+  1032 00:074D: A5 11        	lda	<L51+newlength_1
+  1033 00:074F: 10 01        	bpl	L70
+  1034 00:0751: 88           	dey
+  1035                        L70:
+  1036 00:0752: 85 01        	sta	<R0
+  1037 00:0754: 84 03        	sty	<R0+2
+  Sun Jan  9 2022 20:52                                                Page 19
+
+
+  1038 00:0756: 18           	clc
+  1039 00:0757: AD xx xx     	lda	|~~basicvars+26
+  1040 00:075A: 65 01        	adc	<R0
+  1041 00:075C: 8D xx xx     	sta	|~~basicvars+26
+  1042 00:075F: AD xx xx     	lda	|~~basicvars+26+2
+  1043 00:0762: 65 03        	adc	<R0+2
+  1044 00:0764: 8D xx xx     	sta	|~~basicvars+26+2
+  1045 00:0767: A5 13        	lda	<L51+bp_1
+  1046 00:0769: 8D xx xx     	sta	|~~last_added
+  1047 00:076C: A5 15        	lda	<L51+bp_1+2
+  1048 00:076E: 8D xx xx     	sta	|~~last_added+2
+  1049                        L10030:
+  1050 00:0771: 22 xx xx xx  	jsl	~~adjust_heaplimits
+  1051                        L71:
+  1052 00:0775: A5 1C        	lda	<L50+2
+  1053 00:0777: 85 20        	sta	<L50+2+4
+  1054 00:0779: A5 1B        	lda	<L50+1
+  1055 00:077B: 85 1F        	sta	<L50+1+4
+  1056 00:077D: 2B           	pld
+  1057 00:077E: 3B           	tsc
+  1058 00:077F: 18           	clc
+  1059 00:0780: 69 1E 00     	adc	#L50+4
+  1060 00:0783: 1B           	tcs
+  1061 00:0784: 6B           	rtl
+  1062             0000001A   L50	equ	26
+  1063             0000000D   L51	equ	13
+  1064                        	ends
+  1065                        	efunc
+  1066                        	code
+  1067                        	xdef	~~delete_line
+  1068                        	func
+  1069                        ~~delete_line:
+  1070                        	longa	on
+  1071                        	longi	on
+  1072 00:0785: 3B           	tsc
+  1073 00:0786: 38           	sec
+  1074 00:0787: E9 12 00     	sbc	#L72
+  1075 00:078A: 1B           	tcs
+  1076 00:078B: 0B           	phd
+  1077 00:078C: 5B           	tcd
+  1078             00000004   line_0	set	4
+  1079             00000000   length_1	set	0
+  1080             00000002   p_1	set	2
+  1081 00:078D: D4 16        	pei	<L72+line_0
+  1082 00:078F: 22 xx xx xx  	jsl	~~find_line
+  1083 00:0793: 85 0F        	sta	<L73+p_1
+  1084 00:0795: 86 11        	stx	<L73+p_1+2
+  1085 00:0797: D4 11        	pei	<L73+p_1+2
+  1086 00:0799: D4 0F        	pei	<L73+p_1
+  1087 00:079B: 22 xx xx xx  	jsl	~~get_lineno
+  1088 00:079F: 85 01        	sta	<R0
+  1089 00:07A1: A5 01        	lda	<R0
+  1090 00:07A3: C5 16        	cmp	<L72+line_0
+  1091 00:07A5: F0 03        	beq	L74
+  1092 00:07A7: 82 91 00     	brl	L10032
+  1093                        L74:
+  1094 00:07AA: D4 11        	pei	<L73+p_1+2
+  1095 00:07AC: D4 0F        	pei	<L73+p_1
+  Sun Jan  9 2022 20:52                                                Page 20
+
+
+  1096 00:07AE: 22 xx xx xx  	jsl	~~get_linelen
+  1097 00:07B2: 85 0D        	sta	<L73+length_1
+  1098 00:07B4: A0 00 00     	ldy	#$0
+  1099 00:07B7: A5 0D        	lda	<L73+length_1
+  1100 00:07B9: 10 01        	bpl	L75
+  1101 00:07BB: 88           	dey
+  1102                        L75:
+  1103 00:07BC: 85 01        	sta	<R0
+  1104 00:07BE: 84 03        	sty	<R0+2
+  1105 00:07C0: 38           	sec
+  1106 00:07C1: AD xx xx     	lda	|~~basicvars+26
+  1107 00:07C4: E5 0F        	sbc	<L73+p_1
+  1108 00:07C6: 85 05        	sta	<R1
+  1109 00:07C8: AD xx xx     	lda	|~~basicvars+26+2
+  1110 00:07CB: E5 11        	sbc	<L73+p_1+2
+  1111 00:07CD: 85 07        	sta	<R1+2
+  1112 00:07CF: 38           	sec
+  1113 00:07D0: A5 05        	lda	<R1
+  1114 00:07D2: E5 01        	sbc	<R0
+  1115 00:07D4: 85 09        	sta	<R2
+  1116 00:07D6: A5 07        	lda	<R1+2
+  1117 00:07D8: E5 03        	sbc	<R0+2
+  1118 00:07DA: 85 0B        	sta	<R2+2
+  1119 00:07DC: 18           	clc
+  1120 00:07DD: A9 08 00     	lda	#$8
+  1121 00:07E0: 65 09        	adc	<R2
+  1122 00:07E2: 85 01        	sta	<R0
+  1123 00:07E4: A9 00 00     	lda	#$0
+  1124 00:07E7: 65 0B        	adc	<R2+2
+  1125 00:07E9: 85 03        	sta	<R0+2
+  1126 00:07EB: D4 03        	pei	<R0+2
+  1127 00:07ED: D4 01        	pei	<R0
+  1128 00:07EF: A0 00 00     	ldy	#$0
+  1129 00:07F2: A5 0D        	lda	<L73+length_1
+  1130 00:07F4: 10 01        	bpl	L76
+  1131 00:07F6: 88           	dey
+  1132                        L76:
+  1133 00:07F7: 85 05        	sta	<R1
+  1134 00:07F9: 84 07        	sty	<R1+2
+  1135 00:07FB: 18           	clc
+  1136 00:07FC: A5 0F        	lda	<L73+p_1
+  1137 00:07FE: 65 05        	adc	<R1
+  1138 00:0800: 85 09        	sta	<R2
+  1139 00:0802: A5 11        	lda	<L73+p_1+2
+  1140 00:0804: 65 07        	adc	<R1+2
+  1141 00:0806: 85 0B        	sta	<R2+2
+  1142 00:0808: D4 0B        	pei	<R2+2
+  1143 00:080A: D4 09        	pei	<R2
+  1144 00:080C: D4 11        	pei	<L73+p_1+2
+  1145 00:080E: D4 0F        	pei	<L73+p_1
+  1146 00:0810: 22 xx xx xx  	jsl	~~memmove
+  1147 00:0814: A0 00 00     	ldy	#$0
+  1148 00:0817: A5 0D        	lda	<L73+length_1
+  1149 00:0819: 10 01        	bpl	L77
+  1150 00:081B: 88           	dey
+  1151                        L77:
+  1152 00:081C: 85 01        	sta	<R0
+  1153 00:081E: 84 03        	sty	<R0+2
+  Sun Jan  9 2022 20:52                                                Page 21
+
+
+  1154 00:0820: 38           	sec
+  1155 00:0821: AD xx xx     	lda	|~~basicvars+26
+  1156 00:0824: E5 01        	sbc	<R0
+  1157 00:0826: 8D xx xx     	sta	|~~basicvars+26
+  1158 00:0829: AD xx xx     	lda	|~~basicvars+26+2
+  1159 00:082C: E5 03        	sbc	<R0+2
+  1160 00:082E: 8D xx xx     	sta	|~~basicvars+26+2
+  1161 00:0831: 22 xx xx xx  	jsl	~~adjust_heaplimits
+  1162 00:0835: 9C xx xx     	stz	|~~last_added
+  1163 00:0838: 9C xx xx     	stz	|~~last_added+2
+  1164                        L10032:
+  1165                        L78:
+  1166 00:083B: A5 14        	lda	<L72+2
+  1167 00:083D: 85 16        	sta	<L72+2+2
+  1168 00:083F: A5 13        	lda	<L72+1
+  1169 00:0841: 85 15        	sta	<L72+1+2
+  1170 00:0843: 2B           	pld
+  1171 00:0844: 3B           	tsc
+  1172 00:0845: 18           	clc
+  1173 00:0846: 69 14 00     	adc	#L72+2
+  1174 00:0849: 1B           	tcs
+  1175 00:084A: 6B           	rtl
+  1176             00000012   L72	equ	18
+  1177             0000000D   L73	equ	13
+  1178                        	ends
+  1179                        	efunc
+  1180                        	code
+  1181                        	xdef	~~delete_range
+  1182                        	func
+  1183                        ~~delete_range:
+  1184                        	longa	on
+  1185                        	longi	on
+  1186 00:084B: 3B           	tsc
+  1187 00:084C: 38           	sec
+  1188 00:084D: E9 10 00     	sbc	#L79
+  1189 00:0850: 1B           	tcs
+  1190 00:0851: 0B           	phd
+  1191 00:0852: 5B           	tcd
+  1192             00000004   low_0	set	4
+  1193             00000006   high_0	set	6
+  1194             00000000   lowline_1	set	0
+  1195             00000004   highline_1	set	4
+  1196 00:0853: 38           	sec
+  1197 00:0854: A5 16        	lda	<L79+high_0
+  1198 00:0856: E5 14        	sbc	<L79+low_0
+  1199 00:0858: 70 03        	bvs	L81
+  1200 00:085A: 49 00 80     	eor	#$8000
+  1201                        L81:
+  1202 00:085D: 10 03        	bpl	L82
+  1203 00:085F: 82 10 00     	brl	L10033
+  1204                        L82:
+  1205                        L83:
+  1206 00:0862: A5 12        	lda	<L79+2
+  1207 00:0864: 85 16        	sta	<L79+2+4
+  1208 00:0866: A5 11        	lda	<L79+1
+  1209 00:0868: 85 15        	sta	<L79+1+4
+  1210 00:086A: 2B           	pld
+  1211 00:086B: 3B           	tsc
+  Sun Jan  9 2022 20:52                                                Page 22
+
+
+  1212 00:086C: 18           	clc
+  1213 00:086D: 69 14 00     	adc	#L79+4
+  1214 00:0870: 1B           	tcs
+  1215 00:0871: 6B           	rtl
+  1216                        L10033:
+  1217 00:0872: D4 14        	pei	<L79+low_0
+  1218 00:0874: 22 xx xx xx  	jsl	~~find_line
+  1219 00:0878: 85 09        	sta	<L80+lowline_1
+  1220 00:087A: 86 0B        	stx	<L80+lowline_1+2
+  1221 00:087C: D4 0B        	pei	<L80+lowline_1+2
+  1222 00:087E: D4 09        	pei	<L80+lowline_1
+  1223 00:0880: 22 xx xx xx  	jsl	~~get_lineno
+  1224 00:0884: 85 01        	sta	<R0
+  1225 00:0886: A5 01        	lda	<R0
+  1226 00:0888: C9 00 FF     	cmp	#<$ff00
+  1227 00:088B: F0 03        	beq	L84
+  1228 00:088D: 82 03 00     	brl	L10034
+  1229                        L84:
+  1230 00:0890: 82 CF FF     	brl	L83
+  1231                        L10034:
+  1232 00:0893: 22 xx xx xx  	jsl	~~clear_refs
+  1233 00:0897: D4 16        	pei	<L79+high_0
+  1234 00:0899: 22 xx xx xx  	jsl	~~find_line
+  1235 00:089D: 85 0D        	sta	<L80+highline_1
+  1236 00:089F: 86 0F        	stx	<L80+highline_1+2
+  1237 00:08A1: D4 0F        	pei	<L80+highline_1+2
+  1238 00:08A3: D4 0D        	pei	<L80+highline_1
+  1239 00:08A5: 22 xx xx xx  	jsl	~~get_lineno
+  1240 00:08A9: 85 01        	sta	<R0
+  1241 00:08AB: A5 01        	lda	<R0
+  1242 00:08AD: C5 16        	cmp	<L79+high_0
+  1243 00:08AF: F0 03        	beq	L85
+  1244 00:08B1: 82 23 00     	brl	L10035
+  1245                        L85:
+  1246 00:08B4: D4 0F        	pei	<L80+highline_1+2
+  1247 00:08B6: D4 0D        	pei	<L80+highline_1
+  1248 00:08B8: 22 xx xx xx  	jsl	~~get_linelen
+  1249 00:08BC: 85 01        	sta	<R0
+  1250 00:08BE: A0 00 00     	ldy	#$0
+  1251 00:08C1: A5 01        	lda	<R0
+  1252 00:08C3: 10 01        	bpl	L86
+  1253 00:08C5: 88           	dey
+  1254                        L86:
+  1255 00:08C6: 85 01        	sta	<R0
+  1256 00:08C8: 84 03        	sty	<R0+2
+  1257 00:08CA: 18           	clc
+  1258 00:08CB: A5 0D        	lda	<L80+highline_1
+  1259 00:08CD: 65 01        	adc	<R0
+  1260 00:08CF: 85 0D        	sta	<L80+highline_1
+  1261 00:08D1: A5 0F        	lda	<L80+highline_1+2
+  1262 00:08D3: 65 03        	adc	<R0+2
+  1263 00:08D5: 85 0F        	sta	<L80+highline_1+2
+  1264                        L10035:
+  1265 00:08D7: 38           	sec
+  1266 00:08D8: AD xx xx     	lda	|~~basicvars+26
+  1267 00:08DB: E5 0D        	sbc	<L80+highline_1
+  1268 00:08DD: 85 01        	sta	<R0
+  1269 00:08DF: AD xx xx     	lda	|~~basicvars+26+2
+  Sun Jan  9 2022 20:52                                                Page 23
+
+
+  1270 00:08E2: E5 0F        	sbc	<L80+highline_1+2
+  1271 00:08E4: 85 03        	sta	<R0+2
+  1272 00:08E6: 18           	clc
+  1273 00:08E7: A9 08 00     	lda	#$8
+  1274 00:08EA: 65 01        	adc	<R0
+  1275 00:08EC: 85 05        	sta	<R1
+  1276 00:08EE: A9 00 00     	lda	#$0
+  1277 00:08F1: 65 03        	adc	<R0+2
+  1278 00:08F3: 85 07        	sta	<R1+2
+  1279 00:08F5: D4 07        	pei	<R1+2
+  1280 00:08F7: D4 05        	pei	<R1
+  1281 00:08F9: D4 0F        	pei	<L80+highline_1+2
+  1282 00:08FB: D4 0D        	pei	<L80+highline_1
+  1283 00:08FD: D4 0B        	pei	<L80+lowline_1+2
+  1284 00:08FF: D4 09        	pei	<L80+lowline_1
+  1285 00:0901: 22 xx xx xx  	jsl	~~memmove
+  1286 00:0905: 38           	sec
+  1287 00:0906: A5 0D        	lda	<L80+highline_1
+  1288 00:0908: E5 09        	sbc	<L80+lowline_1
+  1289 00:090A: 85 01        	sta	<R0
+  1290 00:090C: A5 0F        	lda	<L80+highline_1+2
+  1291 00:090E: E5 0B        	sbc	<L80+lowline_1+2
+  1292 00:0910: 85 03        	sta	<R0+2
+  1293 00:0912: 38           	sec
+  1294 00:0913: AD xx xx     	lda	|~~basicvars+26
+  1295 00:0916: E5 01        	sbc	<R0
+  1296 00:0918: 8D xx xx     	sta	|~~basicvars+26
+  1297 00:091B: AD xx xx     	lda	|~~basicvars+26+2
+  1298 00:091E: E5 03        	sbc	<R0+2
+  1299 00:0920: 8D xx xx     	sta	|~~basicvars+26+2
+  1300 00:0923: 22 xx xx xx  	jsl	~~adjust_heaplimits
+  1301 00:0927: 9C xx xx     	stz	|~~last_added
+  1302 00:092A: 9C xx xx     	stz	|~~last_added+2
+  1303 00:092D: 82 32 FF     	brl	L83
+  1304             00000010   L79	equ	16
+  1305             00000009   L80	equ	9
+  1306                        	ends
+  1307                        	efunc
+  1308                        	code
+  1309                        	xdef	~~renumber_program
+  1310                        	func
+  1311                        ~~renumber_program:
+  1312                        	longa	on
+  1313                        	longi	on
+  1314 00:0930: 3B           	tsc
+  1315 00:0931: 38           	sec
+  1316 00:0932: E9 09 00     	sbc	#L87
+  1317 00:0935: 1B           	tcs
+  1318 00:0936: 0B           	phd
+  1319 00:0937: 5B           	tcd
+  1320             00000004   progstart_0	set	4
+  1321             00000008   start_0	set	8
+  1322             0000000A   step_0	set	10
+  1323             00000000   bp_1	set	0
+  1324             00000004   ok_1	set	4
+  1325 00:0938: A5 0D        	lda	<L87+progstart_0
+  1326 00:093A: 85 05        	sta	<L88+bp_1
+  1327 00:093C: A5 0F        	lda	<L87+progstart_0+2
+  Sun Jan  9 2022 20:52                                                Page 24
+
+
+  1328 00:093E: 85 07        	sta	<L88+bp_1+2
+  1329                        L10036:
+  1330 00:0940: E2 20        	sep	#$20
+  1331                        	longa	off
+  1332 00:0942: A0 01 00     	ldy	#$1
+  1333 00:0945: B7 05        	lda	[<L88+bp_1],Y
+  1334 00:0947: C9 FF        	cmp	#<$ff
+  1335 00:0949: C2 20        	rep	#$20
+  1336                        	longa	on
+  1337 00:094B: D0 03        	bne	L89
+  1338 00:094D: 82 4F 00     	brl	L10037
+  1339                        L89:
+  1340 00:0950: A0 00 00     	ldy	#$0
+  1341 00:0953: A5 11        	lda	<L87+start_0
+  1342 00:0955: 10 01        	bpl	L90
+  1343 00:0957: 88           	dey
+  1344                        L90:
+  1345 00:0958: 85 01        	sta	<R0
+  1346 00:095A: 84 03        	sty	<R0+2
+  1347 00:095C: 38           	sec
+  1348 00:095D: A9 FF FE     	lda	#$feff
+  1349 00:0960: E5 01        	sbc	<R0
+  1350 00:0962: A9 00 00     	lda	#$0
+  1351 00:0965: E5 03        	sbc	<R0+2
+  1352 00:0967: 70 03        	bvs	L91
+  1353 00:0969: 49 00 80     	eor	#$8000
+  1354                        L91:
+  1355 00:096C: 30 03        	bmi	L92
+  1356 00:096E: 82 2E 00     	brl	L10037
+  1357                        L92:
+  1358 00:0971: D4 07        	pei	<L88+bp_1+2
+  1359 00:0973: D4 05        	pei	<L88+bp_1
+  1360 00:0975: 22 xx xx xx  	jsl	~~resolve_linenums
+  1361 00:0979: D4 07        	pei	<L88+bp_1+2
+  1362 00:097B: D4 05        	pei	<L88+bp_1
+  1363 00:097D: 22 xx xx xx  	jsl	~~get_linelen
+  1364 00:0981: 85 01        	sta	<R0
+  1365 00:0983: A0 00 00     	ldy	#$0
+  1366 00:0986: A5 01        	lda	<R0
+  1367 00:0988: 10 01        	bpl	L93
+  1368 00:098A: 88           	dey
+  1369                        L93:
+  1370 00:098B: 85 01        	sta	<R0
+  1371 00:098D: 84 03        	sty	<R0+2
+  1372 00:098F: 18           	clc
+  1373 00:0990: A5 05        	lda	<L88+bp_1
+  1374 00:0992: 65 01        	adc	<R0
+  1375 00:0994: 85 05        	sta	<L88+bp_1
+  1376 00:0996: A5 07        	lda	<L88+bp_1+2
+  1377 00:0998: 65 03        	adc	<R0+2
+  1378 00:099A: 85 07        	sta	<L88+bp_1+2
+  1379 00:099C: 82 A1 FF     	brl	L10036
+  1380                        L10037:
+  1381 00:099F: A5 0D        	lda	<L87+progstart_0
+  1382 00:09A1: 85 05        	sta	<L88+bp_1
+  1383 00:09A3: A5 0F        	lda	<L87+progstart_0+2
+  1384 00:09A5: 85 07        	sta	<L88+bp_1+2
+  1385                        L10038:
+  Sun Jan  9 2022 20:52                                                Page 25
+
+
+  1386 00:09A7: E2 20        	sep	#$20
+  1387                        	longa	off
+  1388 00:09A9: A0 01 00     	ldy	#$1
+  1389 00:09AC: B7 05        	lda	[<L88+bp_1],Y
+  1390 00:09AE: C9 FF        	cmp	#<$ff
+  1391 00:09B0: C2 20        	rep	#$20
+  1392                        	longa	on
+  1393 00:09B2: D0 03        	bne	L94
+  1394 00:09B4: 82 58 00     	brl	L10039
+  1395                        L94:
+  1396 00:09B7: A0 00 00     	ldy	#$0
+  1397 00:09BA: A5 11        	lda	<L87+start_0
+  1398 00:09BC: 10 01        	bpl	L95
+  1399 00:09BE: 88           	dey
+  1400                        L95:
+  1401 00:09BF: 85 01        	sta	<R0
+  1402 00:09C1: 84 03        	sty	<R0+2
+  1403 00:09C3: 38           	sec
+  1404 00:09C4: A9 FF FE     	lda	#$feff
+  1405 00:09C7: E5 01        	sbc	<R0
+  1406 00:09C9: A9 00 00     	lda	#$0
+  1407 00:09CC: E5 03        	sbc	<R0+2
+  1408 00:09CE: 70 03        	bvs	L96
+  1409 00:09D0: 49 00 80     	eor	#$8000
+  1410                        L96:
+  1411 00:09D3: 30 03        	bmi	L97
+  1412 00:09D5: 82 37 00     	brl	L10039
+  1413                        L97:
+  1414 00:09D8: D4 11        	pei	<L87+start_0
+  1415 00:09DA: D4 07        	pei	<L88+bp_1+2
+  1416 00:09DC: D4 05        	pei	<L88+bp_1
+  1417 00:09DE: 22 xx xx xx  	jsl	~~save_lineno
+  1418 00:09E2: 18           	clc
+  1419 00:09E3: A5 11        	lda	<L87+start_0
+  1420 00:09E5: 65 13        	adc	<L87+step_0
+  1421 00:09E7: 85 11        	sta	<L87+start_0
+  1422 00:09E9: D4 07        	pei	<L88+bp_1+2
+  1423 00:09EB: D4 05        	pei	<L88+bp_1
+  1424 00:09ED: 22 xx xx xx  	jsl	~~get_linelen
+  1425 00:09F1: 85 01        	sta	<R0
+  1426 00:09F3: A0 00 00     	ldy	#$0
+  1427 00:09F6: A5 01        	lda	<R0
+  1428 00:09F8: 10 01        	bpl	L98
+  1429 00:09FA: 88           	dey
+  1430                        L98:
+  1431 00:09FB: 85 01        	sta	<R0
+  1432 00:09FD: 84 03        	sty	<R0+2
+  1433 00:09FF: 18           	clc
+  1434 00:0A00: A5 05        	lda	<L88+bp_1
+  1435 00:0A02: 65 01        	adc	<R0
+  1436 00:0A04: 85 05        	sta	<L88+bp_1
+  1437 00:0A06: A5 07        	lda	<L88+bp_1+2
+  1438 00:0A08: 65 03        	adc	<R0+2
+  1439 00:0A0A: 85 07        	sta	<L88+bp_1+2
+  1440 00:0A0C: 82 98 FF     	brl	L10038
+  1441                        L10039:
+  1442 00:0A0F: 64 01        	stz	<R0
+  1443 00:0A11: E2 20        	sep	#$20
+  Sun Jan  9 2022 20:52                                                Page 26
+
+
+  1444                        	longa	off
+  1445 00:0A13: A0 01 00     	ldy	#$1
+  1446 00:0A16: B7 05        	lda	[<L88+bp_1],Y
+  1447 00:0A18: C9 FF        	cmp	#<$ff
+  1448 00:0A1A: C2 20        	rep	#$20
+  1449                        	longa	on
+  1450 00:0A1C: F0 03        	beq	L100
+  1451 00:0A1E: 82 02 00     	brl	L99
+  1452                        L100:
+  1453 00:0A21: E6 01        	inc	<R0
+  1454                        L99:
+  1455 00:0A23: E2 20        	sep	#$20
+  1456                        	longa	off
+  1457 00:0A25: A5 01        	lda	<R0
+  1458 00:0A27: 85 09        	sta	<L88+ok_1
+  1459 00:0A29: C2 20        	rep	#$20
+  1460                        	longa	on
+  1461 00:0A2B: A5 09        	lda	<L88+ok_1
+  1462 00:0A2D: 29 FF 00     	and	#$ff
+  1463 00:0A30: F0 03        	beq	L101
+  1464 00:0A32: 82 7A 00     	brl	L10040
+  1465                        L101:
+  1466 00:0A35: A5 13        	lda	<L87+step_0
+  1467 00:0A37: C9 01 00     	cmp	#<$1
+  1468 00:0A3A: D0 03        	bne	L102
+  1469 00:0A3C: 82 70 00     	brl	L10041
+  1470                        L102:
+  1471 00:0A3F: A9 01 00     	lda	#$1
+  1472 00:0A42: 85 11        	sta	<L87+start_0
+  1473 00:0A44: A5 0D        	lda	<L87+progstart_0
+  1474 00:0A46: 85 05        	sta	<L88+bp_1
+  1475 00:0A48: A5 0F        	lda	<L87+progstart_0+2
+  1476 00:0A4A: 85 07        	sta	<L88+bp_1+2
+  1477                        L10042:
+  1478 00:0A4C: E2 20        	sep	#$20
+  1479                        	longa	off
+  1480 00:0A4E: A0 01 00     	ldy	#$1
+  1481 00:0A51: B7 05        	lda	[<L88+bp_1],Y
+  1482 00:0A53: C9 FF        	cmp	#<$ff
+  1483 00:0A55: C2 20        	rep	#$20
+  1484                        	longa	on
+  1485 00:0A57: D0 03        	bne	L103
+  1486 00:0A59: 82 53 00     	brl	L10043
+  1487                        L103:
+  1488 00:0A5C: A0 00 00     	ldy	#$0
+  1489 00:0A5F: A5 11        	lda	<L87+start_0
+  1490 00:0A61: 10 01        	bpl	L104
+  1491 00:0A63: 88           	dey
+  1492                        L104:
+  1493 00:0A64: 85 01        	sta	<R0
+  1494 00:0A66: 84 03        	sty	<R0+2
+  1495 00:0A68: 38           	sec
+  1496 00:0A69: A9 FF FE     	lda	#$feff
+  1497 00:0A6C: E5 01        	sbc	<R0
+  1498 00:0A6E: A9 00 00     	lda	#$0
+  1499 00:0A71: E5 03        	sbc	<R0+2
+  1500 00:0A73: 70 03        	bvs	L105
+  1501 00:0A75: 49 00 80     	eor	#$8000
+  Sun Jan  9 2022 20:52                                                Page 27
+
+
+  1502                        L105:
+  1503 00:0A78: 30 03        	bmi	L106
+  1504 00:0A7A: 82 32 00     	brl	L10043
+  1505                        L106:
+  1506 00:0A7D: D4 11        	pei	<L87+start_0
+  1507 00:0A7F: D4 07        	pei	<L88+bp_1+2
+  1508 00:0A81: D4 05        	pei	<L88+bp_1
+  1509 00:0A83: 22 xx xx xx  	jsl	~~save_lineno
+  1510 00:0A87: E6 11        	inc	<L87+start_0
+  1511 00:0A89: D4 07        	pei	<L88+bp_1+2
+  1512 00:0A8B: D4 05        	pei	<L88+bp_1
+  1513 00:0A8D: 22 xx xx xx  	jsl	~~get_linelen
+  1514 00:0A91: 85 01        	sta	<R0
+  1515 00:0A93: A0 00 00     	ldy	#$0
+  1516 00:0A96: A5 01        	lda	<R0
+  1517 00:0A98: 10 01        	bpl	L107
+  1518 00:0A9A: 88           	dey
+  1519                        L107:
+  1520 00:0A9B: 85 01        	sta	<R0
+  1521 00:0A9D: 84 03        	sty	<R0+2
+  1522 00:0A9F: 18           	clc
+  1523 00:0AA0: A5 05        	lda	<L88+bp_1
+  1524 00:0AA2: 65 01        	adc	<R0
+  1525 00:0AA4: 85 05        	sta	<L88+bp_1
+  1526 00:0AA6: A5 07        	lda	<L88+bp_1+2
+  1527 00:0AA8: 65 03        	adc	<R0+2
+  1528 00:0AAA: 85 07        	sta	<L88+bp_1+2
+  1529 00:0AAC: 82 9D FF     	brl	L10042
+  1530                        L10043:
+  1531                        L10041:
+  1532                        L10040:
+  1533 00:0AAF: A5 0D        	lda	<L87+progstart_0
+  1534 00:0AB1: 85 05        	sta	<L88+bp_1
+  1535 00:0AB3: A5 0F        	lda	<L87+progstart_0+2
+  1536 00:0AB5: 85 07        	sta	<L88+bp_1+2
+  1537                        L10044:
+  1538 00:0AB7: E2 20        	sep	#$20
+  1539                        	longa	off
+  1540 00:0AB9: A0 01 00     	ldy	#$1
+  1541 00:0ABC: B7 05        	lda	[<L88+bp_1],Y
+  1542 00:0ABE: C9 FF        	cmp	#<$ff
+  1543 00:0AC0: C2 20        	rep	#$20
+  1544                        	longa	on
+  1545 00:0AC2: D0 03        	bne	L108
+  1546 00:0AC4: 82 4F 00     	brl	L10045
+  1547                        L108:
+  1548 00:0AC7: A0 00 00     	ldy	#$0
+  1549 00:0ACA: A5 11        	lda	<L87+start_0
+  1550 00:0ACC: 10 01        	bpl	L109
+  1551 00:0ACE: 88           	dey
+  1552                        L109:
+  1553 00:0ACF: 85 01        	sta	<R0
+  1554 00:0AD1: 84 03        	sty	<R0+2
+  1555 00:0AD3: 38           	sec
+  1556 00:0AD4: A9 FF FE     	lda	#$feff
+  1557 00:0AD7: E5 01        	sbc	<R0
+  1558 00:0AD9: A9 00 00     	lda	#$0
+  1559 00:0ADC: E5 03        	sbc	<R0+2
+  Sun Jan  9 2022 20:52                                                Page 28
+
+
+  1560 00:0ADE: 70 03        	bvs	L110
+  1561 00:0AE0: 49 00 80     	eor	#$8000
+  1562                        L110:
+  1563 00:0AE3: 30 03        	bmi	L111
+  1564 00:0AE5: 82 2E 00     	brl	L10045
+  1565                        L111:
+  1566 00:0AE8: D4 07        	pei	<L88+bp_1+2
+  1567 00:0AEA: D4 05        	pei	<L88+bp_1
+  1568 00:0AEC: 22 xx xx xx  	jsl	~~reset_linenums
+  1569 00:0AF0: D4 07        	pei	<L88+bp_1+2
+  1570 00:0AF2: D4 05        	pei	<L88+bp_1
+  1571 00:0AF4: 22 xx xx xx  	jsl	~~get_linelen
+  1572 00:0AF8: 85 01        	sta	<R0
+  1573 00:0AFA: A0 00 00     	ldy	#$0
+  1574 00:0AFD: A5 01        	lda	<R0
+  1575 00:0AFF: 10 01        	bpl	L112
+  1576 00:0B01: 88           	dey
+  1577                        L112:
+  1578 00:0B02: 85 01        	sta	<R0
+  1579 00:0B04: 84 03        	sty	<R0+2
+  1580 00:0B06: 18           	clc
+  1581 00:0B07: A5 05        	lda	<L88+bp_1
+  1582 00:0B09: 65 01        	adc	<R0
+  1583 00:0B0B: 85 05        	sta	<L88+bp_1
+  1584 00:0B0D: A5 07        	lda	<L88+bp_1+2
+  1585 00:0B0F: 65 03        	adc	<R0+2
+  1586 00:0B11: 85 07        	sta	<L88+bp_1+2
+  1587 00:0B13: 82 A1 FF     	brl	L10044
+  1588                        L10045:
+  1589 00:0B16: A5 09        	lda	<L88+ok_1
+  1590 00:0B18: 29 FF 00     	and	#$ff
+  1591 00:0B1B: F0 03        	beq	L113
+  1592 00:0B1D: 82 0A 00     	brl	L10046
+  1593                        L113:
+  1594 00:0B20: F4 84 00     	pea	#<$84
+  1595 00:0B23: F4 04 00     	pea	#4
+  1596 00:0B26: 22 xx xx xx  	jsl	~~error
+  1597                        L10046:
+  1598                        L114:
+  1599 00:0B2A: A5 0B        	lda	<L87+2
+  1600 00:0B2C: 85 13        	sta	<L87+2+8
+  1601 00:0B2E: A5 0A        	lda	<L87+1
+  1602 00:0B30: 85 12        	sta	<L87+1+8
+  1603 00:0B32: 2B           	pld
+  1604 00:0B33: 3B           	tsc
+  1605 00:0B34: 18           	clc
+  1606 00:0B35: 69 11 00     	adc	#L87+8
+  1607 00:0B38: 1B           	tcs
+  1608 00:0B39: 6B           	rtl
+  1609             00000009   L87	equ	9
+  1610             00000005   L88	equ	5
+  1611                        	ends
+  1612                        	efunc
+  1613                        	code
+  1614                        	func
+  1615                        ~~open_file:
+  1616                        	longa	on
+  1617                        	longi	on
+  Sun Jan  9 2022 20:52                                                Page 29
+
+
+  1618 00:0B3A: 3B           	tsc
+  1619 00:0B3B: 38           	sec
+  1620 00:0B3C: E9 10 00     	sbc	#L115
+  1621 00:0B3F: 1B           	tcs
+  1622 00:0B40: 0B           	phd
+  1623 00:0B41: 5B           	tcd
+  1624             00000004   name_0	set	4
+  1625             00000000   srce_1	set	0
+  1626             00000004   dest_1	set	4
+  1627             00000008   handle_1	set	8
+  1628 00:0B42: D4 16        	pei	<L115+name_0+2
+  1629 00:0B44: D4 14        	pei	<L115+name_0
+  1630 00:0B46: A9 xx xx     	lda	#<~~basicvars+1370
+  1631 00:0B49: 85 01        	sta	<R0
+  1632                        	xref	_BEG_DATA
+  1633 00:0B4B: A9 xx xx     	lda	#_BEG_DATA>>16
+  1634 00:0B4E: 85 03        	sta	<R0+2
+  1635 00:0B50: D4 03        	pei	<R0+2
+  1636 00:0B52: D4 01        	pei	<R0
+  1637 00:0B54: 22 xx xx xx  	jsl	~~strcpy
+  1638 00:0B58: F4 xx xx     	pea	#^L1
+  1639 00:0B5B: F4 xx xx     	pea	#<L1
+  1640 00:0B5E: D4 16        	pei	<L115+name_0+2
+  1641 00:0B60: D4 14        	pei	<L115+name_0
+  1642 00:0B62: 22 xx xx xx  	jsl	~~fopen
+  1643 00:0B66: 85 0D        	sta	<L116+handle_1
+  1644 00:0B68: 86 0F        	stx	<L116+handle_1+2
+  1645 00:0B6A: A5 0D        	lda	<L116+handle_1
+  1646 00:0B6C: 05 0F        	ora	<L116+handle_1+2
+  1647 00:0B6E: F0 03        	beq	L118
+  1648 00:0B70: 82 1B 00     	brl	L117
+  1649                        L118:
+  1650 00:0B73: AD xx xx     	lda	|~~basicvars+419
+  1651 00:0B76: 0D xx xx     	ora	|~~basicvars+419+2
+  1652 00:0B79: D0 03        	bne	L119
+  1653 00:0B7B: 82 10 00     	brl	L117
+  1654                        L119:
+  1655 00:0B7E: D4 16        	pei	<L115+name_0+2
+  1656 00:0B80: D4 14        	pei	<L115+name_0
+  1657 00:0B82: 22 xx xx xx  	jsl	~~isapath
+  1658 00:0B86: 29 FF 00     	and	#$ff
+  1659 00:0B89: D0 03        	bne	L120
+  1660 00:0B8B: 82 16 00     	brl	L10047
+  1661                        L120:
+  1662                        L117:
+  1663 00:0B8E: A6 0F        	ldx	<L116+handle_1+2
+  1664 00:0B90: A5 0D        	lda	<L116+handle_1
+  1665                        L121:
+  1666 00:0B92: A8           	tay
+  1667 00:0B93: A5 12        	lda	<L115+2
+  1668 00:0B95: 85 16        	sta	<L115+2+4
+  1669 00:0B97: A5 11        	lda	<L115+1
+  1670 00:0B99: 85 15        	sta	<L115+1+4
+  1671 00:0B9B: 2B           	pld
+  1672 00:0B9C: 3B           	tsc
+  1673 00:0B9D: 18           	clc
+  1674 00:0B9E: 69 14 00     	adc	#L115+4
+  1675 00:0BA1: 1B           	tcs
+  Sun Jan  9 2022 20:52                                                Page 30
+
+
+  1676 00:0BA2: 98           	tya
+  1677 00:0BA3: 6B           	rtl
+  1678                        L10047:
+  1679 00:0BA4: AD xx xx     	lda	|~~basicvars+419
+  1680 00:0BA7: 85 05        	sta	<L116+srce_1
+  1681 00:0BA9: AD xx xx     	lda	|~~basicvars+419+2
+  1682 00:0BAC: 85 07        	sta	<L116+srce_1+2
+  1683                        L10050:
+  1684 00:0BAE: A9 xx xx     	lda	#<~~basicvars+1370
+  1685 00:0BB1: 85 09        	sta	<L116+dest_1
+  1686                        	xref	_BEG_DATA
+  1687 00:0BB3: A9 xx xx     	lda	#_BEG_DATA>>16
+  1688 00:0BB6: 85 0B        	sta	<L116+dest_1+2
+  1689 00:0BB8: E2 20        	sep	#$20
+  1690                        	longa	off
+  1691 00:0BBA: A7 05        	lda	[<L116+srce_1]
+  1692 00:0BBC: C9 2C        	cmp	#<$2c
+  1693 00:0BBE: C2 20        	rep	#$20
+  1694                        	longa	on
+  1695 00:0BC0: D0 03        	bne	L122
+  1696 00:0BC2: 82 58 00     	brl	L10051
+  1697                        L122:
+  1698                        L10052:
+  1699 00:0BC5: A7 05        	lda	[<L116+srce_1]
+  1700 00:0BC7: 29 FF 00     	and	#$ff
+  1701 00:0BCA: D0 03        	bne	L123
+  1702 00:0BCC: 82 24 00     	brl	L10053
+  1703                        L123:
+  1704 00:0BCF: E2 20        	sep	#$20
+  1705                        	longa	off
+  1706 00:0BD1: A7 05        	lda	[<L116+srce_1]
+  1707 00:0BD3: C9 2C        	cmp	#<$2c
+  1708 00:0BD5: C2 20        	rep	#$20
+  1709                        	longa	on
+  1710 00:0BD7: D0 03        	bne	L124
+  1711 00:0BD9: 82 17 00     	brl	L10053
+  1712                        L124:
+  1713 00:0BDC: E2 20        	sep	#$20
+  1714                        	longa	off
+  1715 00:0BDE: A7 05        	lda	[<L116+srce_1]
+  1716 00:0BE0: 87 09        	sta	[<L116+dest_1]
+  1717 00:0BE2: C2 20        	rep	#$20
+  1718                        	longa	on
+  1719 00:0BE4: E6 09        	inc	<L116+dest_1
+  1720 00:0BE6: D0 02        	bne	L125
+  1721 00:0BE8: E6 0B        	inc	<L116+dest_1+2
+  1722                        L125:
+  1723 00:0BEA: E6 05        	inc	<L116+srce_1
+  1724 00:0BEC: D0 02        	bne	L126
+  1725 00:0BEE: E6 07        	inc	<L116+srce_1+2
+  1726                        L126:
+  1727 00:0BF0: 82 D2 FF     	brl	L10052
+  1728                        L10053:
+  1729 00:0BF3: 18           	clc
+  1730 00:0BF4: A9 FF FF     	lda	#$ffff
+  1731 00:0BF7: 65 05        	adc	<L116+srce_1
+  1732 00:0BF9: 85 01        	sta	<R0
+  1733 00:0BFB: A9 FF FF     	lda	#$ffff
+  Sun Jan  9 2022 20:52                                                Page 31
+
+
+  1734 00:0BFE: 65 07        	adc	<L116+srce_1+2
+  1735 00:0C00: 85 03        	sta	<R0+2
+  1736 00:0C02: E2 20        	sep	#$20
+  1737                        	longa	off
+  1738 00:0C04: A7 01        	lda	[<R0]
+  1739 00:0C06: C9 2F        	cmp	#<$2f
+  1740 00:0C08: C2 20        	rep	#$20
+  1741                        	longa	on
+  1742 00:0C0A: D0 03        	bne	L127
+  1743 00:0C0C: 82 0E 00     	brl	L10054
+  1744                        L127:
+  1745 00:0C0F: E2 20        	sep	#$20
+  1746                        	longa	off
+  1747 00:0C11: A9 2F        	lda	#$2f
+  1748 00:0C13: 87 09        	sta	[<L116+dest_1]
+  1749 00:0C15: C2 20        	rep	#$20
+  1750                        	longa	on
+  1751 00:0C17: E6 09        	inc	<L116+dest_1
+  1752 00:0C19: D0 02        	bne	L128
+  1753 00:0C1B: E6 0B        	inc	<L116+dest_1+2
+  1754                        L128:
+  1755                        L10054:
+  1756                        L10051:
+  1757 00:0C1D: E2 20        	sep	#$20
+  1758                        	longa	off
+  1759 00:0C1F: A9 00        	lda	#$0
+  1760 00:0C21: 87 09        	sta	[<L116+dest_1]
+  1761 00:0C23: C2 20        	rep	#$20
+  1762                        	longa	on
+  1763 00:0C25: D4 16        	pei	<L115+name_0+2
+  1764 00:0C27: D4 14        	pei	<L115+name_0
+  1765 00:0C29: A9 xx xx     	lda	#<~~basicvars+1370
+  1766 00:0C2C: 85 01        	sta	<R0
+  1767                        	xref	_BEG_DATA
+  1768 00:0C2E: A9 xx xx     	lda	#_BEG_DATA>>16
+  1769 00:0C31: 85 03        	sta	<R0+2
+  1770 00:0C33: D4 03        	pei	<R0+2
+  1771 00:0C35: D4 01        	pei	<R0
+  1772 00:0C37: 22 xx xx xx  	jsl	~~strcat
+  1773 00:0C3B: F4 xx xx     	pea	#^L1+3
+  1774 00:0C3E: F4 xx xx     	pea	#<L1+3
+  1775 00:0C41: A9 xx xx     	lda	#<~~basicvars+1370
+  1776 00:0C44: 85 01        	sta	<R0
+  1777                        	xref	_BEG_DATA
+  1778 00:0C46: A9 xx xx     	lda	#_BEG_DATA>>16
+  1779 00:0C49: 85 03        	sta	<R0+2
+  1780 00:0C4B: D4 03        	pei	<R0+2
+  1781 00:0C4D: D4 01        	pei	<R0
+  1782 00:0C4F: 22 xx xx xx  	jsl	~~fopen
+  1783 00:0C53: 85 0D        	sta	<L116+handle_1
+  1784 00:0C55: 86 0F        	stx	<L116+handle_1+2
+  1785 00:0C57: A5 0D        	lda	<L116+handle_1
+  1786 00:0C59: 05 0F        	ora	<L116+handle_1+2
+  1787 00:0C5B: F0 03        	beq	L129
+  1788 00:0C5D: 82 13 00     	brl	L10049
+  1789                        L129:
+  1790 00:0C60: A7 05        	lda	[<L116+srce_1]
+  1791 00:0C62: 29 FF 00     	and	#$ff
+  Sun Jan  9 2022 20:52                                                Page 32
+
+
+  1792 00:0C65: D0 03        	bne	L130
+  1793 00:0C67: 82 09 00     	brl	L10049
+  1794                        L130:
+  1795 00:0C6A: E6 05        	inc	<L116+srce_1
+  1796 00:0C6C: D0 02        	bne	L131
+  1797 00:0C6E: E6 07        	inc	<L116+srce_1+2
+  1798                        L131:
+  1799                        L10048:
+  1800 00:0C70: 82 3B FF     	brl	L10050
+  1801                        L10049:
+  1802 00:0C73: A6 0F        	ldx	<L116+handle_1+2
+  1803 00:0C75: A5 0D        	lda	<L116+handle_1
+  1804 00:0C77: 82 18 FF     	brl	L121
+  1805             00000010   L115	equ	16
+  1806             00000005   L116	equ	5
+  1807                        	ends
+  1808                        	efunc
+  1809                        	data
+  1810                        L1:
+  1811 00:000C: 72 62 00 72  	db	$72,$62,$00,$72,$62,$00
+       00:0010: 62 00 
+  1812 00:0012:              	ends
+  1813                        	code
+  1814                        	func
+  1815                        ~~read_bbcfile:
+  1816                        	longa	on
+  1817                        	longi	on
+  1818 00:0C7A: 3B           	tsc
+  1819 00:0C7B: 38           	sec
+  1820 00:0C7C: E9 18 00     	sbc	#L133
+  1821 00:0C7F: 1B           	tcs
+  1822 00:0C80: 0B           	phd
+  1823 00:0C81: 5B           	tcd
+  1824             00000004   bbcfile_0	set	4
+  1825             00000008   base_0	set	8
+  1826             0000000C   limit_0	set	12
+  1827             00000000   length_1	set	0
+  1828             00000002   count_1	set	2
+  1829             00000004   line_1	set	4
+  1830             00000008   filebase_1	set	8
+  1831             0000000C   tokenline_1	set	12
+  1832 00:0C82: 9C xx xx     	stz	|~~basicvars+502
+  1833 00:0C85: A5 20        	lda	<L133+base_0
+  1834 00:0C87: 85 11        	sta	<L134+filebase_1
+  1835 00:0C89: A5 22        	lda	<L133+base_0+2
+  1836 00:0C8B: 85 13        	sta	<L134+filebase_1+2
+  1837 00:0C8D: F4 00 00     	pea	#^$400
+  1838 00:0C90: F4 00 04     	pea	#<$400
+  1839 00:0C93: 22 xx xx xx  	jsl	~~malloc
+  1840 00:0C97: 85 0D        	sta	<L134+line_1
+  1841 00:0C99: 86 0F        	stx	<L134+line_1+2
+  1842 00:0C9B: F4 00 00     	pea	#^$400
+  1843 00:0C9E: F4 00 04     	pea	#<$400
+  1844 00:0CA1: 22 xx xx xx  	jsl	~~malloc
+  1845 00:0CA5: 85 15        	sta	<L134+tokenline_1
+  1846 00:0CA7: 86 17        	stx	<L134+tokenline_1+2
+  1847                        L10057:
+  1848 00:0CA9: D4 1E        	pei	<L133+bbcfile_0+2
+  Sun Jan  9 2022 20:52                                                Page 33
+
+
+  1849 00:0CAB: D4 1C        	pei	<L133+bbcfile_0
+  1850 00:0CAD: 22 xx xx xx  	jsl	~~fgetc
+  1851 00:0CB1: E2 20        	sep	#$20
+  1852                        	longa	off
+  1853 00:0CB3: 87 0D        	sta	[<L134+line_1]
+  1854 00:0CB5: C2 20        	rep	#$20
+  1855                        	longa	on
+  1856 00:0CB7: E2 20        	sep	#$20
+  1857                        	longa	off
+  1858 00:0CB9: A7 0D        	lda	[<L134+line_1]
+  1859 00:0CBB: C9 FF        	cmp	#<$ff
+  1860 00:0CBD: C2 20        	rep	#$20
+  1861                        	longa	on
+  1862 00:0CBF: D0 03        	bne	L135
+  1863 00:0CC1: 82 2E 01     	brl	L10056
+  1864                        L135:
+  1865 00:0CC4: D4 1E        	pei	<L133+bbcfile_0+2
+  1866 00:0CC6: D4 1C        	pei	<L133+bbcfile_0
+  1867 00:0CC8: 22 xx xx xx  	jsl	~~fgetc
+  1868 00:0CCC: E2 20        	sep	#$20
+  1869                        	longa	off
+  1870 00:0CCE: A0 01 00     	ldy	#$1
+  1871 00:0CD1: 97 0D        	sta	[<L134+line_1],Y
+  1872 00:0CD3: C2 20        	rep	#$20
+  1873                        	longa	on
+  1874 00:0CD5: D4 1E        	pei	<L133+bbcfile_0+2
+  1875 00:0CD7: D4 1C        	pei	<L133+bbcfile_0
+  1876 00:0CD9: 22 xx xx xx  	jsl	~~fgetc
+  1877 00:0CDD: 85 09        	sta	<L134+length_1
+  1878 00:0CDF: E2 20        	sep	#$20
+  1879                        	longa	off
+  1880 00:0CE1: A5 09        	lda	<L134+length_1
+  1881 00:0CE3: A0 02 00     	ldy	#$2
+  1882 00:0CE6: 97 0D        	sta	[<L134+line_1],Y
+  1883 00:0CE8: C2 20        	rep	#$20
+  1884                        	longa	on
+  1885 00:0CEA: D4 1E        	pei	<L133+bbcfile_0+2
+  1886 00:0CEC: D4 1C        	pei	<L133+bbcfile_0
+  1887 00:0CEE: 18           	clc
+  1888 00:0CEF: A9 FD FF     	lda	#$fffd
+  1889 00:0CF2: 65 09        	adc	<L134+length_1
+  1890 00:0CF4: 85 01        	sta	<R0
+  1891 00:0CF6: A0 00 00     	ldy	#$0
+  1892 00:0CF9: A5 01        	lda	<R0
+  1893 00:0CFB: 10 01        	bpl	L136
+  1894 00:0CFD: 88           	dey
+  1895                        L136:
+  1896 00:0CFE: 85 01        	sta	<R0
+  1897 00:0D00: 84 03        	sty	<R0+2
+  1898 00:0D02: D4 03        	pei	<R0+2
+  1899 00:0D04: D4 01        	pei	<R0
+  1900 00:0D06: F4 00 00     	pea	#^$1
+  1901 00:0D09: F4 01 00     	pea	#<$1
+  1902 00:0D0C: 18           	clc
+  1903 00:0D0D: A9 03 00     	lda	#$3
+  1904 00:0D10: 65 0D        	adc	<L134+line_1
+  1905 00:0D12: 85 05        	sta	<R1
+  1906 00:0D14: A9 00 00     	lda	#$0
+  Sun Jan  9 2022 20:52                                                Page 34
+
+
+  1907 00:0D17: 65 0F        	adc	<L134+line_1+2
+  1908 00:0D19: 85 07        	sta	<R1+2
+  1909 00:0D1B: D4 07        	pei	<R1+2
+  1910 00:0D1D: D4 05        	pei	<R1
+  1911 00:0D1F: 22 xx xx xx  	jsl	~~fread
+  1912 00:0D23: 85 0B        	sta	<L134+count_1
+  1913 00:0D25: 18           	clc
+  1914 00:0D26: A9 FD FF     	lda	#$fffd
+  1915 00:0D29: 65 09        	adc	<L134+length_1
+  1916 00:0D2B: 85 01        	sta	<R0
+  1917 00:0D2D: A5 01        	lda	<R0
+  1918 00:0D2F: C5 0B        	cmp	<L134+count_1
+  1919 00:0D31: D0 03        	bne	L137
+  1920 00:0D33: 82 20 00     	brl	L10058
+  1921                        L137:
+  1922 00:0D36: D4 1E        	pei	<L133+bbcfile_0+2
+  1923 00:0D38: D4 1C        	pei	<L133+bbcfile_0
+  1924 00:0D3A: 22 xx xx xx  	jsl	~~fclose
+  1925 00:0D3E: A9 xx xx     	lda	#<~~basicvars+1370
+  1926 00:0D41: 85 01        	sta	<R0
+  1927                        	xref	_BEG_DATA
+  1928 00:0D43: A9 xx xx     	lda	#_BEG_DATA>>16
+  1929 00:0D46: 85 03        	sta	<R0+2
+  1930 00:0D48: D4 03        	pei	<R0+2
+  1931 00:0D4A: D4 01        	pei	<R0
+  1932 00:0D4C: F4 75 00     	pea	#<$75
+  1933 00:0D4F: F4 08 00     	pea	#8
+  1934 00:0D52: 22 xx xx xx  	jsl	~~error
+  1935                        L10058:
+  1936 00:0D56: EE xx xx     	inc	|~~basicvars+502
+  1937 00:0D59: D4 17        	pei	<L134+tokenline_1+2
+  1938 00:0D5B: D4 15        	pei	<L134+tokenline_1
+  1939 00:0D5D: D4 0F        	pei	<L134+line_1+2
+  1940 00:0D5F: D4 0D        	pei	<L134+line_1
+  1941 00:0D61: 22 xx xx xx  	jsl	~~reformat
+  1942 00:0D65: 85 09        	sta	<L134+length_1
+  1943 00:0D67: 38           	sec
+  1944 00:0D68: A9 00 00     	lda	#$0
+  1945 00:0D6B: E5 09        	sbc	<L134+length_1
+  1946 00:0D6D: 70 03        	bvs	L138
+  1947 00:0D6F: 49 00 80     	eor	#$8000
+  1948                        L138:
+  1949 00:0D72: 10 03        	bpl	L139
+  1950 00:0D74: 82 6D 00     	brl	L10059
+  1951                        L139:
+  1952 00:0D77: A0 00 00     	ldy	#$0
+  1953 00:0D7A: A5 09        	lda	<L134+length_1
+  1954 00:0D7C: 10 01        	bpl	L140
+  1955 00:0D7E: 88           	dey
+  1956                        L140:
+  1957 00:0D7F: 85 01        	sta	<R0
+  1958 00:0D81: 84 03        	sty	<R0+2
+  1959 00:0D83: 18           	clc
+  1960 00:0D84: A5 20        	lda	<L133+base_0
+  1961 00:0D86: 65 01        	adc	<R0
+  1962 00:0D88: 85 05        	sta	<R1
+  1963 00:0D8A: A5 22        	lda	<L133+base_0+2
+  1964 00:0D8C: 65 03        	adc	<R0+2
+  Sun Jan  9 2022 20:52                                                Page 35
+
+
+  1965 00:0D8E: 85 07        	sta	<R1+2
+  1966 00:0D90: A5 05        	lda	<R1
+  1967 00:0D92: C5 24        	cmp	<L133+limit_0
+  1968 00:0D94: A5 07        	lda	<R1+2
+  1969 00:0D96: E5 26        	sbc	<L133+limit_0+2
+  1970 00:0D98: B0 03        	bcs	L141
+  1971 00:0D9A: 82 12 00     	brl	L10060
+  1972                        L141:
+  1973 00:0D9D: D4 1E        	pei	<L133+bbcfile_0+2
+  1974 00:0D9F: D4 1C        	pei	<L133+bbcfile_0
+  1975 00:0DA1: 22 xx xx xx  	jsl	~~fclose
+  1976 00:0DA5: F4 59 00     	pea	#<$59
+  1977 00:0DA8: F4 04 00     	pea	#4
+  1978 00:0DAB: 22 xx xx xx  	jsl	~~error
+  1979                        L10060:
+  1980 00:0DAF: A0 00 00     	ldy	#$0
+  1981 00:0DB2: A5 09        	lda	<L134+length_1
+  1982 00:0DB4: 10 01        	bpl	L142
+  1983 00:0DB6: 88           	dey
+  1984                        L142:
+  1985 00:0DB7: 85 01        	sta	<R0
+  1986 00:0DB9: 84 03        	sty	<R0+2
+  1987 00:0DBB: D4 03        	pei	<R0+2
+  1988 00:0DBD: D4 01        	pei	<R0
+  1989 00:0DBF: D4 17        	pei	<L134+tokenline_1+2
+  1990 00:0DC1: D4 15        	pei	<L134+tokenline_1
+  1991 00:0DC3: D4 22        	pei	<L133+base_0+2
+  1992 00:0DC5: D4 20        	pei	<L133+base_0
+  1993 00:0DC7: 22 xx xx xx  	jsl	~~memmove
+  1994 00:0DCB: A0 00 00     	ldy	#$0
+  1995 00:0DCE: A5 09        	lda	<L134+length_1
+  1996 00:0DD0: 10 01        	bpl	L143
+  1997 00:0DD2: 88           	dey
+  1998                        L143:
+  1999 00:0DD3: 85 01        	sta	<R0
+  2000 00:0DD5: 84 03        	sty	<R0+2
+  2001 00:0DD7: 18           	clc
+  2002 00:0DD8: A5 20        	lda	<L133+base_0
+  2003 00:0DDA: 65 01        	adc	<R0
+  2004 00:0DDC: 85 20        	sta	<L133+base_0
+  2005 00:0DDE: A5 22        	lda	<L133+base_0+2
+  2006 00:0DE0: 65 03        	adc	<R0+2
+  2007 00:0DE2: 85 22        	sta	<L133+base_0+2
+  2008                        L10059:
+  2009                        L10055:
+  2010 00:0DE4: D4 1E        	pei	<L133+bbcfile_0+2
+  2011 00:0DE6: D4 1C        	pei	<L133+bbcfile_0
+  2012 00:0DE8: 22 xx xx xx  	jsl	~~feof
+  2013 00:0DEC: AA           	tax
+  2014 00:0DED: D0 03        	bne	L144
+  2015 00:0DEF: 82 B7 FE     	brl	L10057
+  2016                        L144:
+  2017                        L10056:
+  2018 00:0DF2: D4 1E        	pei	<L133+bbcfile_0+2
+  2019 00:0DF4: D4 1C        	pei	<L133+bbcfile_0
+  2020 00:0DF6: 22 xx xx xx  	jsl	~~fclose
+  2021 00:0DFA: 9C xx xx     	stz	|~~basicvars+502
+  2022 00:0DFD: 18           	clc
+  Sun Jan  9 2022 20:52                                                Page 36
+
+
+  2023 00:0DFE: A9 08 00     	lda	#$8
+  2024 00:0E01: 65 20        	adc	<L133+base_0
+  2025 00:0E03: 85 01        	sta	<R0
+  2026 00:0E05: A9 00 00     	lda	#$0
+  2027 00:0E08: 65 22        	adc	<L133+base_0+2
+  2028 00:0E0A: 85 03        	sta	<R0+2
+  2029 00:0E0C: A5 01        	lda	<R0
+  2030 00:0E0E: C5 24        	cmp	<L133+limit_0
+  2031 00:0E10: A5 03        	lda	<R0+2
+  2032 00:0E12: E5 26        	sbc	<L133+limit_0+2
+  2033 00:0E14: B0 03        	bcs	L145
+  2034 00:0E16: 82 0A 00     	brl	L10061
+  2035                        L145:
+  2036 00:0E19: F4 59 00     	pea	#<$59
+  2037 00:0E1C: F4 04 00     	pea	#4
+  2038 00:0E1F: 22 xx xx xx  	jsl	~~error
+  2039                        L10061:
+  2040 00:0E23: D4 22        	pei	<L133+base_0+2
+  2041 00:0E25: D4 20        	pei	<L133+base_0
+  2042 00:0E27: 22 xx xx xx  	jsl	~~mark_end
+  2043 00:0E2B: D4 0F        	pei	<L134+line_1+2
+  2044 00:0E2D: D4 0D        	pei	<L134+line_1
+  2045 00:0E2F: 22 xx xx xx  	jsl	~~free
+  2046 00:0E33: D4 17        	pei	<L134+tokenline_1+2
+  2047 00:0E35: D4 15        	pei	<L134+tokenline_1
+  2048 00:0E37: 22 xx xx xx  	jsl	~~free
+  2049 00:0E3B: 38           	sec
+  2050 00:0E3C: A5 20        	lda	<L133+base_0
+  2051 00:0E3E: E5 11        	sbc	<L134+filebase_1
+  2052 00:0E40: 85 01        	sta	<R0
+  2053 00:0E42: A5 22        	lda	<L133+base_0+2
+  2054 00:0E44: E5 13        	sbc	<L134+filebase_1+2
+  2055 00:0E46: 85 03        	sta	<R0+2
+  2056 00:0E48: 18           	clc
+  2057 00:0E49: A9 09 00     	lda	#$9
+  2058 00:0E4C: 65 01        	adc	<R0
+  2059 00:0E4E: 85 05        	sta	<R1
+  2060 00:0E50: A9 00 00     	lda	#$0
+  2061 00:0E53: 65 03        	adc	<R0+2
+  2062 00:0E55: 85 07        	sta	<R1+2
+  2063 00:0E57: A5 05        	lda	<R1
+  2064 00:0E59: 29 FE FF     	and	#<$fffffffe
+  2065 00:0E5C: 85 01        	sta	<R0
+  2066 00:0E5E: A5 07        	lda	<R1+2
+  2067 00:0E60: 85 03        	sta	<R0+2
+  2068 00:0E62: A5 01        	lda	<R0
+  2069                        L146:
+  2070 00:0E64: A8           	tay
+  2071 00:0E65: A5 1A        	lda	<L133+2
+  2072 00:0E67: 85 26        	sta	<L133+2+12
+  2073 00:0E69: A5 19        	lda	<L133+1
+  2074 00:0E6B: 85 25        	sta	<L133+1+12
+  2075 00:0E6D: 2B           	pld
+  2076 00:0E6E: 3B           	tsc
+  2077 00:0E6F: 18           	clc
+  2078 00:0E70: 69 24 00     	adc	#L133+12
+  2079 00:0E73: 1B           	tcs
+  2080 00:0E74: 98           	tya
+  Sun Jan  9 2022 20:52                                                Page 37
+
+
+  2081 00:0E75: 6B           	rtl
+  2082             00000018   L133	equ	24
+  2083             00000009   L134	equ	9
+  2084                        	ends
+  2085                        	efunc
+  2086                        	code
+  2087                        	func
+  2088                        ~~read_textfile:
+  2089                        	longa	on
+  2090                        	longi	on
+  2091 00:0E76: 3B           	tsc
+  2092 00:0E77: 38           	sec
+  2093 00:0E78: E9 17 00     	sbc	#L147
+  2094 00:0E7B: 1B           	tcs
+  2095 00:0E7C: 0B           	phd
+  2096 00:0E7D: 5B           	tcd
+  2097             00000004   textfile_0	set	4
+  2098             00000008   base_0	set	8
+  2099             0000000C   limit_0	set	12
+  2100             00000010   silent_0	set	16
+  2101             00000000   length_1	set	0
+  2102             00000002   filebase_1	set	2
+  2103             00000006   result_1	set	6
+  2104             0000000A   tokenline_1	set	10
+  2105             0000000E   gzipped_1	set	14
+  2106 00:0E7E: E2 20        	sep	#$20
+  2107                        	longa	off
+  2108 00:0E80: 64 17        	stz	<L148+gzipped_1
+  2109 00:0E82: C2 20        	rep	#$20
+  2110                        	longa	on
+  2111 00:0E84: F4 00 00     	pea	#^$400
+  2112 00:0E87: F4 00 04     	pea	#<$400
+  2113 00:0E8A: 22 xx xx xx  	jsl	~~malloc
+  2114 00:0E8E: 85 13        	sta	<L148+tokenline_1
+  2115 00:0E90: 86 15        	stx	<L148+tokenline_1+2
+  2116 00:0E92: F4 00 00     	pea	#<$0
+  2117 00:0E95: F4 00 00     	pea	#^$0
+  2118 00:0E98: F4 00 00     	pea	#<$0
+  2119 00:0E9B: D4 1D        	pei	<L147+textfile_0+2
+  2120 00:0E9D: D4 1B        	pei	<L147+textfile_0
+  2121 00:0E9F: 22 xx xx xx  	jsl	~~fseek
+  2122 00:0EA3: E2 20        	sep	#$20
+  2123                        	longa	off
+  2124 00:0EA5: A9 00        	lda	#$0
+  2125 00:0EA7: A0 02 00     	ldy	#$2
+  2126 00:0EAA: 97 13        	sta	[<L148+tokenline_1],Y
+  2127 00:0EAC: C2 20        	rep	#$20
+  2128                        	longa	on
+  2129 00:0EAE: D4 1D        	pei	<L147+textfile_0+2
+  2130 00:0EB0: D4 1B        	pei	<L147+textfile_0
+  2131 00:0EB2: F4 00 00     	pea	#^$3
+  2132 00:0EB5: F4 03 00     	pea	#<$3
+  2133 00:0EB8: F4 00 00     	pea	#^$1
+  2134 00:0EBB: F4 01 00     	pea	#<$1
+  2135 00:0EBE: D4 15        	pei	<L148+tokenline_1+2
+  2136 00:0EC0: D4 13        	pei	<L148+tokenline_1
+  2137 00:0EC2: 22 xx xx xx  	jsl	~~fread
+  2138 00:0EC6: 64 01        	stz	<R0
+  Sun Jan  9 2022 20:52                                                Page 38
+
+
+  2139 00:0EC8: E2 20        	sep	#$20
+  2140                        	longa	off
+  2141 00:0ECA: A7 13        	lda	[<L148+tokenline_1]
+  2142 00:0ECC: C9 1F        	cmp	#<$1f
+  2143 00:0ECE: C2 20        	rep	#$20
+  2144                        	longa	on
+  2145 00:0ED0: F0 03        	beq	L150
+  2146 00:0ED2: 82 22 00     	brl	L149
+  2147                        L150:
+  2148 00:0ED5: E2 20        	sep	#$20
+  2149                        	longa	off
+  2150 00:0ED7: A0 01 00     	ldy	#$1
+  2151 00:0EDA: B7 13        	lda	[<L148+tokenline_1],Y
+  2152 00:0EDC: C9 8B        	cmp	#<$8b
+  2153 00:0EDE: C2 20        	rep	#$20
+  2154                        	longa	on
+  2155 00:0EE0: F0 03        	beq	L151
+  2156 00:0EE2: 82 12 00     	brl	L149
+  2157                        L151:
+  2158 00:0EE5: E2 20        	sep	#$20
+  2159                        	longa	off
+  2160 00:0EE7: A0 02 00     	ldy	#$2
+  2161 00:0EEA: B7 13        	lda	[<L148+tokenline_1],Y
+  2162 00:0EEC: C9 08        	cmp	#<$8
+  2163 00:0EEE: C2 20        	rep	#$20
+  2164                        	longa	on
+  2165 00:0EF0: F0 03        	beq	L152
+  2166 00:0EF2: 82 02 00     	brl	L149
+  2167                        L152:
+  2168 00:0EF5: E6 01        	inc	<R0
+  2169                        L149:
+  2170 00:0EF7: E2 20        	sep	#$20
+  2171                        	longa	off
+  2172 00:0EF9: A5 01        	lda	<R0
+  2173 00:0EFB: 85 17        	sta	<L148+gzipped_1
+  2174 00:0EFD: C2 20        	rep	#$20
+  2175                        	longa	on
+  2176 00:0EFF: A5 17        	lda	<L148+gzipped_1
+  2177 00:0F01: 29 FF 00     	and	#$ff
+  2178 00:0F04: D0 03        	bne	L153
+  2179 00:0F06: 82 0D 00     	brl	L10062
+  2180                        L153:
+  2181 00:0F09: F4 90 00     	pea	#<$90
+  2182 00:0F0C: F4 04 00     	pea	#4
+  2183 00:0F0F: 22 xx xx xx  	jsl	~~error
+  2184 00:0F13: 82 41 00     	brl	L10063
+  2185                        L10062:
+  2186 00:0F16: D4 1D        	pei	<L147+textfile_0+2
+  2187 00:0F18: D4 1B        	pei	<L147+textfile_0
+  2188 00:0F1A: F4 xx xx     	pea	#^L132
+  2189 00:0F1D: F4 xx xx     	pea	#<L132
+  2190 00:0F20: A9 xx xx     	lda	#<~~basicvars+1370
+  2191 00:0F23: 85 01        	sta	<R0
+  2192                        	xref	_BEG_DATA
+  2193 00:0F25: A9 xx xx     	lda	#_BEG_DATA>>16
+  2194 00:0F28: 85 03        	sta	<R0+2
+  2195 00:0F2A: D4 03        	pei	<R0+2
+  2196 00:0F2C: D4 01        	pei	<R0
+  Sun Jan  9 2022 20:52                                                Page 39
+
+
+  2197 00:0F2E: 22 xx xx xx  	jsl	~~freopen
+  2198 00:0F32: 85 1B        	sta	<L147+textfile_0
+  2199 00:0F34: 86 1D        	stx	<L147+textfile_0+2
+  2200 00:0F36: A5 1B        	lda	<L147+textfile_0
+  2201 00:0F38: 05 1D        	ora	<L147+textfile_0+2
+  2202 00:0F3A: F0 03        	beq	L154
+  2203 00:0F3C: 82 18 00     	brl	L10064
+  2204                        L154:
+  2205 00:0F3F: A9 xx xx     	lda	#<~~basicvars+1370
+  2206 00:0F42: 85 01        	sta	<R0
+  2207                        	xref	_BEG_DATA
+  2208 00:0F44: A9 xx xx     	lda	#_BEG_DATA>>16
+  2209 00:0F47: 85 03        	sta	<R0+2
+  2210 00:0F49: D4 03        	pei	<R0+2
+  2211 00:0F4B: D4 01        	pei	<R0
+  2212 00:0F4D: F4 79 00     	pea	#<$79
+  2213 00:0F50: F4 08 00     	pea	#8
+  2214 00:0F53: 22 xx xx xx  	jsl	~~error
+  2215                        L10064:
+  2216                        L10063:
+  2217 00:0F57: E2 20        	sep	#$20
+  2218                        	longa	off
+  2219 00:0F59: 9C xx xx     	stz	|~~needsnumbers
+  2220 00:0F5C: C2 20        	rep	#$20
+  2221                        	longa	on
+  2222 00:0F5E: 9C xx xx     	stz	|~~basicvars+502
+  2223 00:0F61: A5 1F        	lda	<L147+base_0
+  2224 00:0F63: 85 0B        	sta	<L148+filebase_1
+  2225 00:0F65: A5 21        	lda	<L147+base_0+2
+  2226 00:0F67: 85 0D        	sta	<L148+filebase_1+2
+  2227 00:0F69: D4 1D        	pei	<L147+textfile_0+2
+  2228 00:0F6B: D4 1B        	pei	<L147+textfile_0
+  2229 00:0F6D: F4 00 04     	pea	#<$400
+  2230 00:0F70: AD xx xx     	lda	|~~basicvars+70+2
+  2231 00:0F73: 48           	pha
+  2232 00:0F74: AD xx xx     	lda	|~~basicvars+70
+  2233 00:0F77: 48           	pha
+  2234 00:0F78: 22 xx xx xx  	jsl	~~fgets
+  2235 00:0F7C: 85 0F        	sta	<L148+result_1
+  2236 00:0F7E: 86 11        	stx	<L148+result_1+2
+  2237 00:0F80: A5 0F        	lda	<L148+result_1
+  2238 00:0F82: 05 11        	ora	<L148+result_1+2
+  2239 00:0F84: D0 03        	bne	L155
+  2240 00:0F86: 82 2E 00     	brl	L10065
+  2241                        L155:
+  2242 00:0F89: AD xx xx     	lda	|~~basicvars+70
+  2243 00:0F8C: 85 01        	sta	<R0
+  2244 00:0F8E: AD xx xx     	lda	|~~basicvars+70+2
+  2245 00:0F91: 85 03        	sta	<R0+2
+  2246 00:0F93: E2 20        	sep	#$20
+  2247                        	longa	off
+  2248 00:0F95: A7 01        	lda	[<R0]
+  2249 00:0F97: C9 23        	cmp	#<$23
+  2250 00:0F99: C2 20        	rep	#$20
+  2251                        	longa	on
+  2252 00:0F9B: F0 03        	beq	L156
+  2253 00:0F9D: 82 17 00     	brl	L10065
+  2254                        L156:
+  Sun Jan  9 2022 20:52                                                Page 40
+
+
+  2255 00:0FA0: D4 1D        	pei	<L147+textfile_0+2
+  2256 00:0FA2: D4 1B        	pei	<L147+textfile_0
+  2257 00:0FA4: F4 00 04     	pea	#<$400
+  2258 00:0FA7: AD xx xx     	lda	|~~basicvars+70+2
+  2259 00:0FAA: 48           	pha
+  2260 00:0FAB: AD xx xx     	lda	|~~basicvars+70
+  2261 00:0FAE: 48           	pha
+  2262 00:0FAF: 22 xx xx xx  	jsl	~~fgets
+  2263 00:0FB3: 85 0F        	sta	<L148+result_1
+  2264 00:0FB5: 86 11        	stx	<L148+result_1+2
+  2265                        L10065:
+  2266                        L10066:
+  2267 00:0FB7: A5 0F        	lda	<L148+result_1
+  2268 00:0FB9: 05 11        	ora	<L148+result_1+2
+  2269 00:0FBB: D0 03        	bne	L157
+  2270 00:0FBD: 82 28 01     	brl	L10067
+  2271                        L157:
+  2272 00:0FC0: EE xx xx     	inc	|~~basicvars+502
+  2273 00:0FC3: AD xx xx     	lda	|~~basicvars+70+2
+  2274 00:0FC6: 48           	pha
+  2275 00:0FC7: AD xx xx     	lda	|~~basicvars+70
+  2276 00:0FCA: 48           	pha
+  2277 00:0FCB: 22 xx xx xx  	jsl	~~strlen
+  2278 00:0FCF: 85 09        	sta	<L148+length_1
+  2279                        L10070:
+  2280 00:0FD1: C6 09        	dec	<L148+length_1
+  2281                        L10068:
+  2282 00:0FD3: A5 09        	lda	<L148+length_1
+  2283 00:0FD5: 10 03        	bpl	L159
+  2284 00:0FD7: 82 1C 00     	brl	L158
+  2285                        L159:
+  2286 00:0FDA: AD xx xx     	lda	|~~basicvars+70
+  2287 00:0FDD: 85 01        	sta	<R0
+  2288 00:0FDF: AD xx xx     	lda	|~~basicvars+70+2
+  2289 00:0FE2: 85 03        	sta	<R0+2
+  2290 00:0FE4: A4 09        	ldy	<L148+length_1
+  2291 00:0FE6: B7 01        	lda	[<R0],Y
+  2292 00:0FE8: 29 FF 00     	and	#$ff
+  2293 00:0FEB: 48           	pha
+  2294 00:0FEC: 22 xx xx xx  	jsl	~~isspace
+  2295 00:0FF0: AA           	tax
+  2296 00:0FF1: F0 03        	beq	L160
+  2297 00:0FF3: 82 DB FF     	brl	L10070
+  2298                        L160:
+  2299                        L158:
+  2300                        L10069:
+  2301 00:0FF6: E6 09        	inc	<L148+length_1
+  2302 00:0FF8: AD xx xx     	lda	|~~basicvars+70
+  2303 00:0FFB: 85 01        	sta	<R0
+  2304 00:0FFD: AD xx xx     	lda	|~~basicvars+70+2
+  2305 00:1000: 85 03        	sta	<R0+2
+  2306 00:1002: E2 20        	sep	#$20
+  2307                        	longa	off
+  2308 00:1004: A9 00        	lda	#$0
+  2309 00:1006: A4 09        	ldy	<L148+length_1
+  2310 00:1008: 97 01        	sta	[<R0],Y
+  2311 00:100A: C2 20        	rep	#$20
+  2312                        	longa	on
+  Sun Jan  9 2022 20:52                                                Page 41
+
+
+  2313 00:100C: F4 01 00     	pea	#<$1
+  2314 00:100F: D4 15        	pei	<L148+tokenline_1+2
+  2315 00:1011: D4 13        	pei	<L148+tokenline_1
+  2316 00:1013: AD xx xx     	lda	|~~basicvars+70+2
+  2317 00:1016: 48           	pha
+  2318 00:1017: AD xx xx     	lda	|~~basicvars+70
+  2319 00:101A: 48           	pha
+  2320 00:101B: 22 xx xx xx  	jsl	~~tokenize
+  2321 00:101F: D4 15        	pei	<L148+tokenline_1+2
+  2322 00:1021: D4 13        	pei	<L148+tokenline_1
+  2323 00:1023: 22 xx xx xx  	jsl	~~get_lineno
+  2324 00:1027: 85 01        	sta	<R0
+  2325 00:1029: A5 01        	lda	<R0
+  2326 00:102B: C9 FF FF     	cmp	#<$ffff
+  2327 00:102E: F0 03        	beq	L161
+  2328 00:1030: 82 14 00     	brl	L10071
+  2329                        L161:
+  2330 00:1033: F4 00 00     	pea	#<$0
+  2331 00:1036: D4 15        	pei	<L148+tokenline_1+2
+  2332 00:1038: D4 13        	pei	<L148+tokenline_1
+  2333 00:103A: 22 xx xx xx  	jsl	~~save_lineno
+  2334 00:103E: E2 20        	sep	#$20
+  2335                        	longa	off
+  2336 00:1040: A9 01        	lda	#$1
+  2337 00:1042: 8D xx xx     	sta	|~~needsnumbers
+  2338 00:1045: C2 20        	rep	#$20
+  2339                        	longa	on
+  2340                        L10071:
+  2341 00:1047: D4 15        	pei	<L148+tokenline_1+2
+  2342 00:1049: D4 13        	pei	<L148+tokenline_1
+  2343 00:104B: 22 xx xx xx  	jsl	~~get_linelen
+  2344 00:104F: 85 09        	sta	<L148+length_1
+  2345 00:1051: 38           	sec
+  2346 00:1052: A9 00 00     	lda	#$0
+  2347 00:1055: E5 09        	sbc	<L148+length_1
+  2348 00:1057: 70 03        	bvs	L162
+  2349 00:1059: 49 00 80     	eor	#$8000
+  2350                        L162:
+  2351 00:105C: 10 03        	bpl	L163
+  2352 00:105E: 82 6D 00     	brl	L10072
+  2353                        L163:
+  2354 00:1061: A0 00 00     	ldy	#$0
+  2355 00:1064: A5 09        	lda	<L148+length_1
+  2356 00:1066: 10 01        	bpl	L164
+  2357 00:1068: 88           	dey
+  2358                        L164:
+  2359 00:1069: 85 01        	sta	<R0
+  2360 00:106B: 84 03        	sty	<R0+2
+  2361 00:106D: 18           	clc
+  2362 00:106E: A5 1F        	lda	<L147+base_0
+  2363 00:1070: 65 01        	adc	<R0
+  2364 00:1072: 85 05        	sta	<R1
+  2365 00:1074: A5 21        	lda	<L147+base_0+2
+  2366 00:1076: 65 03        	adc	<R0+2
+  2367 00:1078: 85 07        	sta	<R1+2
+  2368 00:107A: A5 05        	lda	<R1
+  2369 00:107C: C5 23        	cmp	<L147+limit_0
+  2370 00:107E: A5 07        	lda	<R1+2
+  Sun Jan  9 2022 20:52                                                Page 42
+
+
+  2371 00:1080: E5 25        	sbc	<L147+limit_0+2
+  2372 00:1082: B0 03        	bcs	L165
+  2373 00:1084: 82 12 00     	brl	L10073
+  2374                        L165:
+  2375 00:1087: D4 1D        	pei	<L147+textfile_0+2
+  2376 00:1089: D4 1B        	pei	<L147+textfile_0
+  2377 00:108B: 22 xx xx xx  	jsl	~~fclose
+  2378 00:108F: F4 59 00     	pea	#<$59
+  2379 00:1092: F4 04 00     	pea	#4
+  2380 00:1095: 22 xx xx xx  	jsl	~~error
+  2381                        L10073:
+  2382 00:1099: A0 00 00     	ldy	#$0
+  2383 00:109C: A5 09        	lda	<L148+length_1
+  2384 00:109E: 10 01        	bpl	L166
+  2385 00:10A0: 88           	dey
+  2386                        L166:
+  2387 00:10A1: 85 01        	sta	<R0
+  2388 00:10A3: 84 03        	sty	<R0+2
+  2389 00:10A5: D4 03        	pei	<R0+2
+  2390 00:10A7: D4 01        	pei	<R0
+  2391 00:10A9: D4 15        	pei	<L148+tokenline_1+2
+  2392 00:10AB: D4 13        	pei	<L148+tokenline_1
+  2393 00:10AD: D4 21        	pei	<L147+base_0+2
+  2394 00:10AF: D4 1F        	pei	<L147+base_0
+  2395 00:10B1: 22 xx xx xx  	jsl	~~memmove
+  2396 00:10B5: A0 00 00     	ldy	#$0
+  2397 00:10B8: A5 09        	lda	<L148+length_1
+  2398 00:10BA: 10 01        	bpl	L167
+  2399 00:10BC: 88           	dey
+  2400                        L167:
+  2401 00:10BD: 85 01        	sta	<R0
+  2402 00:10BF: 84 03        	sty	<R0+2
+  2403 00:10C1: 18           	clc
+  2404 00:10C2: A5 1F        	lda	<L147+base_0
+  2405 00:10C4: 65 01        	adc	<R0
+  2406 00:10C6: 85 1F        	sta	<L147+base_0
+  2407 00:10C8: A5 21        	lda	<L147+base_0+2
+  2408 00:10CA: 65 03        	adc	<R0+2
+  2409 00:10CC: 85 21        	sta	<L147+base_0+2
+  2410                        L10072:
+  2411 00:10CE: D4 1D        	pei	<L147+textfile_0+2
+  2412 00:10D0: D4 1B        	pei	<L147+textfile_0
+  2413 00:10D2: F4 00 04     	pea	#<$400
+  2414 00:10D5: AD xx xx     	lda	|~~basicvars+70+2
+  2415 00:10D8: 48           	pha
+  2416 00:10D9: AD xx xx     	lda	|~~basicvars+70
+  2417 00:10DC: 48           	pha
+  2418 00:10DD: 22 xx xx xx  	jsl	~~fgets
+  2419 00:10E1: 85 0F        	sta	<L148+result_1
+  2420 00:10E3: 86 11        	stx	<L148+result_1+2
+  2421 00:10E5: 82 CF FE     	brl	L10066
+  2422                        L10067:
+  2423 00:10E8: D4 1D        	pei	<L147+textfile_0+2
+  2424 00:10EA: D4 1B        	pei	<L147+textfile_0
+  2425 00:10EC: 22 xx xx xx  	jsl	~~fclose
+  2426 00:10F0: 9C xx xx     	stz	|~~basicvars+502
+  2427 00:10F3: 18           	clc
+  2428 00:10F4: A9 08 00     	lda	#$8
+  Sun Jan  9 2022 20:52                                                Page 43
+
+
+  2429 00:10F7: 65 1F        	adc	<L147+base_0
+  2430 00:10F9: 85 01        	sta	<R0
+  2431 00:10FB: A9 00 00     	lda	#$0
+  2432 00:10FE: 65 21        	adc	<L147+base_0+2
+  2433 00:1100: 85 03        	sta	<R0+2
+  2434 00:1102: A5 01        	lda	<R0
+  2435 00:1104: C5 23        	cmp	<L147+limit_0
+  2436 00:1106: A5 03        	lda	<R0+2
+  2437 00:1108: E5 25        	sbc	<L147+limit_0+2
+  2438 00:110A: B0 03        	bcs	L168
+  2439 00:110C: 82 0A 00     	brl	L10074
+  2440                        L168:
+  2441 00:110F: F4 59 00     	pea	#<$59
+  2442 00:1112: F4 04 00     	pea	#4
+  2443 00:1115: 22 xx xx xx  	jsl	~~error
+  2444                        L10074:
+  2445 00:1119: D4 21        	pei	<L147+base_0+2
+  2446 00:111B: D4 1F        	pei	<L147+base_0
+  2447 00:111D: 22 xx xx xx  	jsl	~~mark_end
+  2448 00:1121: AD xx xx     	lda	|~~needsnumbers
+  2449 00:1124: 29 FF 00     	and	#$ff
+  2450 00:1127: D0 03        	bne	L169
+  2451 00:1129: 82 22 00     	brl	L10075
+  2452                        L169:
+  2453 00:112C: F4 01 00     	pea	#<$1
+  2454 00:112F: F4 01 00     	pea	#<$1
+  2455 00:1132: D4 0D        	pei	<L148+filebase_1+2
+  2456 00:1134: D4 0B        	pei	<L148+filebase_1
+  2457 00:1136: 22 xx xx xx  	jsl	~~renumber_program
+  2458 00:113A: A5 27        	lda	<L147+silent_0
+  2459 00:113C: 29 FF 00     	and	#$ff
+  2460 00:113F: F0 03        	beq	L170
+  2461 00:1141: 82 0A 00     	brl	L10076
+  2462                        L170:
+  2463 00:1144: F4 87 00     	pea	#<$87
+  2464 00:1147: F4 04 00     	pea	#4
+  2465 00:114A: 22 xx xx xx  	jsl	~~error
+  2466                        L10076:
+  2467                        L10075:
+  2468 00:114E: D4 15        	pei	<L148+tokenline_1+2
+  2469 00:1150: D4 13        	pei	<L148+tokenline_1
+  2470 00:1152: 22 xx xx xx  	jsl	~~free
+  2471 00:1156: 38           	sec
+  2472 00:1157: A5 1F        	lda	<L147+base_0
+  2473 00:1159: E5 0B        	sbc	<L148+filebase_1
+  2474 00:115B: 85 01        	sta	<R0
+  2475 00:115D: A5 21        	lda	<L147+base_0+2
+  2476 00:115F: E5 0D        	sbc	<L148+filebase_1+2
+  2477 00:1161: 85 03        	sta	<R0+2
+  2478 00:1163: 18           	clc
+  2479 00:1164: A9 09 00     	lda	#$9
+  2480 00:1167: 65 01        	adc	<R0
+  2481 00:1169: 85 05        	sta	<R1
+  2482 00:116B: A9 00 00     	lda	#$0
+  2483 00:116E: 65 03        	adc	<R0+2
+  2484 00:1170: 85 07        	sta	<R1+2
+  2485 00:1172: A5 05        	lda	<R1
+  2486 00:1174: 29 FE FF     	and	#<$fffffffe
+  Sun Jan  9 2022 20:52                                                Page 44
+
+
+  2487 00:1177: 85 01        	sta	<R0
+  2488 00:1179: A5 07        	lda	<R1+2
+  2489 00:117B: 85 03        	sta	<R0+2
+  2490 00:117D: A5 01        	lda	<R0
+  2491                        L171:
+  2492 00:117F: A8           	tay
+  2493 00:1180: A5 19        	lda	<L147+2
+  2494 00:1182: 85 27        	sta	<L147+2+14
+  2495 00:1184: A5 18        	lda	<L147+1
+  2496 00:1186: 85 26        	sta	<L147+1+14
+  2497 00:1188: 2B           	pld
+  2498 00:1189: 3B           	tsc
+  2499 00:118A: 18           	clc
+  2500 00:118B: 69 25 00     	adc	#L147+14
+  2501 00:118E: 1B           	tcs
+  2502 00:118F: 98           	tya
+  2503 00:1190: 6B           	rtl
+  2504             00000017   L147	equ	23
+  2505             00000009   L148	equ	9
+  2506                        	ends
+  2507                        	efunc
+  2508                        	data
+  2509                        L132:
+  2510 00:0012: 72 00        	db	$72,$00
+  2511 00:0014:              	ends
+  2512                        	code
+  2513                        	func
+  2514                        ~~identify:
+  2515                        	longa	on
+  2516                        	longi	on
+  2517 00:1191: 3B           	tsc
+  2518 00:1192: 38           	sec
+  2519 00:1193: E9 02 00     	sbc	#L173
+  2520 00:1196: 1B           	tcs
+  2521 00:1197: 0B           	phd
+  2522 00:1198: 5B           	tcd
+  2523             00000004   thisfile_0	set	4
+  2524             00000008   name_0	set	8
+  2525             00000000   firstchar_1	set	0
+  2526 00:1199: D4 08        	pei	<L173+thisfile_0+2
+  2527 00:119B: D4 06        	pei	<L173+thisfile_0
+  2528 00:119D: 22 xx xx xx  	jsl	~~fgetc
+  2529 00:11A1: 85 01        	sta	<L174+firstchar_1
+  2530 00:11A3: A5 01        	lda	<L174+firstchar_1
+  2531 00:11A5: C9 FF FF     	cmp	#<$ffffffff
+  2532 00:11A8: F0 03        	beq	L175
+  2533 00:11AA: 82 24 00     	brl	L10077
+  2534                        L175:
+  2535 00:11AD: D4 08        	pei	<L173+thisfile_0+2
+  2536 00:11AF: D4 06        	pei	<L173+thisfile_0
+  2537 00:11B1: 22 xx xx xx  	jsl	~~ferror
+  2538 00:11B5: AA           	tax
+  2539 00:11B6: D0 03        	bne	L176
+  2540 00:11B8: 82 16 00     	brl	L10077
+  2541                        L176:
+  2542 00:11BB: D4 08        	pei	<L173+thisfile_0+2
+  2543 00:11BD: D4 06        	pei	<L173+thisfile_0
+  2544 00:11BF: 22 xx xx xx  	jsl	~~fclose
+  Sun Jan  9 2022 20:52                                                Page 45
+
+
+  2545 00:11C3: D4 0C        	pei	<L173+name_0+2
+  2546 00:11C5: D4 0A        	pei	<L173+name_0
+  2547 00:11C7: F4 75 00     	pea	#<$75
+  2548 00:11CA: F4 08 00     	pea	#8
+  2549 00:11CD: 22 xx xx xx  	jsl	~~error
+  2550                        L10077:
+  2551 00:11D1: A5 01        	lda	<L174+firstchar_1
+  2552 00:11D3: C9 FF FF     	cmp	#<$ffffffff
+  2553 00:11D6: F0 03        	beq	L177
+  2554 00:11D8: 82 16 00     	brl	L10078
+  2555                        L177:
+  2556 00:11DB: D4 08        	pei	<L173+thisfile_0+2
+  2557 00:11DD: D4 06        	pei	<L173+thisfile_0
+  2558 00:11DF: 22 xx xx xx  	jsl	~~fclose
+  2559 00:11E3: D4 0C        	pei	<L173+name_0+2
+  2560 00:11E5: D4 0A        	pei	<L173+name_0
+  2561 00:11E7: F4 78 00     	pea	#<$78
+  2562 00:11EA: F4 08 00     	pea	#8
+  2563 00:11ED: 22 xx xx xx  	jsl	~~error
+  2564                        L10078:
+  2565 00:11F1: A5 01        	lda	<L174+firstchar_1
+  2566 00:11F3: C9 0D 00     	cmp	#<$d
+  2567 00:11F6: F0 03        	beq	L178
+  2568 00:11F8: 82 15 00     	brl	L10079
+  2569                        L178:
+  2570 00:11FB: A9 01 00     	lda	#$1
+  2571                        L179:
+  2572 00:11FE: A8           	tay
+  2573 00:11FF: A5 04        	lda	<L173+2
+  2574 00:1201: 85 0C        	sta	<L173+2+8
+  2575 00:1203: A5 03        	lda	<L173+1
+  2576 00:1205: 85 0B        	sta	<L173+1+8
+  2577 00:1207: 2B           	pld
+  2578 00:1208: 3B           	tsc
+  2579 00:1209: 18           	clc
+  2580 00:120A: 69 0A 00     	adc	#L173+8
+  2581 00:120D: 1B           	tcs
+  2582 00:120E: 98           	tya
+  2583 00:120F: 6B           	rtl
+  2584                        L10079:
+  2585 00:1210: A9 00 00     	lda	#$0
+  2586 00:1213: 82 E8 FF     	brl	L179
+  2587             00000002   L173	equ	2
+  2588             00000001   L174	equ	1
+  2589                        	ends
+  2590                        	efunc
+  2591                        	code
+  2592                        	xdef	~~read_basic
+  2593                        	func
+  2594                        ~~read_basic:
+  2595                        	longa	on
+  2596                        	longi	on
+  2597 00:1216: 3B           	tsc
+  2598 00:1217: 38           	sec
+  2599 00:1218: E9 0A 00     	sbc	#L180
+  2600 00:121B: 1B           	tcs
+  2601 00:121C: 0B           	phd
+  2602 00:121D: 5B           	tcd
+  Sun Jan  9 2022 20:52                                                Page 46
+
+
+  2603             00000004   name_0	set	4
+  2604             00000000   loadfile_1	set	0
+  2605             00000004   length_1	set	4
+  2606 00:121E: D4 10        	pei	<L180+name_0+2
+  2607 00:1220: D4 0E        	pei	<L180+name_0
+  2608 00:1222: 22 xx xx xx  	jsl	~~open_file
+  2609 00:1226: 85 05        	sta	<L181+loadfile_1
+  2610 00:1228: 86 07        	stx	<L181+loadfile_1+2
+  2611 00:122A: A5 05        	lda	<L181+loadfile_1
+  2612 00:122C: 05 07        	ora	<L181+loadfile_1+2
+  2613 00:122E: F0 03        	beq	L182
+  2614 00:1230: 82 0E 00     	brl	L10080
+  2615                        L182:
+  2616 00:1233: D4 10        	pei	<L180+name_0+2
+  2617 00:1235: D4 0E        	pei	<L180+name_0
+  2618 00:1237: F4 6E 00     	pea	#<$6e
+  2619 00:123A: F4 08 00     	pea	#8
+  2620 00:123D: 22 xx xx xx  	jsl	~~error
+  2621                        L10080:
+  2622 00:1241: 9C xx xx     	stz	|~~last_added
+  2623 00:1244: 9C xx xx     	stz	|~~last_added+2
+  2624 00:1247: D4 10        	pei	<L180+name_0+2
+  2625 00:1249: D4 0E        	pei	<L180+name_0
+  2626 00:124B: D4 07        	pei	<L181+loadfile_1+2
+  2627 00:124D: D4 05        	pei	<L181+loadfile_1
+  2628 00:124F: 22 xx xx xx  	jsl	~~identify
+  2629 00:1253: 85 01        	sta	<R0
+  2630 00:1255: A5 01        	lda	<R0
+  2631 00:1257: C9 01 00     	cmp	#<$1
+  2632 00:125A: F0 03        	beq	L183
+  2633 00:125C: 82 21 00     	brl	L10081
+  2634                        L183:
+  2635 00:125F: 22 xx xx xx  	jsl	~~clear_program
+  2636 00:1263: AD xx xx     	lda	|~~basicvars+50+2
+  2637 00:1266: 48           	pha
+  2638 00:1267: AD xx xx     	lda	|~~basicvars+50
+  2639 00:126A: 48           	pha
+  2640 00:126B: AD xx xx     	lda	|~~basicvars+26+2
+  2641 00:126E: 48           	pha
+  2642 00:126F: AD xx xx     	lda	|~~basicvars+26
+  2643 00:1272: 48           	pha
+  2644 00:1273: D4 07        	pei	<L181+loadfile_1+2
+  2645 00:1275: D4 05        	pei	<L181+loadfile_1
+  2646 00:1277: 22 xx xx xx  	jsl	~~read_bbcfile
+  2647 00:127B: 85 09        	sta	<L181+length_1
+  2648 00:127D: 82 2E 00     	brl	L10082
+  2649                        L10081:
+  2650 00:1280: 22 xx xx xx  	jsl	~~clear_program
+  2651 00:1284: AD xx xx     	lda	|~~basicvars+423
+  2652 00:1287: 85 01        	sta	<R0
+  2653 00:1289: 46 01        	lsr	<R0
+  2654 00:128B: A5 01        	lda	<R0
+  2655 00:128D: 29 01 00     	and	#<$1
+  2656 00:1290: 85 01        	sta	<R0
+  2657 00:1292: D4 01        	pei	<R0
+  2658 00:1294: AD xx xx     	lda	|~~basicvars+50+2
+  2659 00:1297: 48           	pha
+  2660 00:1298: AD xx xx     	lda	|~~basicvars+50
+  Sun Jan  9 2022 20:52                                                Page 47
+
+
+  2661 00:129B: 48           	pha
+  2662 00:129C: AD xx xx     	lda	|~~basicvars+26+2
+  2663 00:129F: 48           	pha
+  2664 00:12A0: AD xx xx     	lda	|~~basicvars+26
+  2665 00:12A3: 48           	pha
+  2666 00:12A4: D4 07        	pei	<L181+loadfile_1+2
+  2667 00:12A6: D4 05        	pei	<L181+loadfile_1
+  2668 00:12A8: 22 xx xx xx  	jsl	~~read_textfile
+  2669 00:12AC: 85 09        	sta	<L181+length_1
+  2670                        L10082:
+  2671 00:12AE: A0 00 00     	ldy	#$0
+  2672 00:12B1: A5 09        	lda	<L181+length_1
+  2673 00:12B3: 10 01        	bpl	L184
+  2674 00:12B5: 88           	dey
+  2675                        L184:
+  2676 00:12B6: 85 01        	sta	<R0
+  2677 00:12B8: 84 03        	sty	<R0+2
+  2678 00:12BA: 18           	clc
+  2679 00:12BB: AD xx xx     	lda	|~~basicvars+26
+  2680 00:12BE: 65 01        	adc	<R0
+  2681 00:12C0: 8D xx xx     	sta	|~~basicvars+26
+  2682 00:12C3: AD xx xx     	lda	|~~basicvars+26+2
+  2683 00:12C6: 65 03        	adc	<R0+2
+  2684 00:12C8: 8D xx xx     	sta	|~~basicvars+26+2
+  2685 00:12CB: A9 01 00     	lda	#$1
+  2686 00:12CE: 1C xx xx     	trb	~~basicvars+437
+  2687 00:12D1: 22 xx xx xx  	jsl	~~adjust_heaplimits
+  2688 00:12D5: AD xx xx     	lda	|~~basicvars+435
+  2689 00:12D8: 89 01 00     	bit	#$1
+  2690 00:12DB: D0 03        	bne	L185
+  2691 00:12DD: 82 25 00     	brl	L10083
+  2692                        L185:
+  2693 00:12E0: AD xx xx     	lda	|~~basicvars+26+2
+  2694 00:12E3: 48           	pha
+  2695 00:12E4: AD xx xx     	lda	|~~basicvars+26
+  2696 00:12E7: 48           	pha
+  2697 00:12E8: AD xx xx     	lda	|~~basicvars+18+2
+  2698 00:12EB: 48           	pha
+  2699 00:12EC: AD xx xx     	lda	|~~basicvars+18
+  2700 00:12EF: 48           	pha
+  2701 00:12F0: F4 xx xx     	pea	#^L172
+  2702 00:12F3: F4 xx xx     	pea	#<L172
+  2703 00:12F6: AD xx xx     	lda	|~~stderr+2
+  2704 00:12F9: 48           	pha
+  2705 00:12FA: AD xx xx     	lda	|~~stderr
+  2706 00:12FD: 48           	pha
+  2707 00:12FE: F4 12 00     	pea	#18
+  2708 00:1301: 22 xx xx xx  	jsl	~~fprintf
+  2709                        L10083:
+  2710                        L186:
+  2711 00:1305: A5 0C        	lda	<L180+2
+  2712 00:1307: 85 10        	sta	<L180+2+4
+  2713 00:1309: A5 0B        	lda	<L180+1
+  2714 00:130B: 85 0F        	sta	<L180+1+4
+  2715 00:130D: 2B           	pld
+  2716 00:130E: 3B           	tsc
+  2717 00:130F: 18           	clc
+  2718 00:1310: 69 0E 00     	adc	#L180+4
+  Sun Jan  9 2022 20:52                                                Page 48
+
+
+  2719 00:1313: 1B           	tcs
+  2720 00:1314: 6B           	rtl
+  2721             0000000A   L180	equ	10
+  2722             00000005   L181	equ	5
+  2723                        	ends
+  2724                        	efunc
+  2725                        	data
+  2726                        L172:
+  2727 00:0014: 50 72 6F 67  	db	$50,$72,$6F,$67,$72,$61,$6D,$20,$69,$73,
+                    $20,$6C,$6F,$61,$64
+       00:0018: 72 61 6D 20 
+       00:001C: 69 73 20 6C 
+       00:0020: 6F 61 64 
+  2728 00:0023: 65 64 20 61  	db	$65,$64,$20,$61,$74,$20,$70,$61,$67,$65,
+                    $3D,$26,$25,$70,$2C
+       00:0027: 74 20 70 61 
+       00:002B: 67 65 3D 26 
+       00:002F: 25 70 2C 
+  2729 00:0032: 20 20 74 6F  	db	$20,$20,$74,$6F,$70,$3D,$26,$25,$70,$0A,
+                    $00
+       00:0036: 70 3D 26 25 
+       00:003A: 70 0A 00 
+  2730 00:003D:              	ends
+  2731                        	code
+  2732                        	func
+  2733                        ~~link_library:
+  2734                        	longa	on
+  2735                        	longi	on
+  2736 00:1315: 3B           	tsc
+  2737 00:1316: 38           	sec
+  2738 00:1317: E9 16 00     	sbc	#L188
+  2739 00:131A: 1B           	tcs
+  2740 00:131B: 0B           	phd
+  2741 00:131C: 5B           	tcd
+  2742             00000004   name_0	set	4
+  2743             00000008   base_0	set	8
+  2744             0000000C   size_0	set	12
+  2745             0000000E   onheap_0	set	14
+  2746             00000000   lp_1	set	0
+  2747             00000004   n_1	set	4
+  2748 00:131D: A5 24        	lda	<L188+onheap_0
+  2749 00:131F: 29 FF 00     	and	#$ff
+  2750 00:1322: D0 03        	bne	L190
+  2751 00:1324: 82 58 00     	brl	L10084
+  2752                        L190:
+  2753 00:1327: F4 12 01     	pea	#<$112
+  2754 00:132A: 22 xx xx xx  	jsl	~~allocmem
+  2755 00:132E: 85 11        	sta	<L189+lp_1
+  2756 00:1330: 86 13        	stx	<L189+lp_1+2
+  2757 00:1332: D4 1C        	pei	<L188+name_0+2
+  2758 00:1334: D4 1A        	pei	<L188+name_0
+  2759 00:1336: 22 xx xx xx  	jsl	~~strlen
+  2760 00:133A: 85 01        	sta	<R0
+  2761 00:133C: 86 03        	stx	<R0+2
+  2762 00:133E: 18           	clc
+  2763 00:133F: A9 01 00     	lda	#$1
+  2764 00:1342: 65 01        	adc	<R0
+  2765 00:1344: 85 05        	sta	<R1
+  Sun Jan  9 2022 20:52                                                Page 49
+
+
+  2766 00:1346: A9 00 00     	lda	#$0
+  2767 00:1349: 65 03        	adc	<R0+2
+  2768 00:134B: 85 07        	sta	<R1+2
+  2769 00:134D: D4 05        	pei	<R1
+  2770 00:134F: 22 xx xx xx  	jsl	~~allocmem
+  2771 00:1353: 85 01        	sta	<R0
+  2772 00:1355: 86 03        	stx	<R0+2
+  2773 00:1357: A5 01        	lda	<R0
+  2774 00:1359: A0 04 00     	ldy	#$4
+  2775 00:135C: 97 11        	sta	[<L189+lp_1],Y
+  2776 00:135E: A5 03        	lda	<R0+2
+  2777 00:1360: A0 06 00     	ldy	#$6
+  2778 00:1363: 97 11        	sta	[<L189+lp_1],Y
+  2779 00:1365: AD xx xx     	lda	|~~basicvars+411
+  2780 00:1368: 87 11        	sta	[<L189+lp_1]
+  2781 00:136A: AD xx xx     	lda	|~~basicvars+411+2
+  2782 00:136D: A0 02 00     	ldy	#$2
+  2783 00:1370: 97 11        	sta	[<L189+lp_1],Y
+  2784 00:1372: A5 11        	lda	<L189+lp_1
+  2785 00:1374: 8D xx xx     	sta	|~~basicvars+411
+  2786 00:1377: A5 13        	lda	<L189+lp_1+2
+  2787 00:1379: 8D xx xx     	sta	|~~basicvars+411+2
+  2788 00:137C: 82 71 00     	brl	L10085
+  2789                        L10084:
+  2790 00:137F: F4 00 00     	pea	#^$112
+  2791 00:1382: F4 12 01     	pea	#<$112
+  2792 00:1385: 22 xx xx xx  	jsl	~~malloc
+  2793 00:1389: 85 11        	sta	<L189+lp_1
+  2794 00:138B: 86 13        	stx	<L189+lp_1+2
+  2795 00:138D: A5 11        	lda	<L189+lp_1
+  2796 00:138F: 05 13        	ora	<L189+lp_1+2
+  2797 00:1391: F0 03        	beq	L191
+  2798 00:1393: 82 0E 00     	brl	L10086
+  2799                        L191:
+  2800 00:1396: D4 1C        	pei	<L188+name_0+2
+  2801 00:1398: D4 1A        	pei	<L188+name_0
+  2802 00:139A: F4 6B 00     	pea	#<$6b
+  2803 00:139D: F4 08 00     	pea	#8
+  2804 00:13A0: 22 xx xx xx  	jsl	~~error
+  2805                        L10086:
+  2806 00:13A4: D4 1C        	pei	<L188+name_0+2
+  2807 00:13A6: D4 1A        	pei	<L188+name_0
+  2808 00:13A8: 22 xx xx xx  	jsl	~~strlen
+  2809 00:13AC: 85 01        	sta	<R0
+  2810 00:13AE: 86 03        	stx	<R0+2
+  2811 00:13B0: 18           	clc
+  2812 00:13B1: A9 01 00     	lda	#$1
+  2813 00:13B4: 65 01        	adc	<R0
+  2814 00:13B6: 85 05        	sta	<R1
+  2815 00:13B8: A9 00 00     	lda	#$0
+  2816 00:13BB: 65 03        	adc	<R0+2
+  2817 00:13BD: 85 07        	sta	<R1+2
+  2818 00:13BF: D4 07        	pei	<R1+2
+  2819 00:13C1: D4 05        	pei	<R1
+  2820 00:13C3: 22 xx xx xx  	jsl	~~malloc
+  2821 00:13C7: 85 01        	sta	<R0
+  2822 00:13C9: 86 03        	stx	<R0+2
+  2823 00:13CB: A5 01        	lda	<R0
+  Sun Jan  9 2022 20:52                                                Page 50
+
+
+  2824 00:13CD: A0 04 00     	ldy	#$4
+  2825 00:13D0: 97 11        	sta	[<L189+lp_1],Y
+  2826 00:13D2: A5 03        	lda	<R0+2
+  2827 00:13D4: A0 06 00     	ldy	#$6
+  2828 00:13D7: 97 11        	sta	[<L189+lp_1],Y
+  2829 00:13D9: AD xx xx     	lda	|~~basicvars+415
+  2830 00:13DC: 87 11        	sta	[<L189+lp_1]
+  2831 00:13DE: AD xx xx     	lda	|~~basicvars+415+2
+  2832 00:13E1: A0 02 00     	ldy	#$2
+  2833 00:13E4: 97 11        	sta	[<L189+lp_1],Y
+  2834 00:13E6: A5 11        	lda	<L189+lp_1
+  2835 00:13E8: 8D xx xx     	sta	|~~basicvars+415
+  2836 00:13EB: A5 13        	lda	<L189+lp_1+2
+  2837 00:13ED: 8D xx xx     	sta	|~~basicvars+415+2
+  2838                        L10085:
+  2839 00:13F0: D4 1C        	pei	<L188+name_0+2
+  2840 00:13F2: D4 1A        	pei	<L188+name_0
+  2841 00:13F4: A0 06 00     	ldy	#$6
+  2842 00:13F7: B7 11        	lda	[<L189+lp_1],Y
+  2843 00:13F9: 48           	pha
+  2844 00:13FA: A0 04 00     	ldy	#$4
+  2845 00:13FD: B7 11        	lda	[<L189+lp_1],Y
+  2846 00:13FF: 48           	pha
+  2847 00:1400: 22 xx xx xx  	jsl	~~strcpy
+  2848 00:1404: A5 1E        	lda	<L188+base_0
+  2849 00:1406: A0 08 00     	ldy	#$8
+  2850 00:1409: 97 11        	sta	[<L189+lp_1],Y
+  2851 00:140B: A5 20        	lda	<L188+base_0+2
+  2852 00:140D: A0 0A 00     	ldy	#$a
+  2853 00:1410: 97 11        	sta	[<L189+lp_1],Y
+  2854 00:1412: A5 22        	lda	<L188+size_0
+  2855 00:1414: A0 0C 00     	ldy	#$c
+  2856 00:1417: 97 11        	sta	[<L189+lp_1],Y
+  2857 00:1419: A9 00 00     	lda	#$0
+  2858 00:141C: A0 0E 00     	ldy	#$e
+  2859 00:141F: 97 11        	sta	[<L189+lp_1],Y
+  2860 00:1421: A9 00 00     	lda	#$0
+  2861 00:1424: A0 10 00     	ldy	#$10
+  2862 00:1427: 97 11        	sta	[<L189+lp_1],Y
+  2863 00:1429: 64 15        	stz	<L189+n_1
+  2864                        L10089:
+  2865 00:142B: A0 00 00     	ldy	#$0
+  2866 00:142E: A5 15        	lda	<L189+n_1
+  2867 00:1430: 10 01        	bpl	L192
+  2868 00:1432: 88           	dey
+  2869                        L192:
+  2870 00:1433: 85 05        	sta	<R1
+  2871 00:1435: 84 07        	sty	<R1+2
+  2872 00:1437: D4 07        	pei	<R1+2
+  2873 00:1439: D4 05        	pei	<R1
+  2874 00:143B: A9 02 00     	lda	#$2
+  2875                        	xref	~~~lasl
+  2876 00:143E: 22 xx xx xx  	jsl	~~~lasl
+  2877 00:1442: 85 01        	sta	<R0
+  2878 00:1444: 86 03        	stx	<R0+2
+  2879 00:1446: 18           	clc
+  2880 00:1447: A9 12 00     	lda	#$12
+  2881 00:144A: 65 11        	adc	<L189+lp_1
+  Sun Jan  9 2022 20:52                                                Page 51
+
+
+  2882 00:144C: 85 09        	sta	<R2
+  2883 00:144E: A9 00 00     	lda	#$0
+  2884 00:1451: 65 13        	adc	<L189+lp_1+2
+  2885 00:1453: 85 0B        	sta	<R2+2
+  2886 00:1455: 18           	clc
+  2887 00:1456: A5 09        	lda	<R2
+  2888 00:1458: 65 01        	adc	<R0
+  2889 00:145A: 85 0D        	sta	<R3
+  2890 00:145C: A5 0B        	lda	<R2+2
+  2891 00:145E: 65 03        	adc	<R0+2
+  2892 00:1460: 85 0F        	sta	<R3+2
+  2893 00:1462: A9 00 00     	lda	#$0
+  2894 00:1465: 87 0D        	sta	[<R3]
+  2895 00:1467: A9 00 00     	lda	#$0
+  2896 00:146A: A0 02 00     	ldy	#$2
+  2897 00:146D: 97 0D        	sta	[<R3],Y
+  2898                        L10087:
+  2899 00:146F: E6 15        	inc	<L189+n_1
+  2900 00:1471: 38           	sec
+  2901 00:1472: A5 15        	lda	<L189+n_1
+  2902 00:1474: E9 40 00     	sbc	#<$40
+  2903 00:1477: 70 03        	bvs	L193
+  2904 00:1479: 49 00 80     	eor	#$8000
+  2905                        L193:
+  2906 00:147C: 30 03        	bmi	L194
+  2907 00:147E: 82 AA FF     	brl	L10089
+  2908                        L194:
+  2909                        L10088:
+  2910                        L195:
+  2911 00:1481: A5 18        	lda	<L188+2
+  2912 00:1483: 85 24        	sta	<L188+2+12
+  2913 00:1485: A5 17        	lda	<L188+1
+  2914 00:1487: 85 23        	sta	<L188+1+12
+  2915 00:1489: 2B           	pld
+  2916 00:148A: 3B           	tsc
+  2917 00:148B: 18           	clc
+  2918 00:148C: 69 22 00     	adc	#L188+12
+  2919 00:148F: 1B           	tcs
+  2920 00:1490: 6B           	rtl
+  2921             00000016   L188	equ	22
+  2922             00000011   L189	equ	17
+  2923                        	ends
+  2924                        	efunc
+  2925                        	code
+  2926                        	func
+  2927                        ~~read_bbclib:
+  2928                        	longa	on
+  2929                        	longi	on
+  2930 00:1491: 3B           	tsc
+  2931 00:1492: 38           	sec
+  2932 00:1493: E9 0E 00     	sbc	#L196
+  2933 00:1496: 1B           	tcs
+  2934 00:1497: 0B           	phd
+  2935 00:1498: 5B           	tcd
+  2936             00000004   libfile_0	set	4
+  2937             00000008   name_0	set	8
+  2938             0000000C   onheap_0	set	12
+  2939             00000000   size_1	set	0
+  Sun Jan  9 2022 20:52                                                Page 52
+
+
+  2940             00000002   base_1	set	2
+  2941 00:1499: AD xx xx     	lda	|~~basicvars+34
+  2942 00:149C: 85 07        	sta	<L197+base_1
+  2943 00:149E: AD xx xx     	lda	|~~basicvars+34+2
+  2944 00:14A1: 85 09        	sta	<L197+base_1+2
+  2945 00:14A3: AD xx xx     	lda	|~~basicvars+42+2
+  2946 00:14A6: 48           	pha
+  2947 00:14A7: AD xx xx     	lda	|~~basicvars+42
+  2948 00:14AA: 48           	pha
+  2949 00:14AB: D4 09        	pei	<L197+base_1+2
+  2950 00:14AD: D4 07        	pei	<L197+base_1
+  2951 00:14AF: D4 14        	pei	<L196+libfile_0+2
+  2952 00:14B1: D4 12        	pei	<L196+libfile_0
+  2953 00:14B3: 22 xx xx xx  	jsl	~~read_bbcfile
+  2954 00:14B7: 85 05        	sta	<L197+size_1
+  2955 00:14B9: A5 1A        	lda	<L196+onheap_0
+  2956 00:14BB: 29 FF 00     	and	#$ff
+  2957 00:14BE: D0 03        	bne	L198
+  2958 00:14C0: 82 33 00     	brl	L10090
+  2959                        L198:
+  2960 00:14C3: A0 00 00     	ldy	#$0
+  2961 00:14C6: A5 05        	lda	<L197+size_1
+  2962 00:14C8: 10 01        	bpl	L199
+  2963 00:14CA: 88           	dey
+  2964                        L199:
+  2965 00:14CB: 85 01        	sta	<R0
+  2966 00:14CD: 84 03        	sty	<R0+2
+  2967 00:14CF: 18           	clc
+  2968 00:14D0: AD xx xx     	lda	|~~basicvars+34
+  2969 00:14D3: 65 01        	adc	<R0
+  2970 00:14D5: 8D xx xx     	sta	|~~basicvars+34
+  2971 00:14D8: AD xx xx     	lda	|~~basicvars+34+2
+  2972 00:14DB: 65 03        	adc	<R0+2
+  2973 00:14DD: 8D xx xx     	sta	|~~basicvars+34+2
+  2974 00:14E0: 18           	clc
+  2975 00:14E1: A9 00 01     	lda	#$100
+  2976 00:14E4: 6D xx xx     	adc	|~~basicvars+34
+  2977 00:14E7: 8D xx xx     	sta	|~~basicvars+38
+  2978 00:14EA: A9 00 00     	lda	#$0
+  2979 00:14ED: 6D xx xx     	adc	|~~basicvars+34+2
+  2980 00:14F0: 8D xx xx     	sta	|~~basicvars+38+2
+  2981 00:14F3: 82 7D 00     	brl	L10091
+  2982                        L10090:
+  2983             00000006   installbase_2	set	6
+  2984 00:14F6: A0 00 00     	ldy	#$0
+  2985 00:14F9: A5 05        	lda	<L197+size_1
+  2986 00:14FB: 10 01        	bpl	L200
+  2987 00:14FD: 88           	dey
+  2988                        L200:
+  2989 00:14FE: 85 01        	sta	<R0
+  2990 00:1500: 84 03        	sty	<R0+2
+  2991 00:1502: D4 03        	pei	<R0+2
+  2992 00:1504: D4 01        	pei	<R0
+  2993 00:1506: 22 xx xx xx  	jsl	~~malloc
+  2994 00:150A: 85 0B        	sta	<L197+installbase_2
+  2995 00:150C: 86 0D        	stx	<L197+installbase_2+2
+  2996 00:150E: A5 0B        	lda	<L197+installbase_2
+  2997 00:1510: 05 0D        	ora	<L197+installbase_2+2
+  Sun Jan  9 2022 20:52                                                Page 53
+
+
+  2998 00:1512: F0 03        	beq	L201
+  2999 00:1514: 82 0E 00     	brl	L10092
+  3000                        L201:
+  3001 00:1517: D4 18        	pei	<L196+name_0+2
+  3002 00:1519: D4 16        	pei	<L196+name_0
+  3003 00:151B: F4 6B 00     	pea	#<$6b
+  3004 00:151E: F4 08 00     	pea	#8
+  3005 00:1521: 22 xx xx xx  	jsl	~~error
+  3006                        L10092:
+  3007 00:1525: A0 00 00     	ldy	#$0
+  3008 00:1528: A5 05        	lda	<L197+size_1
+  3009 00:152A: 10 01        	bpl	L202
+  3010 00:152C: 88           	dey
+  3011                        L202:
+  3012 00:152D: 85 01        	sta	<R0
+  3013 00:152F: 84 03        	sty	<R0+2
+  3014 00:1531: D4 03        	pei	<R0+2
+  3015 00:1533: D4 01        	pei	<R0
+  3016 00:1535: D4 09        	pei	<L197+base_1+2
+  3017 00:1537: D4 07        	pei	<L197+base_1
+  3018 00:1539: D4 0D        	pei	<L197+installbase_2+2
+  3019 00:153B: D4 0B        	pei	<L197+installbase_2
+  3020 00:153D: 22 xx xx xx  	jsl	~~memmove
+  3021 00:1541: A5 0B        	lda	<L197+installbase_2
+  3022 00:1543: 85 07        	sta	<L197+base_1
+  3023 00:1545: A5 0D        	lda	<L197+installbase_2+2
+  3024 00:1547: 85 09        	sta	<L197+base_1+2
+  3025 00:1549: AD xx xx     	lda	|~~basicvars+435
+  3026 00:154C: 89 01 00     	bit	#$1
+  3027 00:154F: D0 03        	bne	L203
+  3028 00:1551: 82 1F 00     	brl	L10093
+  3029                        L203:
+  3030 00:1554: D4 05        	pei	<L197+size_1
+  3031 00:1556: D4 09        	pei	<L197+base_1+2
+  3032 00:1558: D4 07        	pei	<L197+base_1
+  3033 00:155A: D4 18        	pei	<L196+name_0+2
+  3034 00:155C: D4 16        	pei	<L196+name_0
+  3035 00:155E: F4 xx xx     	pea	#^L187
+  3036 00:1561: F4 xx xx     	pea	#<L187
+  3037 00:1564: AD xx xx     	lda	|~~stderr+2
+  3038 00:1567: 48           	pha
+  3039 00:1568: AD xx xx     	lda	|~~stderr
+  3040 00:156B: 48           	pha
+  3041 00:156C: F4 14 00     	pea	#20
+  3042 00:156F: 22 xx xx xx  	jsl	~~fprintf
+  3043                        L10093:
+  3044                        L10091:
+  3045 00:1573: D4 1A        	pei	<L196+onheap_0
+  3046 00:1575: D4 05        	pei	<L197+size_1
+  3047 00:1577: D4 09        	pei	<L197+base_1+2
+  3048 00:1579: D4 07        	pei	<L197+base_1
+  3049 00:157B: D4 18        	pei	<L196+name_0+2
+  3050 00:157D: D4 16        	pei	<L196+name_0
+  3051 00:157F: 22 xx xx xx  	jsl	~~link_library
+  3052                        L204:
+  3053 00:1583: A5 10        	lda	<L196+2
+  3054 00:1585: 85 1A        	sta	<L196+2+10
+  3055 00:1587: A5 0F        	lda	<L196+1
+  Sun Jan  9 2022 20:52                                                Page 54
+
+
+  3056 00:1589: 85 19        	sta	<L196+1+10
+  3057 00:158B: 2B           	pld
+  3058 00:158C: 3B           	tsc
+  3059 00:158D: 18           	clc
+  3060 00:158E: 69 18 00     	adc	#L196+10
+  3061 00:1591: 1B           	tcs
+  3062 00:1592: 6B           	rtl
+  3063             0000000E   L196	equ	14
+  3064             00000005   L197	equ	5
+  3065                        	ends
+  3066                        	efunc
+  3067                        	data
+  3068                        L187:
+  3069 00:003D: 4C 6F 61 64  	db	$4C,$6F,$61,$64,$65,$64,$20,$6C,$69,$62,
+                    $72,$61,$72,$79,$20
+       00:0041: 65 64 20 6C 
+       00:0045: 69 62 72 61 
+       00:0049: 72 79 20 
+  3070 00:004C: 27 25 73 27  	db	$27,$25,$73,$27,$20,$61,$74,$20,$25,$70,
+                    $2C,$20,$73,$69,$7A
+       00:0050: 20 61 74 20 
+       00:0054: 25 70 2C 20 
+       00:0058: 73 69 7A 
+  3071 00:005B: 65 20 3D 20  	db	$65,$20,$3D,$20,$25,$64,$0A,$00
+       00:005F: 25 64 0A 00 
+  3072 00:0063:              	ends
+  3073                        	code
+  3074                        	func
+  3075                        ~~read_textlib:
+  3076                        	longa	on
+  3077                        	longi	on
+  3078 00:1593: 3B           	tsc
+  3079 00:1594: 38           	sec
+  3080 00:1595: E9 0E 00     	sbc	#L206
+  3081 00:1598: 1B           	tcs
+  3082 00:1599: 0B           	phd
+  3083 00:159A: 5B           	tcd
+  3084             00000004   libfile_0	set	4
+  3085             00000008   name_0	set	8
+  3086             0000000C   onheap_0	set	12
+  3087             00000000   size_1	set	0
+  3088             00000002   base_1	set	2
+  3089 00:159B: AD xx xx     	lda	|~~basicvars+34
+  3090 00:159E: 85 07        	sta	<L207+base_1
+  3091 00:15A0: AD xx xx     	lda	|~~basicvars+34+2
+  3092 00:15A3: 85 09        	sta	<L207+base_1+2
+  3093 00:15A5: F4 01 00     	pea	#<$1
+  3094 00:15A8: AD xx xx     	lda	|~~basicvars+42+2
+  3095 00:15AB: 48           	pha
+  3096 00:15AC: AD xx xx     	lda	|~~basicvars+42
+  3097 00:15AF: 48           	pha
+  3098 00:15B0: D4 09        	pei	<L207+base_1+2
+  3099 00:15B2: D4 07        	pei	<L207+base_1
+  3100 00:15B4: D4 14        	pei	<L206+libfile_0+2
+  3101 00:15B6: D4 12        	pei	<L206+libfile_0
+  3102 00:15B8: 22 xx xx xx  	jsl	~~read_textfile
+  3103 00:15BC: 85 05        	sta	<L207+size_1
+  3104 00:15BE: A5 1A        	lda	<L206+onheap_0
+  Sun Jan  9 2022 20:52                                                Page 55
+
+
+  3105 00:15C0: 29 FF 00     	and	#$ff
+  3106 00:15C3: D0 03        	bne	L208
+  3107 00:15C5: 82 33 00     	brl	L10094
+  3108                        L208:
+  3109 00:15C8: A0 00 00     	ldy	#$0
+  3110 00:15CB: A5 05        	lda	<L207+size_1
+  3111 00:15CD: 10 01        	bpl	L209
+  3112 00:15CF: 88           	dey
+  3113                        L209:
+  3114 00:15D0: 85 01        	sta	<R0
+  3115 00:15D2: 84 03        	sty	<R0+2
+  3116 00:15D4: 18           	clc
+  3117 00:15D5: AD xx xx     	lda	|~~basicvars+34
+  3118 00:15D8: 65 01        	adc	<R0
+  3119 00:15DA: 8D xx xx     	sta	|~~basicvars+34
+  3120 00:15DD: AD xx xx     	lda	|~~basicvars+34+2
+  3121 00:15E0: 65 03        	adc	<R0+2
+  3122 00:15E2: 8D xx xx     	sta	|~~basicvars+34+2
+  3123 00:15E5: 18           	clc
+  3124 00:15E6: A9 00 01     	lda	#$100
+  3125 00:15E9: 6D xx xx     	adc	|~~basicvars+34
+  3126 00:15EC: 8D xx xx     	sta	|~~basicvars+38
+  3127 00:15EF: A9 00 00     	lda	#$0
+  3128 00:15F2: 6D xx xx     	adc	|~~basicvars+34+2
+  3129 00:15F5: 8D xx xx     	sta	|~~basicvars+38+2
+  3130 00:15F8: 82 7D 00     	brl	L10095
+  3131                        L10094:
+  3132             00000006   installbase_2	set	6
+  3133 00:15FB: A0 00 00     	ldy	#$0
+  3134 00:15FE: A5 05        	lda	<L207+size_1
+  3135 00:1600: 10 01        	bpl	L210
+  3136 00:1602: 88           	dey
+  3137                        L210:
+  3138 00:1603: 85 01        	sta	<R0
+  3139 00:1605: 84 03        	sty	<R0+2
+  3140 00:1607: D4 03        	pei	<R0+2
+  3141 00:1609: D4 01        	pei	<R0
+  3142 00:160B: 22 xx xx xx  	jsl	~~malloc
+  3143 00:160F: 85 0B        	sta	<L207+installbase_2
+  3144 00:1611: 86 0D        	stx	<L207+installbase_2+2
+  3145 00:1613: A5 0B        	lda	<L207+installbase_2
+  3146 00:1615: 05 0D        	ora	<L207+installbase_2+2
+  3147 00:1617: F0 03        	beq	L211
+  3148 00:1619: 82 0E 00     	brl	L10096
+  3149                        L211:
+  3150 00:161C: D4 18        	pei	<L206+name_0+2
+  3151 00:161E: D4 16        	pei	<L206+name_0
+  3152 00:1620: F4 6B 00     	pea	#<$6b
+  3153 00:1623: F4 08 00     	pea	#8
+  3154 00:1626: 22 xx xx xx  	jsl	~~error
+  3155                        L10096:
+  3156 00:162A: A0 00 00     	ldy	#$0
+  3157 00:162D: A5 05        	lda	<L207+size_1
+  3158 00:162F: 10 01        	bpl	L212
+  3159 00:1631: 88           	dey
+  3160                        L212:
+  3161 00:1632: 85 01        	sta	<R0
+  3162 00:1634: 84 03        	sty	<R0+2
+  Sun Jan  9 2022 20:52                                                Page 56
+
+
+  3163 00:1636: D4 03        	pei	<R0+2
+  3164 00:1638: D4 01        	pei	<R0
+  3165 00:163A: D4 09        	pei	<L207+base_1+2
+  3166 00:163C: D4 07        	pei	<L207+base_1
+  3167 00:163E: D4 0D        	pei	<L207+installbase_2+2
+  3168 00:1640: D4 0B        	pei	<L207+installbase_2
+  3169 00:1642: 22 xx xx xx  	jsl	~~memmove
+  3170 00:1646: A5 0B        	lda	<L207+installbase_2
+  3171 00:1648: 85 07        	sta	<L207+base_1
+  3172 00:164A: A5 0D        	lda	<L207+installbase_2+2
+  3173 00:164C: 85 09        	sta	<L207+base_1+2
+  3174 00:164E: AD xx xx     	lda	|~~basicvars+435
+  3175 00:1651: 89 01 00     	bit	#$1
+  3176 00:1654: D0 03        	bne	L213
+  3177 00:1656: 82 1F 00     	brl	L10097
+  3178                        L213:
+  3179 00:1659: D4 05        	pei	<L207+size_1
+  3180 00:165B: D4 09        	pei	<L207+base_1+2
+  3181 00:165D: D4 07        	pei	<L207+base_1
+  3182 00:165F: D4 18        	pei	<L206+name_0+2
+  3183 00:1661: D4 16        	pei	<L206+name_0
+  3184 00:1663: F4 xx xx     	pea	#^L205
+  3185 00:1666: F4 xx xx     	pea	#<L205
+  3186 00:1669: AD xx xx     	lda	|~~stderr+2
+  3187 00:166C: 48           	pha
+  3188 00:166D: AD xx xx     	lda	|~~stderr
+  3189 00:1670: 48           	pha
+  3190 00:1671: F4 14 00     	pea	#20
+  3191 00:1674: 22 xx xx xx  	jsl	~~fprintf
+  3192                        L10097:
+  3193                        L10095:
+  3194 00:1678: D4 1A        	pei	<L206+onheap_0
+  3195 00:167A: D4 05        	pei	<L207+size_1
+  3196 00:167C: D4 09        	pei	<L207+base_1+2
+  3197 00:167E: D4 07        	pei	<L207+base_1
+  3198 00:1680: D4 18        	pei	<L206+name_0+2
+  3199 00:1682: D4 16        	pei	<L206+name_0
+  3200 00:1684: 22 xx xx xx  	jsl	~~link_library
+  3201                        L214:
+  3202 00:1688: A5 10        	lda	<L206+2
+  3203 00:168A: 85 1A        	sta	<L206+2+10
+  3204 00:168C: A5 0F        	lda	<L206+1
+  3205 00:168E: 85 19        	sta	<L206+1+10
+  3206 00:1690: 2B           	pld
+  3207 00:1691: 3B           	tsc
+  3208 00:1692: 18           	clc
+  3209 00:1693: 69 18 00     	adc	#L206+10
+  3210 00:1696: 1B           	tcs
+  3211 00:1697: 6B           	rtl
+  3212             0000000E   L206	equ	14
+  3213             00000005   L207	equ	5
+  3214                        	ends
+  3215                        	efunc
+  3216                        	data
+  3217                        L205:
+  3218 00:0063: 4C 6F 61 64  	db	$4C,$6F,$61,$64,$65,$64,$20,$6C,$69,$62,
+                    $72,$61,$72,$79,$20
+       00:0067: 65 64 20 6C 
+  Sun Jan  9 2022 20:52                                                Page 57
+
+
+       00:006B: 69 62 72 61 
+       00:006F: 72 79 20 
+  3219 00:0072: 27 25 73 27  	db	$27,$25,$73,$27,$20,$61,$74,$20,$25,$70,
+                    $2C,$20,$73,$69,$7A
+       00:0076: 20 61 74 20 
+       00:007A: 25 70 2C 20 
+       00:007E: 73 69 7A 
+  3220 00:0081: 65 20 3D 20  	db	$65,$20,$3D,$20,$25,$64,$0A,$00
+       00:0085: 25 64 0A 00 
+  3221 00:0089:              	ends
+  3222                        	code
+  3223                        	xdef	~~read_library
+  3224                        	func
+  3225                        ~~read_library:
+  3226                        	longa	on
+  3227                        	longi	on
+  3228 00:1698: 3B           	tsc
+  3229 00:1699: 38           	sec
+  3230 00:169A: E9 0E 00     	sbc	#L216
+  3231 00:169D: 1B           	tcs
+  3232 00:169E: 0B           	phd
+  3233 00:169F: 5B           	tcd
+  3234             00000004   name_0	set	4
+  3235             00000008   onheap_0	set	8
+  3236             00000000   firstchar_1	set	0
+  3237             00000002   lp_1	set	2
+  3238             00000006   libfile_1	set	6
+  3239 00:16A0: A5 16        	lda	<L216+onheap_0
+  3240 00:16A2: 29 FF 00     	and	#$ff
+  3241 00:16A5: D0 03        	bne	L218
+  3242 00:16A7: 82 0D 00     	brl	L10098
+  3243                        L218:
+  3244 00:16AA: AD xx xx     	lda	|~~basicvars+411
+  3245 00:16AD: 85 07        	sta	<L217+lp_1
+  3246 00:16AF: AD xx xx     	lda	|~~basicvars+411+2
+  3247 00:16B2: 85 09        	sta	<L217+lp_1+2
+  3248 00:16B4: 82 0A 00     	brl	L10099
+  3249                        L10098:
+  3250 00:16B7: AD xx xx     	lda	|~~basicvars+415
+  3251 00:16BA: 85 07        	sta	<L217+lp_1
+  3252 00:16BC: AD xx xx     	lda	|~~basicvars+415+2
+  3253 00:16BF: 85 09        	sta	<L217+lp_1+2
+  3254                        L10099:
+  3255                        L10100:
+  3256 00:16C1: A5 07        	lda	<L217+lp_1
+  3257 00:16C3: 05 09        	ora	<L217+lp_1+2
+  3258 00:16C5: D0 03        	bne	L219
+  3259 00:16C7: 82 30 00     	brl	L10101
+  3260                        L219:
+  3261 00:16CA: D4 14        	pei	<L216+name_0+2
+  3262 00:16CC: D4 12        	pei	<L216+name_0
+  3263 00:16CE: A0 06 00     	ldy	#$6
+  3264 00:16D1: B7 07        	lda	[<L217+lp_1],Y
+  3265 00:16D3: 48           	pha
+  3266 00:16D4: A0 04 00     	ldy	#$4
+  3267 00:16D7: B7 07        	lda	[<L217+lp_1],Y
+  3268 00:16D9: 48           	pha
+  3269 00:16DA: 22 xx xx xx  	jsl	~~strcmp
+  Sun Jan  9 2022 20:52                                                Page 58
+
+
+  3270 00:16DE: AA           	tax
+  3271 00:16DF: D0 03        	bne	L220
+  3272 00:16E1: 82 16 00     	brl	L10101
+  3273                        L220:
+  3274 00:16E4: A7 07        	lda	[<L217+lp_1]
+  3275 00:16E6: 85 01        	sta	<R0
+  3276 00:16E8: A0 02 00     	ldy	#$2
+  3277 00:16EB: B7 07        	lda	[<L217+lp_1],Y
+  3278 00:16ED: 85 03        	sta	<R0+2
+  3279 00:16EF: A5 01        	lda	<R0
+  3280 00:16F1: 85 07        	sta	<L217+lp_1
+  3281 00:16F3: A5 03        	lda	<R0+2
+  3282 00:16F5: 85 09        	sta	<L217+lp_1+2
+  3283 00:16F7: 82 C7 FF     	brl	L10100
+  3284                        L10101:
+  3285 00:16FA: A5 07        	lda	<L217+lp_1
+  3286 00:16FC: 05 09        	ora	<L217+lp_1+2
+  3287 00:16FE: D0 03        	bne	L221
+  3288 00:1700: 82 1E 00     	brl	L10102
+  3289                        L221:
+  3290 00:1703: D4 14        	pei	<L216+name_0+2
+  3291 00:1705: D4 12        	pei	<L216+name_0
+  3292 00:1707: F4 69 00     	pea	#<$69
+  3293 00:170A: F4 08 00     	pea	#8
+  3294 00:170D: 22 xx xx xx  	jsl	~~error
+  3295                        L222:
+  3296 00:1711: A5 10        	lda	<L216+2
+  3297 00:1713: 85 16        	sta	<L216+2+6
+  3298 00:1715: A5 0F        	lda	<L216+1
+  3299 00:1717: 85 15        	sta	<L216+1+6
+  3300 00:1719: 2B           	pld
+  3301 00:171A: 3B           	tsc
+  3302 00:171B: 18           	clc
+  3303 00:171C: 69 14 00     	adc	#L216+6
+  3304 00:171F: 1B           	tcs
+  3305 00:1720: 6B           	rtl
+  3306                        L10102:
+  3307 00:1721: D4 14        	pei	<L216+name_0+2
+  3308 00:1723: D4 12        	pei	<L216+name_0
+  3309 00:1725: 22 xx xx xx  	jsl	~~open_file
+  3310 00:1729: 85 0B        	sta	<L217+libfile_1
+  3311 00:172B: 86 0D        	stx	<L217+libfile_1+2
+  3312 00:172D: A5 0B        	lda	<L217+libfile_1
+  3313 00:172F: 05 0D        	ora	<L217+libfile_1+2
+  3314 00:1731: F0 03        	beq	L223
+  3315 00:1733: 82 0E 00     	brl	L10103
+  3316                        L223:
+  3317 00:1736: D4 14        	pei	<L216+name_0+2
+  3318 00:1738: D4 12        	pei	<L216+name_0
+  3319 00:173A: F4 6A 00     	pea	#<$6a
+  3320 00:173D: F4 08 00     	pea	#8
+  3321 00:1740: 22 xx xx xx  	jsl	~~error
+  3322                        L10103:
+  3323 00:1744: D4 14        	pei	<L216+name_0+2
+  3324 00:1746: D4 12        	pei	<L216+name_0
+  3325 00:1748: D4 0D        	pei	<L217+libfile_1+2
+  3326 00:174A: D4 0B        	pei	<L217+libfile_1
+  3327 00:174C: 22 xx xx xx  	jsl	~~identify
+  Sun Jan  9 2022 20:52                                                Page 59
+
+
+  3328 00:1750: 85 01        	sta	<R0
+  3329 00:1752: A5 01        	lda	<R0
+  3330 00:1754: C9 01 00     	cmp	#<$1
+  3331 00:1757: F0 03        	beq	L224
+  3332 00:1759: 82 11 00     	brl	L10104
+  3333                        L224:
+  3334 00:175C: D4 16        	pei	<L216+onheap_0
+  3335 00:175E: D4 14        	pei	<L216+name_0+2
+  3336 00:1760: D4 12        	pei	<L216+name_0
+  3337 00:1762: D4 0D        	pei	<L217+libfile_1+2
+  3338 00:1764: D4 0B        	pei	<L217+libfile_1
+  3339 00:1766: 22 xx xx xx  	jsl	~~read_bbclib
+  3340 00:176A: 82 0E 00     	brl	L10105
+  3341                        L10104:
+  3342 00:176D: D4 16        	pei	<L216+onheap_0
+  3343 00:176F: D4 14        	pei	<L216+name_0+2
+  3344 00:1771: D4 12        	pei	<L216+name_0
+  3345 00:1773: D4 0D        	pei	<L217+libfile_1+2
+  3346 00:1775: D4 0B        	pei	<L217+libfile_1
+  3347 00:1777: 22 xx xx xx  	jsl	~~read_textlib
+  3348                        L10105:
+  3349 00:177B: 82 93 FF     	brl	L222
+  3350             0000000E   L216	equ	14
+  3351             00000005   L217	equ	5
+  3352                        	ends
+  3353                        	efunc
+  3354                        	code
+  3355                        	xdef	~~write_text
+  3356                        	func
+  3357                        ~~write_text:
+  3358                        	longa	on
+  3359                        	longi	on
+  3360 00:177E: 3B           	tsc
+  3361 00:177F: 38           	sec
+  3362 00:1780: E9 0E 00     	sbc	#L225
+  3363 00:1783: 1B           	tcs
+  3364 00:1784: 0B           	phd
+  3365 00:1785: 5B           	tcd
+  3366             00000004   name_0	set	4
+  3367             00000000   savefile_1	set	0
+  3368             00000004   bp_1	set	4
+  3369             00000008   x_1	set	8
+  3370 00:1786: F4 xx xx     	pea	#^L215
+  3371 00:1789: F4 xx xx     	pea	#<L215
+  3372 00:178C: D4 14        	pei	<L225+name_0+2
+  3373 00:178E: D4 12        	pei	<L225+name_0
+  3374 00:1790: 22 xx xx xx  	jsl	~~fopen
+  3375 00:1794: 85 05        	sta	<L226+savefile_1
+  3376 00:1796: 86 07        	stx	<L226+savefile_1+2
+  3377 00:1798: A5 05        	lda	<L226+savefile_1
+  3378 00:179A: 05 07        	ora	<L226+savefile_1+2
+  3379 00:179C: F0 03        	beq	L227
+  3380 00:179E: 82 0E 00     	brl	L10106
+  3381                        L227:
+  3382 00:17A1: D4 14        	pei	<L225+name_0+2
+  3383 00:17A3: D4 12        	pei	<L225+name_0
+  3384 00:17A5: F4 76 00     	pea	#<$76
+  3385 00:17A8: F4 08 00     	pea	#8
+  Sun Jan  9 2022 20:52                                                Page 60
+
+
+  3386 00:17AB: 22 xx xx xx  	jsl	~~error
+  3387                        L10106:
+  3388 00:17AF: AD xx xx     	lda	|~~basicvars+22
+  3389 00:17B2: 85 09        	sta	<L226+bp_1
+  3390 00:17B4: AD xx xx     	lda	|~~basicvars+22+2
+  3391 00:17B7: 85 0B        	sta	<L226+bp_1+2
+  3392                        L10107:
+  3393 00:17B9: E2 20        	sep	#$20
+  3394                        	longa	off
+  3395 00:17BB: A0 01 00     	ldy	#$1
+  3396 00:17BE: B7 09        	lda	[<L226+bp_1],Y
+  3397 00:17C0: C9 FF        	cmp	#<$ff
+  3398 00:17C2: C2 20        	rep	#$20
+  3399                        	longa	on
+  3400 00:17C4: D0 03        	bne	L228
+  3401 00:17C6: 82 7F 00     	brl	L10108
+  3402                        L228:
+  3403 00:17C9: AD xx xx     	lda	|~~basicvars+70+2
+  3404 00:17CC: 48           	pha
+  3405 00:17CD: AD xx xx     	lda	|~~basicvars+70
+  3406 00:17D0: 48           	pha
+  3407 00:17D1: D4 0B        	pei	<L226+bp_1+2
+  3408 00:17D3: D4 09        	pei	<L226+bp_1
+  3409 00:17D5: 22 xx xx xx  	jsl	~~expand
+  3410 00:17D9: D4 07        	pei	<L226+savefile_1+2
+  3411 00:17DB: D4 05        	pei	<L226+savefile_1
+  3412 00:17DD: AD xx xx     	lda	|~~basicvars+70+2
+  3413 00:17E0: 48           	pha
+  3414 00:17E1: AD xx xx     	lda	|~~basicvars+70
+  3415 00:17E4: 48           	pha
+  3416 00:17E5: 22 xx xx xx  	jsl	~~fputs
+  3417 00:17E9: 85 0D        	sta	<L226+x_1
+  3418 00:17EB: A5 0D        	lda	<L226+x_1
+  3419 00:17ED: C9 FF FF     	cmp	#<$ffffffff
+  3420 00:17F0: D0 03        	bne	L229
+  3421 00:17F2: 82 0D 00     	brl	L10109
+  3422                        L229:
+  3423 00:17F5: D4 07        	pei	<L226+savefile_1+2
+  3424 00:17F7: D4 05        	pei	<L226+savefile_1
+  3425 00:17F9: F4 0A 00     	pea	#<$a
+  3426 00:17FC: 22 xx xx xx  	jsl	~~fputc
+  3427 00:1800: 85 0D        	sta	<L226+x_1
+  3428                        L10109:
+  3429 00:1802: A5 0D        	lda	<L226+x_1
+  3430 00:1804: C9 FF FF     	cmp	#<$ffffffff
+  3431 00:1807: F0 03        	beq	L230
+  3432 00:1809: 82 16 00     	brl	L10110
+  3433                        L230:
+  3434 00:180C: D4 07        	pei	<L226+savefile_1+2
+  3435 00:180E: D4 05        	pei	<L226+savefile_1
+  3436 00:1810: 22 xx xx xx  	jsl	~~fclose
+  3437 00:1814: D4 14        	pei	<L225+name_0+2
+  3438 00:1816: D4 12        	pei	<L225+name_0
+  3439 00:1818: F4 77 00     	pea	#<$77
+  3440 00:181B: F4 08 00     	pea	#8
+  3441 00:181E: 22 xx xx xx  	jsl	~~error
+  3442                        L10110:
+  3443 00:1822: D4 0B        	pei	<L226+bp_1+2
+  Sun Jan  9 2022 20:52                                                Page 61
+
+
+  3444 00:1824: D4 09        	pei	<L226+bp_1
+  3445 00:1826: 22 xx xx xx  	jsl	~~get_linelen
+  3446 00:182A: 85 01        	sta	<R0
+  3447 00:182C: A0 00 00     	ldy	#$0
+  3448 00:182F: A5 01        	lda	<R0
+  3449 00:1831: 10 01        	bpl	L231
+  3450 00:1833: 88           	dey
+  3451                        L231:
+  3452 00:1834: 85 01        	sta	<R0
+  3453 00:1836: 84 03        	sty	<R0+2
+  3454 00:1838: 18           	clc
+  3455 00:1839: A5 09        	lda	<L226+bp_1
+  3456 00:183B: 65 01        	adc	<R0
+  3457 00:183D: 85 09        	sta	<L226+bp_1
+  3458 00:183F: A5 0B        	lda	<L226+bp_1+2
+  3459 00:1841: 65 03        	adc	<R0+2
+  3460 00:1843: 85 0B        	sta	<L226+bp_1+2
+  3461 00:1845: 82 71 FF     	brl	L10107
+  3462                        L10108:
+  3463 00:1848: D4 07        	pei	<L226+savefile_1+2
+  3464 00:184A: D4 05        	pei	<L226+savefile_1
+  3465 00:184C: 22 xx xx xx  	jsl	~~fclose
+  3466                        L232:
+  3467 00:1850: A5 10        	lda	<L225+2
+  3468 00:1852: 85 14        	sta	<L225+2+4
+  3469 00:1854: A5 0F        	lda	<L225+1
+  3470 00:1856: 85 13        	sta	<L225+1+4
+  3471 00:1858: 2B           	pld
+  3472 00:1859: 3B           	tsc
+  3473 00:185A: 18           	clc
+  3474 00:185B: 69 12 00     	adc	#L225+4
+  3475 00:185E: 1B           	tcs
+  3476 00:185F: 6B           	rtl
+  3477             0000000E   L225	equ	14
+  3478             00000005   L226	equ	5
+  3479                        	ends
+  3480                        	efunc
+  3481                        	data
+  3482                        L215:
+  3483 00:0089: 77 00        	db	$77,$00
+  3484 00:008B:              	ends
+  3485                        	code
+  3486                        	xdef	~~edit_line
+  3487                        	func
+  3488                        ~~edit_line:
+  3489                        	longa	on
+  3490                        	longi	on
+  3491 00:1860: 3B           	tsc
+  3492 00:1861: 38           	sec
+  3493 00:1862: E9 04 00     	sbc	#L234
+  3494 00:1865: 1B           	tcs
+  3495 00:1866: 0B           	phd
+  3496 00:1867: 5B           	tcd
+  3497 00:1868: AD xx xx     	lda	|~~basicvars+437
+  3498 00:186B: 89 01 00     	bit	#$1
+  3499 00:186E: D0 03        	bne	L236
+  3500 00:1870: 82 0A 00     	brl	L10111
+  3501                        L236:
+  Sun Jan  9 2022 20:52                                                Page 62
+
+
+  3502 00:1873: F4 07 00     	pea	#<$7
+  3503 00:1876: F4 04 00     	pea	#4
+  3504 00:1879: 22 xx xx xx  	jsl	~~error
+  3505                        L10111:
+  3506 00:187D: 22 xx xx xx  	jsl	~~clear_refs
+  3507 00:1881: A9 04 00     	lda	#$4
+  3508 00:1884: 1C xx xx     	trb	~~basicvars+437
+  3509 00:1887: A9 xx xx     	lda	#<~~thisline
+  3510 00:188A: 85 01        	sta	<R0
+  3511                        	xref	_BEG_DATA
+  3512 00:188C: A9 xx xx     	lda	#_BEG_DATA>>16
+  3513 00:188F: 85 03        	sta	<R0+2
+  3514 00:1891: D4 03        	pei	<R0+2
+  3515 00:1893: D4 01        	pei	<R0
+  3516 00:1895: 22 xx xx xx  	jsl	~~isempty
+  3517 00:1899: 29 FF 00     	and	#$ff
+  3518 00:189C: D0 03        	bne	L237
+  3519 00:189E: 82 1A 00     	brl	L10112
+  3520                        L237:
+  3521 00:18A1: A9 xx xx     	lda	#<~~thisline
+  3522 00:18A4: 85 01        	sta	<R0
+  3523                        	xref	_BEG_DATA
+  3524 00:18A6: A9 xx xx     	lda	#_BEG_DATA>>16
+  3525 00:18A9: 85 03        	sta	<R0+2
+  3526 00:18AB: D4 03        	pei	<R0+2
+  3527 00:18AD: D4 01        	pei	<R0
+  3528 00:18AF: 22 xx xx xx  	jsl	~~get_lineno
+  3529 00:18B3: 48           	pha
+  3530 00:18B4: 22 xx xx xx  	jsl	~~delete_line
+  3531 00:18B8: 82 12 00     	brl	L10113
+  3532                        L10112:
+  3533 00:18BB: A9 xx xx     	lda	#<~~thisline
+  3534 00:18BE: 85 01        	sta	<R0
+  3535                        	xref	_BEG_DATA
+  3536 00:18C0: A9 xx xx     	lda	#_BEG_DATA>>16
+  3537 00:18C3: 85 03        	sta	<R0+2
+  3538 00:18C5: D4 03        	pei	<R0+2
+  3539 00:18C7: D4 01        	pei	<R0
+  3540 00:18C9: 22 xx xx xx  	jsl	~~insert_line
+  3541                        L10113:
+  3542                        L238:
+  3543 00:18CD: 2B           	pld
+  3544 00:18CE: 3B           	tsc
+  3545 00:18CF: 18           	clc
+  3546 00:18D0: 69 04 00     	adc	#L234
+  3547 00:18D3: 1B           	tcs
+  3548 00:18D4: 6B           	rtl
+  3549             00000004   L234	equ	4
+  3550             00000005   L235	equ	5
+  3551                        	ends
+  3552                        	efunc
+  3553                        	xref	~~isapath
+  3554                        	xref	~~init_stack
+  3555                        	xref	~~find_line
+  3556                        	xref	~~alignaddr
+  3557                        	xref	~~clear_strings
+  3558                        	xref	~~isempty
+  3559                        	xref	~~reformat
+  Sun Jan  9 2022 20:52                                                Page 63
+
+
+  3560                        	xref	~~reset_linenums
+  3561                        	xref	~~resolve_linenums
+  3562                        	xref	~~isvalid
+  3563                        	xref	~~clear_linerefs
+  3564                        	xref	~~get_linelen
+  3565                        	xref	~~get_lineno
+  3566                        	xref	~~save_lineno
+  3567                        	xref	~~expand
+  3568                        	xref	~~tokenize
+  3569                        	xref	~~clear_heap
+  3570                        	xref	~~allocmem
+  3571                        	xref	~~clear_varlists
+  3572                        	xref	~~error
+  3573                        	xref	~~isspace
+  3574                        	xref	~~strlen
+  3575                        	xref	~~strcmp
+  3576                        	xref	~~strcat
+  3577                        	xref	~~memcpy
+  3578                        	xref	~~memmove
+  3579                        	xref	~~strcpy
+  3580                        	xref	~~free
+  3581                        	xref	~~malloc
+  3582                        	xref	~~ferror
+  3583                        	xref	~~feof
+  3584                        	xref	~~fclose
+  3585                        	xref	~~fread
+  3586                        	xref	~~fseek
+  3587                        	xref	~~fputs
+  3588                        	xref	~~fputc
+  3589                        	xref	~~fgets
+  3590                        	xref	~~fgetc
+  3591                        	xref	~~fprintf
+  3592                        	xref	~~freopen
+  3593                        	xref	~~fopen
+  3594                        	udata
+  3595                        ~~needsnumbers
+  3596 00:0000:              	ds	1
+  3597 00:0001:              	ends
+  3598                        	udata
+  3599                        ~~last_added
+  3600 00:0001:              	ds	4
+  3601 00:0005:              	ends
+  3602                        	xref	~~thisline
+  3603                        	xref	~~basicvars
+  3604                        	xref	~~stderr
+  3605                        	end
+
+
+      Lines assembled: 3605
+      Errors: 0

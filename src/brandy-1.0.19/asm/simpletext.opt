@@ -1,0 +1,1768 @@
+;:ts=8
+R0	equ	1
+R1	equ	5
+R2	equ	9
+R3	equ	13
+	data
+~~modetable:
+	dw	$280,$100,$2,$500,$400,$50,$20,$1,$2
+	db	$1
+	dw	$140,$100,$4,$500,$400,$28,$20,$2,$2
+	db	$1
+	dw	$A0,$100,$10,$500,$400,$14,$20,$4,$2
+	db	$1
+	dw	$0,$0,$2,$0,$0,$50,$19,$1,$2
+	db	$0
+	dw	$140,$100,$2,$500,$400,$28,$20,$2,$2
+	db	$1
+	dw	$A0,$100,$4,$500,$400,$14,$20,$4,$2
+	db	$1
+	dw	$0,$0,$2,$0,$0,$28,$19,$2,$2
+	db	$0
+	dw	$0,$0,$10,$0,$0,$28,$19,$2,$2
+	db	$0
+	dw	$280,$100,$4,$500,$400,$50,$20,$1,$2
+	db	$1
+	dw	$140,$100,$10,$500,$400,$28,$20,$2,$2
+	db	$1
+	dw	$A0,$100,$100,$500,$400,$14,$20,$4,$2
+	db	$1
+	dw	$280,$FA,$4,$500,$3E8,$50,$19,$1,$2
+	db	$1
+	dw	$280,$100,$10,$500,$400,$50,$20,$1,$2
+	db	$1
+	dw	$140,$100,$100,$500,$400,$28,$20,$2,$2
+	db	$1
+	dw	$280,$FA,$10,$500,$3E8,$50,$20,$1,$2
+	db	$1
+	dw	$280,$100,$100,$500,$400,$50,$20,$1,$2
+	db	$1
+	dw	$420,$100,$10,$840,$400,$84,$20,$1,$2
+	db	$1
+	dw	$420,$FA,$10,$840,$3E8,$84,$20,$1,$2
+	db	$1
+	dw	$280,$200,$2,$500,$400,$50,$40,$1,$1
+	db	$1
+	dw	$280,$200,$4,$500,$400,$50,$40,$1,$1
+	db	$1
+	dw	$280,$200,$10,$500,$400,$50,$40,$1,$1
+	db	$1
+	dw	$280,$200,$100,$500,$400,$50,$40,$1,$1
+	db	$1
+	dw	$300,$120,$10,$300,$240,$60,$24,$1,$2
+	db	$1
+	dw	$480,$380,$2,$900,$700,$90,$38,$1,$1
+	db	$1
+	dw	$420,$100,$100,$840,$400,$84,$20,$1,$2
+	db	$1
+	dw	$280,$1E0,$2,$500,$3C0,$50,$3C,$1,$1
+	db	$1
+	dw	$280,$1E0,$4,$500,$3C0,$50,$3C,$1,$1
+	db	$1
+	dw	$280,$1E0,$10,$500,$3C0,$50,$3C,$1,$1
+	db	$1
+	dw	$280,$1E0,$100,$500,$3C0,$50,$3C,$1,$1
+	db	$1
+	dw	$320,$258,$2,$500,$4B0,$64,$4B,$1,$1
+	db	$1
+	dw	$320,$258,$4,$640,$4B0,$64,$4B,$1,$1
+	db	$1
+	dw	$320,$258,$10,$640,$4B0,$64,$4B,$1,$1
+	db	$1
+	dw	$320,$258,$100,$640,$4B0,$64,$4B,$1,$1
+	db	$1
+	dw	$300,$120,$2,$600,$480,$60,$24,$1,$2
+	db	$1
+	dw	$300,$120,$4,$600,$480,$60,$24,$1,$2
+	db	$1
+	dw	$300,$120,$10,$600,$480,$60,$24,$1,$2
+	db	$1
+	dw	$300,$120,$100,$600,$480,$60,$24,$1,$2
+	db	$1
+	dw	$380,$160,$2,$700,$580,$70,$2C,$1,$1
+	db	$1
+	dw	$380,$160,$4,$700,$580,$70,$2C,$1,$1
+	db	$1
+	dw	$380,$160,$10,$700,$580,$70,$2C,$1,$1
+	db	$1
+	dw	$380,$160,$100,$700,$580,$70,$2C,$1,$1
+	db	$1
+	dw	$280,$160,$2,$500,$580,$50,$2C,$1,$1
+	db	$1
+	dw	$280,$160,$4,$500,$580,$50,$2C,$1,$1
+	db	$1
+	dw	$280,$160,$10,$500,$580,$50,$2C,$1,$1
+	db	$1
+	dw	$280,$C8,$2,$500,$320,$50,$19,$1,$2
+	db	$1
+	dw	$280,$C8,$4,$500,$320,$50,$19,$1,$2
+	db	$1
+	dw	$280,$C8,$10,$500,$320,$50,$19,$1,$2
+	db	$1
+	ends
+	data
+~~vdubytes:
+	dw	$0,$1,$0,$0,$0,$0,$0,$0,$0,$0
+	dw	$0,$0,$0,$0,$0,$0,$0,$1,$2,$5
+	dw	$0,$0,$1,$9,$8,$5,$0,$0,$4,$4
+	dw	$0,$2
+	ends
+	code
+	xdef	~~find_cursor
+	func
+~~find_cursor:
+	longa	on
+	longi	on
+	rtl
+L2	equ	0
+L3	equ	1
+	ends
+	efunc
+	code
+	xdef	~~set_cursor
+	func
+~~set_cursor:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L5
+	tcs
+	phd
+	tcd
+underline_0	set	4
+	lda	<L5+2
+	sta	<L5+2+2
+	lda	<L5+1
+	sta	<L5+1+2
+	pld
+	tsc
+	clc
+	adc	#L5+2
+	tcs
+	rtl
+L5	equ	0
+L6	equ	1
+	ends
+	efunc
+	code
+	xdef	~~echo_on
+	func
+~~echo_on:
+	longa	on
+	longi	on
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~echo
+	rep	#$20
+	longa	on
+	lda	|~~stdout+2
+	pha
+	lda	|~~stdout
+	pha
+	jsl	~~fflush
+	rtl
+L8	equ	0
+L9	equ	1
+	ends
+	efunc
+	code
+	xdef	~~echo_off
+	func
+~~echo_off:
+	longa	on
+	longi	on
+	sep	#$20
+	longa	off
+	stz	|~~echo
+	rep	#$20
+	longa	on
+	rtl
+L11	equ	0
+L12	equ	1
+	ends
+	efunc
+	code
+	func
+~~nogo:
+	longa	on
+	longi	on
+	lda	|~~basicvars+423
+	bit	#$800
+	beq	L17
+	pea	#<$1
+	pea	#4
+	jsl	~~error
+L17:
+	rtl
+L14	equ	0
+L15	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_vdu
+	func
+~~emulate_vdu:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L18
+	tcs
+	phd
+	tcd
+charvalue_0	set	4
+	lda	#$ff00
+	trb	<L18+charvalue_0
+	lda	|~~vduneeded
+	bne	L10002
+	sec
+	lda	<L18+charvalue_0
+	sbc	#<$20
+	bvs	L21
+	eor	#$8000
+L21:
+	bpl	L10003
+	lda	<L18+charvalue_0
+	cmp	#<$7f
+	bne	L10004
+	lda	#$20
+	sta	<L18+charvalue_0
+L10004:
+	lda	|~~stdout+2
+	pha
+	lda	|~~stdout
+	pha
+	pei	<L18+charvalue_0
+	jsl	~~fputc
+	lda	|~~echo
+	and	#$ff
+	beq	L25
+	lda	|~~stdout+2
+	pha
+	lda	|~~stdout
+	pha
+	jsl	~~fflush
+L25:
+	lda	<L18+2
+	sta	<L18+2+2
+	lda	<L18+1
+	sta	<L18+1+2
+	pld
+	tsc
+	clc
+	adc	#L18+2
+	tcs
+	rtl
+L10003:
+	lda	|~~echo
+	and	#$ff
+	bne	L10006
+	lda	|~~stdout+2
+	pha
+	lda	|~~stdout
+	pha
+	jsl	~~fflush
+L10006:
+	lda	<L18+charvalue_0
+	sta	|~~vducmd
+	lda	<L18+charvalue_0
+	asl	A
+	tax
+	lda	|~~vdubytes,X
+	sta	|~~vduneeded
+	stz	|~~vdunext
+	bra	L10007
+L10002:
+	sep	#$20
+	longa	off
+	lda	<L18+charvalue_0
+	ldx	|~~vdunext
+	sta	|~~vduqueue,X
+	rep	#$20
+	longa	on
+	inc	|~~vdunext
+L10007:
+	sec
+	lda	|~~vdunext
+	sbc	|~~vduneeded
+	bvs	L27
+	eor	#$8000
+L27:
+	bpl	L25
+	stz	|~~vduneeded
+	lda	|~~vducmd
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	0
+	dw	32
+	dw	L25-1
+	dw	L25-1
+	dw	L25-1
+	dw	L25-1
+	dw	L25-1
+	dw	L25-1
+	dw	L10025-1
+	dw	L25-1
+	dw	L10042-1
+	dw	L10042-1
+	dw	L10037-1
+	dw	L10042-1
+	dw	L10037-1
+	dw	L10037-1
+	dw	L10042-1
+	dw	L25-1
+	dw	L25-1
+	dw	L10025-1
+	dw	L10037-1
+	dw	L10025-1
+	dw	L10037-1
+	dw	L10037-1
+	dw	L25-1
+	dw	L10037-1
+	dw	L10037-1
+	dw	L10025-1
+	dw	L10025-1
+	dw	L10037-1
+	dw	L10042-1
+	dw	L10037-1
+	dw	L10025-1
+	dw	L10037-1
+	dw	L10037-1
+L10025:
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	brl	L25
+L10037:
+	jsl	~~nogo
+	brl	L25
+L10042:
+	lda	|~~stdout+2
+	pha
+	lda	|~~stdout
+	pha
+	lda	|~~vducmd
+	pha
+	jsl	~~fputc
+	brl	L25
+L18	equ	4
+L19	equ	5
+	ends
+	efunc
+	code
+	xdef	~~emulate_vdustr
+	func
+~~emulate_vdustr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L29
+	tcs
+	phd
+	tcd
+string_0	set	4
+length_0	set	8
+n_1	set	0
+	lda	<L29+length_0
+	bne	L10043
+	pei	<L29+string_0+2
+	pei	<L29+string_0
+	jsl	~~strlen
+	sta	<L29+length_0
+L10043:
+	jsl	~~echo_off
+	stz	<L30+n_1
+	bra	L10047
+L10046:
+	ldy	<L30+n_1
+	lda	[<L29+string_0],Y
+	and	#$ff
+	pha
+	jsl	~~emulate_vdu
+	inc	<L30+n_1
+L10047:
+	sec
+	lda	<L30+n_1
+	sbc	<L29+length_0
+	bvs	L32
+	eor	#$8000
+L32:
+	bpl	L10046
+	jsl	~~echo_on
+	lda	<L29+2
+	sta	<L29+2+6
+	lda	<L29+1
+	sta	<L29+1+6
+	pld
+	tsc
+	clc
+	adc	#L29+6
+	tcs
+	rtl
+L29	equ	2
+L30	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_printf
+	func
+~~emulate_printf:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L35
+	tcs
+	phd
+	tcd
+format_0	set	6
+length_1	set	0
+n_1	set	2
+parms_1	set	4
+text_1	set	8
+	pea	#^$1000
+	pea	#<$1000
+	jsl	~~malloc
+	sta	<L36+text_1
+	stx	<L36+text_1+2
+	clc
+	tdc
+	adc	#<L35+format_0+4
+	sta	<L36+parms_1
+	lda	#$0
+	sta	<L36+parms_1+2
+	pha
+	pei	<L36+parms_1
+	pei	<L35+format_0+2
+	pei	<L35+format_0
+	pei	<L36+text_1+2
+	pei	<L36+text_1
+	jsl	~~vsprintf
+	sta	<L36+length_1
+	jsl	~~echo_off
+	stz	<L36+n_1
+	bra	L10051
+L10050:
+	ldy	<L36+n_1
+	lda	[<L36+text_1],Y
+	and	#$ff
+	pha
+	jsl	~~emulate_vdu
+	inc	<L36+n_1
+L10051:
+	lda	<L36+n_1
+	cmp	<L36+length_1
+	bcc	L10050
+	jsl	~~echo_on
+	pei	<L36+text_1+2
+	pei	<L36+text_1
+	jsl	~~free
+	phx
+	ldx	<L35+4
+	lda	<L35+2
+	sta	<L35+2,X
+	lda	<L35+1
+	sta	<L35+1,X
+	txa
+	plx
+	pld
+	pha
+	tsc
+	clc
+	adc	#L35+2
+	adc	<1,s
+	tcs
+	rtl
+L35	equ	12
+L36	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_newline
+	func
+~~emulate_newline:
+	longa	on
+	longi	on
+	pea	#<$d
+	jsl	~~emulate_vdu
+	pea	#<$a
+	jsl	~~emulate_vdu
+	rtl
+L39	equ	0
+L40	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_vdufn
+	func
+~~emulate_vdufn:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L42
+	tcs
+	phd
+	tcd
+variable_0	set	4
+	lda	#$0
+	tay
+	lda	<L42+2
+	sta	<L42+2+2
+	lda	<L42+1
+	sta	<L42+1+2
+	pld
+	tsc
+	clc
+	adc	#L42+2
+	tcs
+	tya
+	rtl
+L42	equ	0
+L43	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_colourfn
+	func
+~~emulate_colourfn:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L45
+	tcs
+	phd
+	tcd
+red_0	set	4
+green_0	set	6
+blue_0	set	8
+	lda	#$1
+	tay
+	lda	<L45+2
+	sta	<L45+2+6
+	lda	<L45+1
+	sta	<L45+1+6
+	pld
+	tsc
+	clc
+	adc	#L45+6
+	tcs
+	tya
+	rtl
+L45	equ	0
+L46	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_pos
+	func
+~~emulate_pos:
+	longa	on
+	longi	on
+	jsl	~~nogo
+	lda	#$0
+	rtl
+L48	equ	0
+L49	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_vpos
+	func
+~~emulate_vpos:
+	longa	on
+	longi	on
+	jsl	~~nogo
+	lda	#$0
+	rtl
+L51	equ	0
+L52	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_mode
+	func
+~~emulate_mode:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L54
+	tcs
+	phd
+	tcd
+mode_0	set	4
+	jsl	~~nogo
+	lda	<L54+2
+	sta	<L54+2+2
+	lda	<L54+1
+	sta	<L54+1+2
+	pld
+	tsc
+	clc
+	adc	#L54+2
+	tcs
+	rtl
+L54	equ	0
+L55	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_newmode
+	func
+~~emulate_newmode:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L57
+	tcs
+	phd
+	tcd
+xres_0	set	4
+yres_0	set	6
+bpp_0	set	8
+rate_0	set	10
+	jsl	~~nogo
+	lda	<L57+2
+	sta	<L57+2+8
+	lda	<L57+1
+	sta	<L57+1+8
+	pld
+	tsc
+	clc
+	adc	#L57+8
+	tcs
+	rtl
+L57	equ	0
+L58	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_modestr
+	func
+~~emulate_modestr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L60
+	tcs
+	phd
+	tcd
+xres_0	set	4
+yres_0	set	6
+colours_0	set	8
+greys_0	set	10
+xeig_0	set	12
+yeig_0	set	14
+rate_0	set	16
+	jsl	~~nogo
+	lda	<L60+2
+	sta	<L60+2+14
+	lda	<L60+1
+	sta	<L60+1+14
+	pld
+	tsc
+	clc
+	adc	#L60+14
+	tcs
+	rtl
+L60	equ	0
+L61	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_modefn
+	func
+~~emulate_modefn:
+	longa	on
+	longi	on
+	lda	|~~screenmode
+	rtl
+L63	equ	0
+L64	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_pointto
+	func
+~~emulate_pointto:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L66
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$1
+	pea	#4
+	jsl	~~error
+	lda	<L66+2
+	sta	<L66+2+4
+	lda	<L66+1
+	sta	<L66+1+4
+	pld
+	tsc
+	clc
+	adc	#L66+4
+	tcs
+	rtl
+L66	equ	0
+L67	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_wait
+	func
+~~emulate_wait:
+	longa	on
+	longi	on
+	jsl	~~nogo
+	rtl
+L69	equ	0
+L70	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_tab
+	func
+~~emulate_tab:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L72
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	jsl	~~nogo
+	lda	<L72+2
+	sta	<L72+2+4
+	lda	<L72+1
+	sta	<L72+1+4
+	pld
+	tsc
+	clc
+	adc	#L72+4
+	tcs
+	rtl
+L72	equ	0
+L73	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_off
+	func
+~~emulate_off:
+	longa	on
+	longi	on
+	jsl	~~nogo
+	rtl
+L75	equ	0
+L76	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_on
+	func
+~~emulate_on:
+	longa	on
+	longi	on
+	jsl	~~nogo
+	rtl
+L78	equ	0
+L79	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_tint
+	func
+~~emulate_tint:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L81
+	tcs
+	phd
+	tcd
+action_0	set	4
+tint_0	set	6
+	jsl	~~nogo
+	lda	<L81+2
+	sta	<L81+2+4
+	lda	<L81+1
+	sta	<L81+1+4
+	pld
+	tsc
+	clc
+	adc	#L81+4
+	tcs
+	rtl
+L81	equ	0
+L82	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_plot
+	func
+~~emulate_plot:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L84
+	tcs
+	phd
+	tcd
+code_0	set	4
+x_0	set	6
+y_0	set	8
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L84+2
+	sta	<L84+2+6
+	lda	<L84+1
+	sta	<L84+1+6
+	pld
+	tsc
+	clc
+	adc	#L84+6
+	tcs
+	rtl
+L84	equ	0
+L85	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_pointfn
+	func
+~~emulate_pointfn:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L87
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	#$0
+	tay
+	lda	<L87+2
+	sta	<L87+2+4
+	lda	<L87+1
+	sta	<L87+1+4
+	pld
+	tsc
+	clc
+	adc	#L87+4
+	tcs
+	tya
+	rtl
+L87	equ	0
+L88	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_tintfn
+	func
+~~emulate_tintfn:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L90
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	#$0
+	tay
+	lda	<L90+2
+	sta	<L90+2+4
+	lda	<L90+1
+	sta	<L90+1+4
+	pld
+	tsc
+	clc
+	adc	#L90+4
+	tcs
+	tya
+	rtl
+L90	equ	0
+L91	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_gcol
+	func
+~~emulate_gcol:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L93
+	tcs
+	phd
+	tcd
+action_0	set	4
+colour_0	set	6
+tint_0	set	8
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L93+2
+	sta	<L93+2+6
+	lda	<L93+1
+	sta	<L93+1+6
+	pld
+	tsc
+	clc
+	adc	#L93+6
+	tcs
+	rtl
+L93	equ	0
+L94	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_gcolrgb
+	func
+~~emulate_gcolrgb:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L96
+	tcs
+	phd
+	tcd
+action_0	set	4
+background_0	set	6
+red_0	set	8
+green_0	set	10
+blue_0	set	12
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L96+2
+	sta	<L96+2+10
+	lda	<L96+1
+	sta	<L96+1+10
+	pld
+	tsc
+	clc
+	adc	#L96+10
+	tcs
+	rtl
+L96	equ	0
+L97	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_gcolnum
+	func
+~~emulate_gcolnum:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L99
+	tcs
+	phd
+	tcd
+action_0	set	4
+background_0	set	6
+colnum_0	set	8
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L99+2
+	sta	<L99+2+6
+	lda	<L99+1
+	sta	<L99+1+6
+	pld
+	tsc
+	clc
+	adc	#L99+6
+	tcs
+	rtl
+L99	equ	0
+L100	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_colourtint
+	func
+~~emulate_colourtint:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L102
+	tcs
+	phd
+	tcd
+colour_0	set	4
+tint_0	set	6
+	jsl	~~nogo
+	lda	<L102+2
+	sta	<L102+2+4
+	lda	<L102+1
+	sta	<L102+1+4
+	pld
+	tsc
+	clc
+	adc	#L102+4
+	tcs
+	rtl
+L102	equ	0
+L103	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_mapcolour
+	func
+~~emulate_mapcolour:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L105
+	tcs
+	phd
+	tcd
+colour_0	set	4
+physcolour_0	set	6
+	jsl	~~nogo
+	lda	<L105+2
+	sta	<L105+2+4
+	lda	<L105+1
+	sta	<L105+1+4
+	pld
+	tsc
+	clc
+	adc	#L105+4
+	tcs
+	rtl
+L105	equ	0
+L106	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_setcolour
+	func
+~~emulate_setcolour:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L108
+	tcs
+	phd
+	tcd
+red_0	set	4
+green_0	set	6
+blue_0	set	8
+dummy_0	set	10
+	jsl	~~nogo
+	lda	<L108+2
+	sta	<L108+2+8
+	lda	<L108+1
+	sta	<L108+1+8
+	pld
+	tsc
+	clc
+	adc	#L108+8
+	tcs
+	rtl
+L108	equ	0
+L109	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_setcolnum
+	func
+~~emulate_setcolnum:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L111
+	tcs
+	phd
+	tcd
+background_0	set	4
+colnum_0	set	6
+	jsl	~~nogo
+	lda	<L111+2
+	sta	<L111+2+4
+	lda	<L111+1
+	sta	<L111+1+4
+	pld
+	tsc
+	clc
+	adc	#L111+4
+	tcs
+	rtl
+L111	equ	0
+L112	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_defcolour
+	func
+~~emulate_defcolour:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L114
+	tcs
+	phd
+	tcd
+colour_0	set	4
+red_0	set	6
+green_0	set	8
+blue_0	set	10
+	jsl	~~nogo
+	lda	<L114+2
+	sta	<L114+2+8
+	lda	<L114+1
+	sta	<L114+1+8
+	pld
+	tsc
+	clc
+	adc	#L114+8
+	tcs
+	rtl
+L114	equ	0
+L115	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_move
+	func
+~~emulate_move:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L117
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L117+2
+	sta	<L117+2+4
+	lda	<L117+1
+	sta	<L117+1+4
+	pld
+	tsc
+	clc
+	adc	#L117+4
+	tcs
+	rtl
+L117	equ	0
+L118	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_moveby
+	func
+~~emulate_moveby:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L120
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L120+2
+	sta	<L120+2+4
+	lda	<L120+1
+	sta	<L120+1+4
+	pld
+	tsc
+	clc
+	adc	#L120+4
+	tcs
+	rtl
+L120	equ	0
+L121	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_draw
+	func
+~~emulate_draw:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L123
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L123+2
+	sta	<L123+2+4
+	lda	<L123+1
+	sta	<L123+1+4
+	pld
+	tsc
+	clc
+	adc	#L123+4
+	tcs
+	rtl
+L123	equ	0
+L124	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_drawby
+	func
+~~emulate_drawby:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L126
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L126+2
+	sta	<L126+2+4
+	lda	<L126+1
+	sta	<L126+1+4
+	pld
+	tsc
+	clc
+	adc	#L126+4
+	tcs
+	rtl
+L126	equ	0
+L127	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_line
+	func
+~~emulate_line:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L129
+	tcs
+	phd
+	tcd
+x1_0	set	4
+y1_0	set	6
+x2_0	set	8
+y2_0	set	10
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L129+2
+	sta	<L129+2+8
+	lda	<L129+1
+	sta	<L129+1+8
+	pld
+	tsc
+	clc
+	adc	#L129+8
+	tcs
+	rtl
+L129	equ	0
+L130	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_point
+	func
+~~emulate_point:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L132
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L132+2
+	sta	<L132+2+4
+	lda	<L132+1
+	sta	<L132+1+4
+	pld
+	tsc
+	clc
+	adc	#L132+4
+	tcs
+	rtl
+L132	equ	0
+L133	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_pointby
+	func
+~~emulate_pointby:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L135
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L135+2
+	sta	<L135+2+4
+	lda	<L135+1
+	sta	<L135+1+4
+	pld
+	tsc
+	clc
+	adc	#L135+4
+	tcs
+	rtl
+L135	equ	0
+L136	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_ellipse
+	func
+~~emulate_ellipse:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L138
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+majorlen_0	set	8
+minorlen_0	set	10
+angle_0	set	12
+isfilled_0	set	16
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L138+2
+	sta	<L138+2+14
+	lda	<L138+1
+	sta	<L138+1+14
+	pld
+	tsc
+	clc
+	adc	#L138+14
+	tcs
+	rtl
+L138	equ	0
+L139	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_circle
+	func
+~~emulate_circle:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L141
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+radius_0	set	8
+isfilled_0	set	10
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L141+2
+	sta	<L141+2+8
+	lda	<L141+1
+	sta	<L141+1+8
+	pld
+	tsc
+	clc
+	adc	#L141+8
+	tcs
+	rtl
+L141	equ	0
+L142	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_drawrect
+	func
+~~emulate_drawrect:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L144
+	tcs
+	phd
+	tcd
+x1_0	set	4
+y1_0	set	6
+width_0	set	8
+height_0	set	10
+isfilled_0	set	12
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L144+2
+	sta	<L144+2+10
+	lda	<L144+1
+	sta	<L144+1+10
+	pld
+	tsc
+	clc
+	adc	#L144+10
+	tcs
+	rtl
+L144	equ	0
+L145	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_moverect
+	func
+~~emulate_moverect:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L147
+	tcs
+	phd
+	tcd
+x1_0	set	4
+y1_0	set	6
+width_0	set	8
+height_0	set	10
+x2_0	set	12
+y2_0	set	14
+ismove_0	set	16
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L147+2
+	sta	<L147+2+14
+	lda	<L147+1
+	sta	<L147+1+14
+	pld
+	tsc
+	clc
+	adc	#L147+14
+	tcs
+	rtl
+L147	equ	0
+L148	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_fill
+	func
+~~emulate_fill:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L150
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L150+2
+	sta	<L150+2+4
+	lda	<L150+1
+	sta	<L150+1+4
+	pld
+	tsc
+	clc
+	adc	#L150+4
+	tcs
+	rtl
+L150	equ	0
+L151	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_fillby
+	func
+~~emulate_fillby:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L153
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L153+2
+	sta	<L153+2+4
+	lda	<L153+1
+	sta	<L153+1+4
+	pld
+	tsc
+	clc
+	adc	#L153+4
+	tcs
+	rtl
+L153	equ	0
+L154	equ	1
+	ends
+	efunc
+	code
+	xdef	~~emulate_origin
+	func
+~~emulate_origin:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L156
+	tcs
+	phd
+	tcd
+x_0	set	4
+y_0	set	6
+	pea	#<$3
+	pea	#4
+	jsl	~~error
+	lda	<L156+2
+	sta	<L156+2+4
+	lda	<L156+1
+	sta	<L156+1+4
+	pld
+	tsc
+	clc
+	adc	#L156+4
+	tcs
+	rtl
+L156	equ	0
+L157	equ	1
+	ends
+	efunc
+	code
+	xdef	~~init_screen
+	func
+~~init_screen:
+	longa	on
+	longi	on
+	lda	#$7f
+	sta	|~~screenmode
+	stz	|~~vdunext
+	stz	|~~vduneeded
+	lda	#$1
+	rtl
+L159	equ	0
+L160	equ	1
+	ends
+	efunc
+	code
+	xdef	~~end_screen
+	func
+~~end_screen:
+	longa	on
+	longi	on
+	rtl
+L162	equ	0
+L163	equ	1
+	ends
+	efunc
+	xref	~~error
+	xref	~~strlen
+	xref	~~free
+	xref	~~malloc
+	xref	~~fflush
+	xref	~~fputc
+	xref	~~vsprintf
+	udata
+~~logtophys
+	ds	32
+	ends
+	udata
+~~vduqueue
+	ds	9
+	ends
+	udata
+~~cursorstate
+	ds	2
+	ends
+	udata
+~~cursmode
+	ds	2
+	ends
+	udata
+~~textwin
+	ds	1
+	ends
+	udata
+~~echo
+	ds	1
+	ends
+	udata
+~~enable_print
+	ds	1
+	ends
+	udata
+~~enable_vdu
+	ds	1
+	ends
+	udata
+~~ytext
+	ds	2
+	ends
+	udata
+~~xtext
+	ds	2
+	ends
+	udata
+~~twinbottom
+	ds	2
+	ends
+	udata
+~~twintop
+	ds	2
+	ends
+	udata
+~~twinright
+	ds	2
+	ends
+	udata
+~~twinleft
+	ds	2
+	ends
+	udata
+~~textheight
+	ds	2
+	ends
+	udata
+~~textwidth
+	ds	2
+	ends
+	udata
+~~realheight
+	ds	2
+	ends
+	udata
+~~realwidth
+	ds	2
+	ends
+	udata
+~~text_backtint
+	ds	2
+	ends
+	udata
+~~text_foretint
+	ds	2
+	ends
+	udata
+~~text_physbackcol
+	ds	2
+	ends
+	udata
+~~text_physforecol
+	ds	2
+	ends
+	udata
+~~text_backcol
+	ds	2
+	ends
+	udata
+~~text_forecol
+	ds	2
+	ends
+	udata
+~~colourmask
+	ds	2
+	ends
+	udata
+~~colourdepth
+	ds	2
+	ends
+	udata
+~~screenmode
+	ds	2
+	ends
+	udata
+~~vduneeded
+	ds	2
+	ends
+	udata
+~~vdunext
+	ds	2
+	ends
+	udata
+~~vducmd
+	ds	2
+	ends
+	xref	~~basicvars
+	xref	~~stdout

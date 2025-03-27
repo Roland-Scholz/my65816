@@ -1,0 +1,17 @@
+timeout = 30
+setflowctrl 2
+
+fname = 'TEST816.EXE'
+
+setdir '..\release'
+getdir curdir
+
+
+sprintf2 curdir '%s\%s' curdir fname
+
+;messagebox curdir 'Dir'
+
+sendfile curdir 0
+
+:ende
+	messagebox 'Ende' 'Ende'

@@ -1,0 +1,40 @@
+		.include "homebrew.inc"
+		
+		.org $E000
+
+start:		sei
+		cld
+		ldx #$ff
+		txs
+	
+		lda #$1f		; 19600 Baud
+		sta control6551
+		lda #$0b
+		sta command6551
+
+loop:		jsr charin
+		jsr charout
+		jmp loop
+		
+wait1:		lda #8
+wait:		bit status6551
+		beq wait
+		
+		lda data6551		
+		sta data6551
+		
+		jmp wait1
+
+charin:		lda #8
+charin1:	bit status6551
+		beq charin1
+		lda data6551
+		rts
+
+charout:	pha
+		lda #16
+charout1:	bit status6551
+		beq charout1
+		pla
+		sta data6551
+		rts

@@ -1,0 +1,130 @@
+		.include "homebrew.inc"
+		.include "myos.inc"
+		
+ptrfrom	=	$80;
+ptrto	=	$82;
+debug	=	$84;
+		
+		.org $0A00
+
+vgmstart:	ldx #0
+		lda #<vgmtab
+		sta ptrfrom
+		lda #>vgmtab
+		sta ptrfrom+1
+		jsr vgmloop
+		jmp vgmstart
+		lda #<vgmoff
+		sta ptrfrom
+		lda #>vgmoff
+		sta ptrfrom+1
+		
+vgmloop:	lda (ptrfrom,x)
+		jsr incptr
+		
+vgmcmd52:	cmp #$52
+		bne vgmcmd53
+		lda (ptrfrom,x)
+		sta YMADR0
+		jsr incptr
+		lda (ptrfrom,x)
+		sta YMDAT0
+		jsr incptr
+		jmp vgmloop
+		
+vgmcmd53:	cmp #$53
+		bne vgmcmd61
+		lda (ptrfrom,x)
+		sta YMADR1
+		jsr incptr
+		lda (ptrfrom,x)
+		sta YMDAT1
+		jsr incptr
+		jmp vgmloop
+
+vgmcmd61:	cmp #$61
+		bne vgmcmd62
+		lda (ptrfrom,x)
+		sta ptrto
+		jsr incptr
+		lda (ptrfrom,x)
+		sta ptrto+1
+		jsr incptr
+		jsr wait
+		jmp vgmloop
+		
+		
+vgmcmd62:	cmp #$62
+		bne vgmcmd63
+		lda #<735
+		sta ptrto
+		lda #>735
+		sta ptrto+1
+		jsr wait
+		jmp vgmloop
+		
+vgmcmd63:	cmp #$63
+		bne vgmcmd7x
+		lda #<882
+		sta ptrto
+		lda #>882
+		sta ptrto+1
+		jsr wait
+		jmp vgmloop
+
+vgmcmd7x:	tay
+		and #$70
+		cmp #$70
+		bne vgmend
+		tya
+		and #$0F
+		tay
+vgmcmd7x1:	jsr clk40
+		dey
+		bpl vgmcmd7x1
+		jmp vgmloop
+		
+vgmend:		rts
+		
+incptr:		inc ptrfrom
+		bne incptr1
+		inc ptrfrom+1
+incptr1:	rts
+
+
+wait:		jsr clk40
+		lda ptrto
+		bne wait1
+		dec ptrto+1
+wait1:		dec ptrto
+		bne wait
+		lda ptrto+1
+		bne wait
+		rts
+
+clk40:		pha		; 3	3
+		lda #1		; 2	5
+		sec		; 2	7
+clk40a:		sbc #1		; 2
+		bne clk40a	; 3  4 * 5 = 20 26
+		pla		; 4	30
+		rts		; 6	36
+		
+vgmoff:		.byte $52, $28, $00
+		.byte $52, $28, $04
+		.byte $52, $28, $01
+		.byte $52, $28, $05
+		.byte $52, $28, $02
+		.byte $52, $28, $06
+		.byte $52, $22, $00
+		.byte $66
+
+vgmtab:
+		.include "..\res\VGM\10 Theme for Satan.a65"
+;		.include "..\res\VGM\19 Present.a65"
+;		.include "..\res\VGM\01 Startup Music.a65"
+;		.include "..\res\VGM\$11 Heaven.a65"
+;		.include "..\res\VGM\wind.a65"
+;		.include "..\res\VGM\04 - Inn.a65"
+;		.include "..\res\VGM\08 - Storm Wind.a65"
+;		.include "..\res\VGM\13 - Getufu.a65"

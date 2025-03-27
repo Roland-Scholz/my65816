@@ -1,0 +1,73 @@
+Release 8.1i - Fit P.20131013
+Copyright(c) 1995-2003 Xilinx Inc. All rights reserved
+
+10-17-2019  5:27PM
+
+NOTE: This file is designed to be imported into a spreadsheet program
+such as Microsoft Excel for viewing, printing and sorting. The pipe '|'
+character is used as the data field separator.
+This file is also designed to support parsing.
+
+Input file:  MultiIO.ngd
+output file: MultiIO.pad
+Part type:   xc9536
+Speed grade: -15
+Package:     pc44
+
+Pinout by Pin Number:
+
+-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+Pin Number|Signal Name|Pin Usage|Pin Name|Direction|IO Standard|IO Bank Number|{blank}|Slew Rate|Termination|{blank}|Voltage|Constraint|
+P1|MISO|I|I/O|INPUT|||||||||
+P2|A<15>|I|I/O|INPUT|||||||||
+P3|A<14>|I|I/O|INPUT|||||||||
+P4|A<13>|I|I/O|INPUT|||||||||
+P5|IRQ|O|I/O/GCK1|OUTPUT|||||||||
+P6|PHI2|GCK/I|I/O/GCK2||||||||||
+P7|RW|I|I/O/GCK3|INPUT|||||||||
+P8|A<12>|I|I/O|INPUT|||||||||
+P9|A<11>|I|I/O|INPUT|||||||||
+P10|GND||GND||||||||||
+P11|A<10>|I|I/O|INPUT|||||||||
+P12|A<9>|I|I/O|INPUT|||||||||
+P13|A<8>|I|I/O|INPUT|||||||||
+P14|A<7>|I|I/O|INPUT|||||||||
+P15|TDI||TDI||||||||||
+P16|TMS||TMS||||||||||
+P17|TCK||TCK||||||||||
+P18|A<6>|I|I/O|INPUT|||||||||
+P19|A<5>|I|I/O|INPUT|||||||||
+P20|A<4>|I|I/O|INPUT|||||||||
+P21|VCC||VCCINT||||||||||
+P22|PS2DAT|I|I/O|INPUT|||||||||
+P23|GND||GND||||||||||
+P24|PS2CLK|I|I/O|INPUT|||||||||
+P25|CSSER|O|I/O|OUTPUT|||||||||
+P26|LATCH|O|I/O|OUTPUT|||||||||
+P27|D<0>|I/O|I/O|BIDIR|||||||||
+P28|D<1>|I/O|I/O|BIDIR|||||||||
+P29|D<2>|O|I/O|OUTPUT|||||||||
+P30|TDO||TDO||||||||||
+P31|GND||GND||||||||||
+P32|VCC||VCCIO||||||||||
+P33|D<3>|O|I/O|OUTPUT|||||||||
+P34|D<4>|O|I/O|OUTPUT|||||||||
+P35|D<5>|O|I/O|OUTPUT|||||||||
+P36|D<6>|O|I/O|OUTPUT|||||||||
+P37|D<7>|I/O|I/O|BIDIR|||||||||
+P38|SPICS|I/O|I/O|BIDIR|||||||||
+P39|RES|GSR/I|I/O/GSR||||||||||
+P40|AL<0>|I|I/O/GTS2|INPUT|||||||||
+P41|VCC||VCCINT||||||||||
+P42|AL<1>|I|I/O/GTS1|INPUT|||||||||
+P43|MOSI|O|I/O|OUTPUT|||||||||
+P44|SCLK|I/O|I/O|BIDIR|||||||||
+
+To preserve the pinout above for future design iterations in
+Project Navigator simply execute the (Lock Pins) process
+located under the (Implement Design) process in a toolbox named
+(Optional Implementation Tools) or invoke PIN2UCF from the
+command line. The location constraints will be written into your
+specified UCF file
+
+

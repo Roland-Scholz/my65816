@@ -1,0 +1,47 @@
+ca65 V2.13.3 - (C) Copyright 1998-2012 Ullrich von Bassewitz
+Main file   : my65816.a65
+Current file: my65816.a65
+
+000000r 1               ;------------------------------------------------------------------
+000000r 1               ;
+000000r 1               ;------------------------------------------------------------------
+000000r 1               
+000000r 1               		.org $e000
+00E000  1               
+00E000  1  D8           kernel:		cld
+00E001  1  78           		sei
+00E002  1               ;		ldx #time-routine
+00E002  1               ;kernel1:	lda routine,x
+00E002  1               ;		sta $200,x
+00E002  1               ;		dex
+00E002  1               ;		bpl kernel1
+00E002  1               ;		jmp $200
+00E002  1               
+00E002  1  18           routine:	clc
+00E003  1  FB           		xce
+00E004  1               
+00E004  1  A2 00        		ldx #0
+00E006  1  A0 00        		ldy #0
+00E008  1  CA           @loop1:		dex
+00E009  1  D0 FD        		bne @loop1
+00E00B  1  88           		dey
+00E00C  1  D0 FA        		bne @loop1
+00E00E  1               
+00E00E  1  38           		sec
+00E00F  1  FB           		xce
+00E010  1  A2 00        		ldx #0
+00E012  1  A0 00        		ldy #0
+00E014  1  CA           @loop2:		dex
+00E015  1  D0 FD        		bne @loop2
+00E017  1  88           		dey
+00E018  1  D0 FA        		bne @loop2
+00E01A  1  80 E6        		bra routine
+00E01C  1               
+00E01C  1  A2 00        time:		ldx #0
+00E01E  1  A0 00        		ldy #0
+00E020  1  CA           @loop:		dex
+00E021  1  D0 FD        		bne @loop
+00E023  1  88           		dey
+00E024  1  D0 FA        		bne @loop
+00E026  1               		rts
+00E026  1  60           

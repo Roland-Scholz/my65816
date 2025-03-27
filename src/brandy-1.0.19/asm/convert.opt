@@ -1,0 +1,922 @@
+;:ts=8
+R0	equ	1
+R1	equ	5
+R2	equ	9
+R3	equ	13
+	code
+	xdef	~~todigit
+	func
+~~todigit:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L2
+	tcs
+	phd
+	tcd
+x_0	set	4
+	sep	#$20
+	longa	off
+	lda	<L2+x_0
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	bcc	L10001
+	sep	#$20
+	longa	off
+	lda	#$39
+	cmp	<L2+x_0
+	rep	#$20
+	longa	on
+	bcc	L10001
+	lda	<L2+x_0
+	and	#$ff
+	sta	<R0
+	clc
+	lda	#$ffd0
+L20000:
+	adc	<R0
+L6:
+	tay
+	lda	<L2+2
+	sta	<L2+2+2
+	lda	<L2+1
+	sta	<L2+1+2
+	pld
+	tsc
+	clc
+	adc	#L2+2
+	tcs
+	tya
+	rtl
+L10001:
+	sep	#$20
+	longa	off
+	lda	<L2+x_0
+	cmp	#<$41
+	rep	#$20
+	longa	on
+	bcc	L10002
+	sep	#$20
+	longa	off
+	lda	#$46
+	cmp	<L2+x_0
+	rep	#$20
+	longa	on
+	bcc	L10002
+	lda	<L2+x_0
+	and	#$ff
+	sta	<R0
+	clc
+	lda	#$ffc9
+	bra	L20000
+L10002:
+	sep	#$20
+	longa	off
+	lda	<L2+x_0
+	cmp	#<$61
+	rep	#$20
+	longa	on
+	bcc	L10003
+	sep	#$20
+	longa	off
+	lda	#$66
+	cmp	<L2+x_0
+	rep	#$20
+	longa	on
+	bcc	L10003
+	lda	<L2+x_0
+	and	#$ff
+	sta	<R0
+	clc
+	lda	#$ffa9
+	bra	L20000
+L10003:
+	lda	#$0
+	bra	L6
+L2	equ	4
+L3	equ	5
+	ends
+	efunc
+	code
+	xdef	~~tonumber
+	func
+~~tonumber:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L11
+	tcs
+	phd
+	tcd
+cp_0	set	4
+isinteger_0	set	8
+intvalue_0	set	12
+floatvalue_0	set	16
+value_1	set	0
+isint_1	set	2
+isneg_1	set	3
+negexp_1	set	4
+digits_1	set	5
+exponent_1	set	7
+	stz	<L12+value_1
+	stz	<L12+digits_1
+	pei	<L11+cp_0+2
+	pei	<L11+cp_0
+	jsl	~~skip_blanks
+	sta	<L11+cp_0
+	stx	<L11+cp_0+2
+	lda	[<L11+cp_0]
+	and	#$ff
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	37
+	dw	L10013-1
+	dw	38
+	dw	L10008-1
+	dw	L10018-1
+L20018:
+	lda	#$22
+L20026:
+	sta	[<L11+intvalue_0]
+	stz	<L11+cp_0
+	stz	<L11+cp_0+2
+L10007:
+	ldx	<L11+cp_0+2
+	lda	<L11+cp_0
+	tay
+	lda	<L11+2
+	sta	<L11+2+16
+	lda	<L11+1
+	sta	<L11+1+16
+	pld
+	tsc
+	clc
+	adc	#L11+16
+	tcs
+	tya
+	rtl
+L20003:
+	inc	<L12+digits_1
+	lda	<L12+value_1
+	asl	A
+	asl	A
+	asl	A
+	asl	A
+	sta	<R0
+	lda	[<L11+cp_0]
+	pha
+	jsl	~~todigit
+	clc
+	adc	<R0
+	sta	<L12+value_1
+L10008:
+	inc	<L11+cp_0
+	bne	L10009
+	inc	<L11+cp_0+2
+L10009:
+	lda	[<L11+cp_0]
+	and	#$ff
+	pha
+	jsl	~~isxdigit
+	tax
+	bne	L20003
+	lda	<L12+digits_1
+	beq	L20018
+	lda	<L12+value_1
+	sta	[<L11+intvalue_0]
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	[<L11+isinteger_0]
+	rep	#$20
+	longa	on
+	bra	L10007
+L20022:
+	lda	#$23
+	bra	L20026
+L18:
+	inc	<L12+digits_1
+	lda	[<L11+cp_0]
+	and	#$ff
+	sta	<R0
+	lda	<L12+value_1
+	asl	A
+	clc
+	adc	<R0
+	clc
+	adc	#$ffd0
+	sta	<L12+value_1
+L10013:
+	inc	<L11+cp_0
+	bne	L10014
+	inc	<L11+cp_0+2
+L10014:
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	beq	L18
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$31
+	rep	#$20
+	longa	on
+	beq	L18
+	lda	<L12+digits_1
+	beq	L20022
+	lda	<L12+value_1
+	sta	[<L11+intvalue_0]
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	[<L11+isinteger_0]
+	rep	#$20
+	longa	on
+	brl	L10007
+L10018:
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L12+isint_1
+	rep	#$20
+	longa	on
+	stz	<R0
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2d
+	rep	#$20
+	longa	on
+	bne	L23
+	inc	<R0
+L23:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L12+isneg_1
+	lda	[<L11+cp_0]
+	cmp	#<$2b
+	rep	#$20
+	longa	on
+	beq	L25
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2d
+	rep	#$20
+	longa	on
+	bne	L10020
+L25:
+	inc	<L11+cp_0
+	bne	L10020
+	inc	<L11+cp_0+2
+L10020:
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	bcc	*+5
+	brl	L20009
+L10021:
+	lda	<L12+isint_1
+	and	#$ff
+	bne	L10025
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2e
+	rep	#$20
+	longa	on
+	beq	L10025
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$45
+	rep	#$20
+	longa	on
+	beq	L10025
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	pea	#$4F00
+	pea	#$0000
+	xref	~~~fcmp
+	jsl	~~~fcmp
+	bmi	L10025
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~ffix
+	jsl	~~~ffix
+	pla
+	sta	<R0
+	pla
+	sta	<R0+2
+	lda	<R0
+	sta	<L12+value_1
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	<L12+isint_1
+	rep	#$20
+	longa	on
+L10025:
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2e
+	rep	#$20
+	longa	on
+	bne	L10026
+	lda	<L12+isint_1
+	and	#$ff
+	beq	L10027
+	sep	#$20
+	longa	off
+	stz	<L12+isint_1
+	rep	#$20
+	longa	on
+	ldy	#$0
+	lda	<L12+value_1
+	bpl	L45
+	dey
+L45:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10027:
+	lda	#$0
+	sta	|L10005
+	lda	#$3f80
+L20028:
+	sta	|L10005+2
+	inc	<L11+cp_0
+	bne	L10028
+	inc	<L11+cp_0+2
+L10028:
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	bcc	*+5
+	brl	L20012
+L10029:
+	lda	|L10005+2
+	pha
+	lda	|L10005
+	pha
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~fdiv
+	jsl	~~~fdiv
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10026:
+	lda	[<L11+cp_0]
+	and	#$ff
+	pha
+	jsl	~~toupper
+	cmp	#<$45
+	beq	*+5
+	brl	L10030
+	ldy	#$1
+	lda	[<L11+cp_0],Y
+	and	#$ff
+	pha
+	jsl	~~isalpha
+	tax
+	beq	*+5
+	brl	L10030
+	lda	<L12+isint_1
+	and	#$ff
+	beq	L10031
+	sep	#$20
+	longa	off
+	stz	<L12+isint_1
+	rep	#$20
+	longa	on
+	ldy	#$0
+	lda	<L12+value_1
+	bpl	L54
+	dey
+L54:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10031:
+	stz	<L12+exponent_1
+	inc	<L11+cp_0
+	bne	L55
+	inc	<L11+cp_0+2
+L55:
+	stz	<R0
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2d
+	rep	#$20
+	longa	on
+	bne	L56
+	inc	<R0
+L56:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L12+negexp_1
+	lda	[<L11+cp_0]
+	cmp	#<$2b
+	rep	#$20
+	longa	on
+	beq	L58
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$2d
+	rep	#$20
+	longa	on
+	bne	L10033
+L58:
+	inc	<L11+cp_0
+	bne	L10033
+	inc	<L11+cp_0+2
+L10033:
+	sep	#$20
+	longa	off
+	lda	[<L11+cp_0]
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	bcc	*+5
+	brl	L20015
+L10034:
+	lda	<L12+negexp_1
+	and	#$ff
+	bne	*+5
+	brl	L10035
+	sec
+	lda	<L12+exponent_1
+	sbc	<L12+digits_1
+	sta	<R0
+	sec
+	lda	#$134
+	sbc	<R0
+	bvs	L68
+	eor	#$8000
+L68:
+	bmi	*+5
+	brl	L10036
+	sec
+	lda	#$0
+	sbc	<L12+exponent_1
+	sta	<L12+exponent_1
+	brl	L10038
+L20009:
+	sep	#$20
+	longa	off
+	lda	#$39
+	cmp	[<L11+cp_0]
+	rep	#$20
+	longa	on
+	bcs	*+5
+	brl	L10021
+	stz	<L12+digits_1
+	lda	<L12+isint_1
+	and	#$ff
+	beq	L10022
+	ldy	#$0
+	lda	<L12+value_1
+	bpl	L32
+	dey
+L32:
+	sta	<R0
+	sty	<R0+2
+	sec
+	lda	<R0
+	sbc	#<$ccccccc
+	lda	<R0+2
+	sbc	#^$ccccccc
+	bvs	L33
+	eor	#$8000
+L33:
+	bpl	L10022
+	sep	#$20
+	longa	off
+	stz	<L12+isint_1
+	rep	#$20
+	longa	on
+	ldy	#$0
+	lda	<L12+value_1
+	bpl	L35
+	dey
+L35:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10022:
+	lda	<L12+isint_1
+	and	#$ff
+	beq	L10023
+	lda	[<L11+cp_0]
+	and	#$ff
+	sta	<R0
+	lda	<L12+value_1
+	asl	A
+	asl	A
+	adc	<L12+value_1
+	asl	A
+	clc
+	adc	<R0
+	clc
+	adc	#$ffd0
+	sta	<L12+value_1
+	bra	L10024
+L10023:
+	lda	[<L11+cp_0]
+	and	#$ff
+	clc
+	adc	#$ffd0
+	sta	<R1
+	ldy	#$0
+	lda	<R1
+	bpl	L37
+	dey
+L37:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	xref	~~~ftod
+	jsl	~~~ftod
+	pea	#$4024
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~ftod
+	jsl	~~~ftod
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dadc
+	jsl	~~~dadc
+	xref	~~~dtof
+	jsl	~~~dtof
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10024:
+	inc	<L12+digits_1
+	brl	L25
+L20012:
+	sep	#$20
+	longa	off
+	lda	#$39
+	cmp	[<L11+cp_0]
+	rep	#$20
+	longa	on
+	bcs	*+5
+	brl	L10029
+	lda	[<L11+cp_0]
+	and	#$ff
+	clc
+	adc	#$ffd0
+	sta	<R1
+	ldy	#$0
+	lda	<R1
+	bpl	L49
+	dey
+L49:
+	phy
+	pha
+	xref	~~~fflt
+	jsl	~~~fflt
+	xref	~~~ftod
+	jsl	~~~ftod
+	pea	#$4024
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~ftod
+	jsl	~~~ftod
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dadc
+	jsl	~~~dadc
+	xref	~~~dtof
+	jsl	~~~dtof
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+	pea	#$4024
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	lda	|L10005+2
+	pha
+	lda	|L10005
+	pha
+	xref	~~~ftod
+	jsl	~~~ftod
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dtof
+	jsl	~~~dtof
+	pla
+	sta	|L10005
+	pla
+	brl	L20028
+L20015:
+	sep	#$20
+	longa	off
+	lda	#$39
+	cmp	[<L11+cp_0]
+	rep	#$20
+	longa	on
+	bcs	*+5
+	brl	L10034
+	sec
+	lda	#$134
+	sbc	<L12+exponent_1
+	bvs	L64
+	eor	#$8000
+L64:
+	bmi	*+5
+	brl	L10034
+	lda	[<L11+cp_0]
+	and	#$ff
+	sta	<R0
+	lda	<L12+exponent_1
+	asl	A
+	asl	A
+	adc	<L12+exponent_1
+	asl	A
+	clc
+	adc	<R0
+	clc
+	adc	#$ffd0
+	sta	<L12+exponent_1
+	brl	L58
+L10036:
+	stz	<L12+exponent_1
+	lda	#$0
+	sta	|L10004
+	sta	|L10004+2
+	bra	L10038
+L10035:
+	lda	<L12+exponent_1
+	clc
+	adc	<L12+digits_1
+	clc
+	adc	#$ffff
+	sta	<R1
+	sec
+	lda	#$134
+	sbc	<R1
+	bvs	L70
+	eor	#$8000
+L70:
+	bmi	L10038
+	lda	#$24
+	sta	[<L11+intvalue_0]
+	stz	<L11+cp_0
+	stz	<L11+cp_0+2
+	stz	<L12+exponent_1
+L10038:
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~ftod
+	jsl	~~~ftod
+	phy
+	phy
+	phy
+	phy
+	ldy	#$0
+	lda	<L12+exponent_1
+	bpl	L72
+	dey
+L72:
+	phy
+	pha
+	xref	~~~dflt
+	jsl	~~~dflt
+	pea	#$4024
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	jsl	~~pow
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dtof
+	jsl	~~~dtof
+	pla
+	sta	|L10004
+	pla
+	sta	|L10004+2
+L10030:
+	sep	#$20
+	longa	off
+	lda	<L12+isint_1
+	sta	[<L11+isinteger_0]
+	rep	#$20
+	longa	on
+	lda	<L12+isint_1
+	and	#$ff
+	beq	L10040
+	lda	<L12+isneg_1
+	and	#$ff
+	beq	L74
+	sec
+	lda	#$0
+	sbc	<L12+value_1
+	bra	L76
+L74:
+	lda	<L12+value_1
+L76:
+	sta	[<L11+intvalue_0]
+	brl	L10007
+L10040:
+	lda	<L12+isneg_1
+	and	#$ff
+	beq	L77
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+	xref	~~~fneg
+	jsl	~~~fneg
+	bra	L79
+L77:
+	lda	|L10004+2
+	pha
+	lda	|L10004
+	pha
+L79:
+	pla
+	sta	[<L11+floatvalue_0]
+	pla
+	ldy	#$2
+	sta	[<L11+floatvalue_0],Y
+	brl	L10007
+L11	equ	21
+L12	equ	13
+	ends
+	efunc
+	udata
+L10004:
+	ds	4
+	ends
+	udata
+L10005:
+	ds	4
+	ends
+	code
+	xdef	~~itob
+	func
+~~itob:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L81
+	tcs
+	phd
+	tcd
+dest_0	set	4
+value_0	set	8
+width_0	set	10
+count_1	set	0
+n_1	set	2
+temp_1	set	4
+	stz	<L82+n_1
+	bra	L10045
+L10044:
+	lda	<L81+value_0
+	and	#<$1
+	clc
+	adc	#$30
+	sep	#$20
+	longa	off
+	ldx	<L82+n_1
+	sta	<L82+temp_1,X
+	rep	#$20
+	longa	on
+	lda	<L81+value_0
+	asl	A
+	ror	<L81+value_0
+	inc	<L82+n_1
+L10045:
+	lda	<L82+n_1
+	cmp	#<$10
+	bcc	L10044
+	lda	#$f
+	sta	<L82+n_1
+	bra	L10046
+L20030:
+	sep	#$20
+	longa	off
+	ldx	<L82+n_1
+	lda	<L82+temp_1,X
+	cmp	#<$30
+	rep	#$20
+	longa	on
+	bne	L10047
+	dec	<L82+n_1
+L10046:
+	sec
+	lda	#$0
+	sbc	<L82+n_1
+	bvs	L84
+	eor	#$8000
+L84:
+	bpl	L20030
+L10047:
+	lda	<L82+n_1
+	ina
+	sta	<L82+count_1
+	bra	L10048
+L20032:
+	sep	#$20
+	longa	off
+	ldx	<L82+n_1
+	lda	<L82+temp_1,X
+	sta	[<L81+dest_0]
+	rep	#$20
+	longa	on
+	inc	<L81+dest_0
+	bne	L88
+	inc	<L81+dest_0+2
+L88:
+	dec	<L82+n_1
+L10048:
+	lda	<L82+n_1
+	bpl	L20032
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	[<L81+dest_0]
+	rep	#$20
+	longa	on
+	lda	<L82+count_1
+	tay
+	lda	<L81+2
+	sta	<L81+2+8
+	lda	<L81+1
+	sta	<L81+1+8
+	pld
+	tsc
+	clc
+	adc	#L81+8
+	tcs
+	tya
+	rtl
+L81	equ	24
+L82	equ	5
+	ends
+	efunc
+	xref	~~skip_blanks
+	xref	~~pow
+	xref	~~isxdigit
+	xref	~~toupper
+	xref	~~isalpha

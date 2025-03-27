@@ -1,0 +1,2920 @@
+;:ts=8
+R0	equ	1
+R1	equ	5
+R2	equ	9
+R3	equ	13
+	code
+	xdef	~~isapath
+	func
+~~isapath:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L2
+	tcs
+	phd
+	tcd
+name_0	set	4
+	stz	<R0
+	pea	#^L1
+	pea	#<L1
+	pei	<L2+name_0+2
+	pei	<L2+name_0
+	jsl	~~strpbrk
+	lda	<R1
+	ora	<R1+2
+	beq	L6
+	inc	<R0
+L6:
+	tay
+	lda	<L2+2
+	sta	<L2+2+4
+	lda	<L2+1
+	sta	<L2+1+4
+	pld
+	tsc
+	clc
+	adc	#L2+4
+	tcs
+	tya
+	rtl
+L2	equ	8
+L3	equ	9
+	ends
+	efunc
+	data
+L1:
+	db	$2F,$00
+	ends
+	code
+	func
+~~map_handle:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L8
+	tcs
+	phd
+	tcd
+handle_0	set	4
+	sec
+	lda	#$fe
+	sbc	<L8+handle_0
+	sta	<L8+handle_0
+	lda	<L8+handle_0
+	bmi	L10
+	sec
+	lda	<L8+handle_0
+	sbc	#<$19
+	bvs	L12
+	eor	#$8000
+L12:
+	bmi	L10
+	lda	<L8+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L8+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	bne	L10001
+L10:
+	pea	#<$7c
+	pea	#4
+	jsl	~~error
+L10001:
+	lda	<L8+handle_0
+	tay
+	lda	<L8+2
+	sta	<L8+2+2
+	lda	<L8+1
+	sta	<L8+1+2
+	pld
+	tsc
+	clc
+	adc	#L8+2
+	tcs
+	tya
+	rtl
+L8	equ	4
+L9	equ	5
+	ends
+	efunc
+	code
+	xdef	~~fileio_openin
+	func
+~~fileio_openin:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L16
+	tcs
+	phd
+	tcd
+name_0	set	4
+namelen_0	set	8
+thefile_1	set	0
+n_1	set	4
+filename_1	set	6
+	stz	<L17+n_1
+	bra	L10005
+L10002:
+	inc	<L17+n_1
+L10005:
+	sec
+	lda	<L17+n_1
+	sbc	#<$19
+	bvs	L19
+	eor	#$8000
+L19:
+	bmi	L10003
+	lda	<L17+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L17+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	ldy	#$2
+	ora	(<R1),Y
+	bne	L10002
+L10003:
+	sec
+	lda	<L17+n_1
+	sbc	#<$19
+	bvs	L22
+	eor	#$8000
+L22:
+	bpl	L10006
+	pea	#<$80
+	pea	#4
+	jsl	~~error
+L10006:
+	ldy	#$0
+	lda	<L16+namelen_0
+	bpl	L24
+	dey
+L24:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L16+name_0+2
+	pei	<L16+name_0
+	pea	#0
+	clc
+	tdc
+	adc	#<L17+filename_1
+	pha
+	jsl	~~memmove
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldx	<L16+namelen_0
+	sta	<L17+filename_1,X
+	rep	#$20
+	longa	on
+	pea	#^L7
+	pea	#<L7
+	pea	#0
+	clc
+	tdc
+	adc	#<L17+filename_1
+	pha
+	jsl	~~fopen
+	sta	<L17+thefile_1
+	stx	<L17+thefile_1+2
+	ora	<L17+thefile_1+2
+	bne	L10007
+	lda	#$0
+L26:
+	tay
+	lda	<L16+2
+	sta	<L16+2+6
+	lda	<L16+1
+	sta	<L16+1+6
+	pld
+	tsc
+	clc
+	adc	#L16+6
+	tcs
+	tya
+	rtl
+L10007:
+	lda	<L17+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L17+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	<L17+thefile_1
+	sta	(<R1)
+	lda	<L17+thefile_1+2
+	ldy	#$2
+	sta	(<R1),Y
+	lda	<L17+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L17+n_1
+	tax
+	lda	#$1
+	sta	|~~fileinfo+4,X
+	lda	<L17+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L17+n_1
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L17+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L17+n_1
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	sec
+	lda	#$fe
+	sbc	<L17+n_1
+	bra	L26
+L16	equ	30
+L17	equ	9
+	ends
+	efunc
+	data
+L7:
+	db	$72,$00
+	ends
+	code
+	xdef	~~fileio_openout
+	func
+~~fileio_openout:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L28
+	tcs
+	phd
+	tcd
+name_0	set	4
+namelen_0	set	8
+thefile_1	set	0
+n_1	set	4
+filename_1	set	6
+	stz	<L29+n_1
+	bra	L10011
+L10008:
+	inc	<L29+n_1
+L10011:
+	sec
+	lda	<L29+n_1
+	sbc	#<$19
+	bvs	L31
+	eor	#$8000
+L31:
+	bmi	L10009
+	lda	<L29+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L29+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	ldy	#$2
+	ora	(<R1),Y
+	bne	L10008
+L10009:
+	sec
+	lda	<L29+n_1
+	sbc	#<$19
+	bvs	L34
+	eor	#$8000
+L34:
+	bpl	L10012
+	pea	#<$80
+	pea	#4
+	jsl	~~error
+L10012:
+	ldy	#$0
+	lda	<L28+namelen_0
+	bpl	L36
+	dey
+L36:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L28+name_0+2
+	pei	<L28+name_0
+	pea	#0
+	clc
+	tdc
+	adc	#<L29+filename_1
+	pha
+	jsl	~~memmove
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldx	<L28+namelen_0
+	sta	<L29+filename_1,X
+	rep	#$20
+	longa	on
+	pea	#^L27
+	pea	#<L27
+	pea	#0
+	clc
+	tdc
+	adc	#<L29+filename_1
+	pha
+	jsl	~~fopen
+	sta	<L29+thefile_1
+	stx	<L29+thefile_1+2
+	ora	<L29+thefile_1+2
+	bne	L10013
+	pea	#0
+	clc
+	tdc
+	adc	#<L29+filename_1
+	pha
+	pea	#<$6f
+	pea	#8
+	jsl	~~error
+L10013:
+	lda	<L29+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L29+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	<L29+thefile_1
+	sta	(<R1)
+	lda	<L29+thefile_1+2
+	ldy	#$2
+	sta	(<R1),Y
+	lda	<L29+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L29+n_1
+	tax
+	lda	#$3
+	sta	|~~fileinfo+4,X
+	lda	<L29+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L29+n_1
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L29+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L29+n_1
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	sec
+	lda	#$fe
+	sbc	<L29+n_1
+	tay
+	lda	<L28+2
+	sta	<L28+2+6
+	lda	<L28+1
+	sta	<L28+1+6
+	pld
+	tsc
+	clc
+	adc	#L28+6
+	tcs
+	tya
+	rtl
+L28	equ	30
+L29	equ	9
+	ends
+	efunc
+	data
+L27:
+	db	$77,$2B,$00
+	ends
+	code
+	xdef	~~fileio_openup
+	func
+~~fileio_openup:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L40
+	tcs
+	phd
+	tcd
+name_0	set	4
+namelen_0	set	8
+thefile_1	set	0
+n_1	set	4
+filename_1	set	6
+	stz	<L41+n_1
+	bra	L10017
+L10014:
+	inc	<L41+n_1
+L10017:
+	sec
+	lda	<L41+n_1
+	sbc	#<$19
+	bvs	L43
+	eor	#$8000
+L43:
+	bmi	L10015
+	lda	<L41+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L41+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	ldy	#$2
+	ora	(<R1),Y
+	bne	L10014
+L10015:
+	sec
+	lda	<L41+n_1
+	sbc	#<$19
+	bvs	L46
+	eor	#$8000
+L46:
+	bpl	L10018
+	pea	#<$80
+	pea	#4
+	jsl	~~error
+L10018:
+	ldy	#$0
+	lda	<L40+namelen_0
+	bpl	L48
+	dey
+L48:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pei	<L40+name_0+2
+	pei	<L40+name_0
+	pea	#0
+	clc
+	tdc
+	adc	#<L41+filename_1
+	pha
+	jsl	~~memmove
+	sep	#$20
+	longa	off
+	lda	#$0
+	ldx	<L40+namelen_0
+	sta	<L41+filename_1,X
+	rep	#$20
+	longa	on
+	pea	#^L39
+	pea	#<L39
+	pea	#0
+	clc
+	tdc
+	adc	#<L41+filename_1
+	pha
+	jsl	~~fopen
+	sta	<L41+thefile_1
+	stx	<L41+thefile_1+2
+	ora	<L41+thefile_1+2
+	bne	L10019
+	pea	#0
+	clc
+	tdc
+	adc	#<L41+filename_1
+	pha
+	pea	#<$70
+	pea	#8
+	jsl	~~error
+L10019:
+	lda	<L41+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L41+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	<L41+thefile_1
+	sta	(<R1)
+	lda	<L41+thefile_1+2
+	ldy	#$2
+	sta	(<R1),Y
+	lda	<L41+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L41+n_1
+	tax
+	tya
+	sta	|~~fileinfo+4,X
+	lda	<L41+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L41+n_1
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L41+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L41+n_1
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	sec
+	lda	#$fe
+	sbc	<L41+n_1
+	tay
+	lda	<L40+2
+	sta	<L40+2+6
+	lda	<L40+1
+	sta	<L40+1+6
+	pld
+	tsc
+	clc
+	adc	#L40+6
+	tcs
+	tya
+	rtl
+L40	equ	30
+L41	equ	9
+	ends
+	efunc
+	data
+L39:
+	db	$72,$2B,$00
+	ends
+	code
+	func
+~~close_file:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L52
+	tcs
+	phd
+	tcd
+handle_0	set	4
+	lda	<L52+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L52+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fclose
+	lda	<L52+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L52+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	#$0
+	sta	(<R1)
+	ldy	#$2
+	sta	(<R1),Y
+	lda	<L52+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L52+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+4,X
+	lda	<L52+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L52+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L52+2
+	sta	<L52+2+2
+	lda	<L52+1
+	sta	<L52+1+2
+	pld
+	tsc
+	clc
+	adc	#L52+2
+	tcs
+	rtl
+L52	equ	8
+L53	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_close
+	func
+~~fileio_close:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L55
+	tcs
+	phd
+	tcd
+handle_0	set	4
+n_1	set	0
+	lda	<L55+handle_0
+	bne	L10020
+	stz	<L56+n_1
+L10023:
+	lda	<L56+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L56+n_1
+	tax
+	lda	|~~fileinfo+4,X
+	beq	L10021
+	pei	<L56+n_1
+	jsl	~~close_file
+L10021:
+	inc	<L56+n_1
+	sec
+	lda	<L56+n_1
+	sbc	#<$19
+	bvs	L59
+	eor	#$8000
+L59:
+	bmi	L62
+	bra	L10023
+L10020:
+	pei	<L55+handle_0
+	jsl	~~map_handle
+	sta	<L56+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L56+n_1
+	tax
+	lda	|~~fileinfo+4,X
+	beq	L62
+	pei	<L56+n_1
+	jsl	~~close_file
+L62:
+	lda	<L55+2
+	sta	<L55+2+2
+	lda	<L55+1
+	sta	<L55+1+2
+	pld
+	tsc
+	clc
+	adc	#L55+2
+	tcs
+	rtl
+L55	equ	6
+L56	equ	5
+	ends
+	efunc
+	code
+	xdef	~~fileio_bget
+	func
+~~fileio_bget:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L63
+	tcs
+	phd
+	tcd
+handle_0	set	4
+ch_1	set	0
+	pei	<L63+handle_0
+	jsl	~~map_handle
+	sta	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	|~~fileinfo+6,X
+	beq	L10027
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	#$2
+	sta	|~~fileinfo+6,X
+	pea	#<$74
+	pea	#4
+	jsl	~~error
+	bra	L10028
+L10027:
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$3
+	bne	L10028
+	stz	<L64+ch_1
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	#$1
+	sta	|~~fileinfo+6,X
+L10028:
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	|~~fileinfo+8,X
+	and	#$ff
+	beq	L10030
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fflush
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+L10030:
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fgetc
+	sta	<L64+ch_1
+	cmp	#<$ffffffff
+	bne	L10031
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	lda	#$1
+	sta	|~~fileinfo+6,X
+	stz	<L64+ch_1
+L10031:
+	lda	<L63+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L63+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L64+ch_1
+	tay
+	lda	<L63+2
+	sta	<L63+2+2
+	lda	<L63+1
+	sta	<L63+1+2
+	pld
+	tsc
+	clc
+	adc	#L63+2
+	tcs
+	tya
+	rtl
+L63	equ	10
+L64	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_getdol
+	func
+~~fileio_getdol:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L70
+	tcs
+	phd
+	tcd
+handle_0	set	4
+buffer_0	set	6
+p_1	set	0
+length_1	set	4
+	pei	<L70+handle_0
+	jsl	~~map_handle
+	sta	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	tax
+	lda	|~~fileinfo+6,X
+	beq	L10032
+	lda	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	tax
+	lda	#$2
+	sta	|~~fileinfo+6,X
+	pea	#<$74
+	pea	#4
+	jsl	~~error
+L10032:
+	lda	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	tax
+	lda	|~~fileinfo+8,X
+	and	#$ff
+	beq	L10033
+	lda	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fflush
+	lda	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+L10033:
+	lda	<L70+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L70+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	pea	#<$1000
+	pei	<L70+buffer_0+2
+	pei	<L70+buffer_0
+	jsl	~~fgets
+	sta	<L71+p_1
+	stx	<L71+p_1+2
+	ora	<L71+p_1+2
+	bne	L10034
+	pea	#<$72
+	pea	#4
+	jsl	~~error
+L10034:
+	pei	<L70+buffer_0+2
+	pei	<L70+buffer_0
+	jsl	~~strlen
+	sta	<L71+length_1
+	ldy	#$0
+	lda	<L71+length_1
+	bpl	L75
+	dey
+L75:
+	sta	<R0
+	sty	<R0+2
+	lda	#$ffff
+	clc
+	adc	<R0
+	sta	<R1
+	lda	#$ffff
+	adc	<R0+2
+	sta	<R1+2
+	lda	<L70+buffer_0
+	clc
+	adc	<R1
+	sta	<L71+p_1
+	lda	<L70+buffer_0+2
+	adc	<R1+2
+	sta	<L71+p_1+2
+	sep	#$20
+	longa	off
+	lda	[<L71+p_1]
+	cmp	#<$a
+	rep	#$20
+	longa	on
+	bne	L10035
+	dec	<L71+length_1
+	sec
+	lda	#$0
+	sbc	<L71+length_1
+	bvs	L77
+	eor	#$8000
+L77:
+	bmi	L10035
+	lda	#$ffff
+	clc
+	adc	<L71+p_1
+	sta	<R0
+	lda	#$ffff
+	adc	<L71+p_1+2
+	sta	<R0+2
+	sep	#$20
+	longa	off
+	lda	[<R0]
+	cmp	#<$d
+	rep	#$20
+	longa	on
+	bne	L10035
+	dec	<L71+length_1
+L10035:
+	lda	<L71+length_1
+	tay
+	lda	<L70+2
+	sta	<L70+2+6
+	lda	<L70+1
+	sta	<L70+1+6
+	pld
+	tsc
+	clc
+	adc	#L70+6
+	tcs
+	tya
+	rtl
+L70	equ	14
+L71	equ	9
+	ends
+	efunc
+	code
+	func
+~~read:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L81
+	tcs
+	phd
+	tcd
+handle_0	set	4
+ch_1	set	0
+	pei	<L81+handle_0+2
+	pei	<L81+handle_0
+	jsl	~~fgetc
+	sta	<L82+ch_1
+	cmp	#<$ffffffff
+	bne	L10037
+	pea	#<$72
+	pea	#4
+	jsl	~~error
+L10037:
+	lda	<L82+ch_1
+	tay
+	lda	<L81+2
+	sta	<L81+2+4
+	lda	<L81+1
+	sta	<L81+1+4
+	pld
+	tsc
+	clc
+	adc	#L81+4
+	tcs
+	tya
+	rtl
+L81	equ	2
+L82	equ	1
+	ends
+	efunc
+	code
+	xdef	~~fileio_getnumber
+	func
+~~fileio_getnumber:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L85
+	tcs
+	phd
+	tcd
+handle_0	set	4
+isint_0	set	6
+ip_0	set	10
+fp_0	set	14
+stream_1	set	0
+n_1	set	4
+marker_1	set	6
+temp_1	set	8
+	pei	<L85+handle_0
+	jsl	~~map_handle
+	sta	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	tax
+	lda	|~~fileinfo+6,X
+	beq	L10038
+	lda	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	tax
+	lda	#$2
+	sta	|~~fileinfo+6,X
+	pea	#<$74
+	pea	#4
+	jsl	~~error
+L10038:
+	lda	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	tax
+	lda	|~~fileinfo+8,X
+	and	#$ff
+	beq	L10039
+	lda	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fflush
+	lda	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+L10039:
+	lda	<L85+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L85+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L86+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L86+stream_1+2
+	pha
+	pei	<L86+stream_1
+	jsl	~~read
+	sta	<L86+marker_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	3
+	dw	64
+	dw	L10042-1
+	dw	128
+	dw	L10069-1
+	dw	136
+	dw	L10046-1
+	dw	L10072-1
+L10042:
+	lda	#$0
+	sta	[<L85+ip_0]
+	lda	#$18
+	sta	<L86+n_1
+L10045:
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	ldx	<L86+n_1
+	xref	~~~asl
+	jsl	~~~asl
+	sta	<R0
+	lda	[<L85+ip_0]
+	ora	<R0
+	sta	[<L85+ip_0]
+	lda	#$fff8
+	clc
+	adc	<L86+n_1
+	sta	<L86+n_1
+	lda	<L86+n_1
+	bpl	L10045
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	[<L85+isint_0]
+	rep	#$20
+	longa	on
+L103:
+	lda	<L85+2
+	sta	<L85+2+14
+	lda	<L85+1
+	sta	<L85+1+14
+	pld
+	tsc
+	clc
+	adc	#L85+14
+	tcs
+	rtl
+L10046:
+	lda	|~~double_type
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	0
+	dw	4
+	dw	L10048-1
+	dw	L10049-1
+	dw	L10054-1
+	dw	L10059-1
+	dw	L10064-1
+L10049:
+	stz	<L86+n_1
+	bra	L10053
+L10052:
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldx	<L86+n_1
+	sta	<L86+temp_1,X
+	rep	#$20
+	longa	on
+	inc	<L86+n_1
+L10053:
+	lda	<L86+n_1
+	cmp	#<$4
+	bcc	L10052
+	bra	L10048
+L10054:
+	stz	<L86+n_1
+	bra	L10058
+L10057:
+	lda	<L86+n_1
+	eor	#<$4
+	sta	<R0
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldx	<R0
+	sta	<L86+temp_1,X
+	rep	#$20
+	longa	on
+	inc	<L86+n_1
+L10058:
+	lda	<L86+n_1
+	cmp	#<$4
+	bcc	L10057
+	bra	L10048
+L10059:
+	stz	<L86+n_1
+	bra	L10063
+L10062:
+	lda	<L86+n_1
+	eor	#<$3
+	sta	<R0
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldx	<R0
+	sta	<L86+temp_1,X
+	rep	#$20
+	longa	on
+	inc	<L86+n_1
+L10063:
+	lda	<L86+n_1
+	cmp	#<$4
+	bcc	L10062
+	bra	L10048
+L10064:
+	stz	<L86+n_1
+	bra	L10068
+L10067:
+	lda	<L86+n_1
+	eor	#<$7
+	sta	<R0
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldx	<R0
+	sta	<L86+temp_1,X
+	rep	#$20
+	longa	on
+	inc	<L86+n_1
+L10068:
+	lda	<L86+n_1
+	cmp	#<$4
+	bcc	L10067
+L10048:
+	pea	#^$4
+	pea	#<$4
+	pea	#0
+	clc
+	tdc
+	adc	#<L86+temp_1
+	pha
+	pei	<L85+fp_0+2
+	pei	<L85+fp_0
+	jsl	~~memmove
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	[<L85+isint_0]
+	rep	#$20
+	longa	on
+	brl	L103
+L10069:
+exponent_2	set	12
+mantissa_2	set	14
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sta	<L86+mantissa_2
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	xba
+	and	#$ff00
+	tsb	<L86+mantissa_2
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	ldx	#<$10
+	xref	~~~asl
+	jsl	~~~asl
+	tsb	<L86+mantissa_2
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	ldx	#<$18
+	xref	~~~asl
+	jsl	~~~asl
+	tsb	<L86+mantissa_2
+	pei	<L86+stream_1+2
+	pei	<L86+stream_1
+	jsl	~~read
+	sta	<L86+exponent_2
+	lda	<L86+exponent_2
+	bne	L94
+	lda	<L86+mantissa_2
+	bne	*+5
+	brl	L10070
+L94:
+	lda	<L86+mantissa_2
+	bpl	L97
+	lda	#$ffff
+	bra	L99
+L97:
+	lda	#$1
+L99:
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L100
+	dey
+L100:
+	phy
+	pha
+	xref	~~~dflt
+	jsl	~~~dflt
+	pea	#$3FE0
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	pea	#$41F0
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	ldy	#$0
+	lda	<L86+mantissa_2
+	bpl	L101
+	dey
+L101:
+	sta	<R0
+	sty	<R0+2
+	lda	<R0
+	sta	<R1
+	lda	<R0+2
+	and	#^$7fffffff
+	pha
+	pei	<R1
+	xref	~~~dflt
+	jsl	~~~dflt
+	xref	~~~ddiv
+	jsl	~~~ddiv
+	xref	~~~dadc
+	jsl	~~~dadc
+	phy
+	phy
+	phy
+	phy
+	lda	#$ff80
+	clc
+	adc	<L86+exponent_2
+	sta	<R0
+	ldy	#$0
+	lda	<R0
+	bpl	L102
+	dey
+L102:
+	phy
+	pha
+	xref	~~~dflt
+	jsl	~~~dflt
+	pea	#$4000
+	pea	#$0000
+	pea	#$0000
+	pea	#$0000
+	jsl	~~pow
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dmul
+	jsl	~~~dmul
+	xref	~~~dtof
+	jsl	~~~dtof
+	pla
+	sta	[<L85+fp_0]
+	pla
+	bra	L20001
+L10070:
+	lda	#$0
+	sta	[<L85+fp_0]
+L20001:
+	ldy	#$2
+	sta	[<L85+fp_0],Y
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	[<L85+isint_0]
+	rep	#$20
+	longa	on
+	brl	L103
+L10072:
+	pea	#<$3f
+	pea	#4
+	jsl	~~error
+	brl	L103
+L85	equ	24
+L86	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_getstring
+	func
+~~fileio_getstring:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L104
+	tcs
+	phd
+	tcd
+handle_0	set	4
+p_0	set	6
+stream_1	set	0
+marker_1	set	4
+length_1	set	6
+n_1	set	8
+	pei	<L104+handle_0
+	jsl	~~map_handle
+	sta	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	tax
+	lda	|~~fileinfo+6,X
+	beq	L10073
+	lda	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	tax
+	lda	#$2
+	sta	|~~fileinfo+6,X
+	pea	#<$74
+	pea	#4
+	jsl	~~error
+L10073:
+	lda	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	tax
+	lda	|~~fileinfo+8,X
+	and	#$ff
+	beq	L10074
+	lda	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~fflush
+	lda	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$0
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+L10074:
+	lda	<L104+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L104+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L105+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L105+stream_1+2
+	pha
+	pei	<L105+stream_1
+	jsl	~~read
+	sta	<L105+marker_1
+	xref	~~~swt
+	jsl	~~~swt
+	dw	2
+	dw	0
+	dw	L10077-1
+	dw	1
+	dw	L10082-1
+	dw	L10091-1
+L10077:
+	pei	<L105+stream_1+2
+	pei	<L105+stream_1
+	jsl	~~read
+	sta	<L105+length_1
+	lda	#$1
+	sta	<L105+n_1
+	bra	L10081
+L10080:
+	sec
+	lda	<L105+length_1
+	sbc	<L105+n_1
+	sta	<R0
+	pei	<L105+stream_1+2
+	pei	<L105+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldy	<R0
+	sta	[<L104+p_0],Y
+	rep	#$20
+	longa	on
+	inc	<L105+n_1
+L10081:
+	sec
+	lda	<L105+length_1
+	sbc	<L105+n_1
+	bvs	L108
+	eor	#$8000
+L108:
+	bmi	L10080
+	bra	L10076
+L10082:
+	stz	<L105+length_1
+	stz	<L105+n_1
+	bra	L10086
+L10085:
+	lda	<L105+n_1
+	asl	A
+	asl	A
+	asl	A
+	pha
+	pei	<L105+stream_1+2
+	pei	<L105+stream_1
+	jsl	~~read
+	plx
+	xref	~~~asl
+	jsl	~~~asl
+	clc
+	adc	<L105+length_1
+	sta	<L105+length_1
+	inc	<L105+n_1
+L10086:
+	lda	<L105+n_1
+	cmp	#<$2
+	bcc	L10085
+	stz	<L105+n_1
+	bra	L10090
+L10089:
+	pei	<L105+stream_1+2
+	pei	<L105+stream_1
+	jsl	~~read
+	sep	#$20
+	longa	off
+	ldy	<L105+n_1
+	sta	[<L104+p_0],Y
+	rep	#$20
+	longa	on
+	inc	<L105+n_1
+L10090:
+	sec
+	lda	<L105+n_1
+	sbc	<L105+length_1
+	bvs	L111
+	eor	#$8000
+L111:
+	bmi	L10076
+	bra	L10089
+L10091:
+	pea	#<$40
+	pea	#4
+	jsl	~~error
+L10076:
+	lda	<L105+length_1
+	tay
+	lda	<L104+2
+	sta	<L104+2+6
+	lda	<L104+1
+	sta	<L104+1+6
+	pld
+	tsc
+	clc
+	adc	#L104+6
+	tcs
+	tya
+	rtl
+L104	equ	18
+L105	equ	9
+	ends
+	efunc
+	code
+	func
+~~write:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L114
+	tcs
+	phd
+	tcd
+stream_0	set	4
+value_0	set	8
+result_1	set	0
+	pei	<L114+stream_0+2
+	pei	<L114+stream_0
+	pei	<L114+value_0
+	jsl	~~fputc
+	sta	<L115+result_1
+	cmp	#<$ffffffff
+	bne	L117
+	pea	#<$73
+	pea	#4
+	jsl	~~error
+L117:
+	lda	<L114+2
+	sta	<L114+2+6
+	lda	<L114+1
+	sta	<L114+1+6
+	pld
+	tsc
+	clc
+	adc	#L114+6
+	tcs
+	rtl
+L114	equ	2
+L115	equ	1
+	ends
+	efunc
+	code
+	xdef	~~fileio_bput
+	func
+~~fileio_bput:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L118
+	tcs
+	phd
+	tcd
+handle_0	set	4
+value_0	set	6
+result_1	set	0
+	pei	<L118+handle_0
+	jsl	~~map_handle
+	sta	<L118+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L118+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$1
+	bne	L10093
+	pea	#<$71
+	pea	#4
+	jsl	~~error
+L10093:
+	lda	<L118+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L118+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L118+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L118+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	pei	<L118+value_0
+	jsl	~~fputc
+	sta	<L119+result_1
+	cmp	#<$ffffffff
+	bne	L10094
+	pea	#<$73
+	pea	#4
+	jsl	~~error
+L10094:
+	lda	<L118+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L118+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L118+2
+	sta	<L118+2+4
+	lda	<L118+1
+	sta	<L118+1+4
+	pld
+	tsc
+	clc
+	adc	#L118+4
+	tcs
+	rtl
+L118	equ	10
+L119	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_bputstr
+	func
+~~fileio_bputstr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L123
+	tcs
+	phd
+	tcd
+handle_0	set	4
+string_0	set	6
+length_0	set	10
+result_1	set	0
+	pei	<L123+handle_0
+	jsl	~~map_handle
+	sta	<L123+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L123+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$1
+	bne	L10095
+	pea	#<$71
+	pea	#4
+	jsl	~~error
+L10095:
+	lda	<L123+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L123+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L123+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L123+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	dey
+	dey
+	lda	<L123+length_0
+	bpl	L126
+	dey
+L126:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pea	#^$1
+	pea	#<$1
+	pei	<L123+string_0+2
+	pei	<L123+string_0
+	jsl	~~fwrite
+	sta	<L124+result_1
+	cmp	<L123+length_0
+	beq	L10096
+	pea	#<$73
+	pea	#4
+	jsl	~~error
+L10096:
+	lda	<L123+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L123+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L123+2
+	sta	<L123+2+8
+	lda	<L123+1
+	sta	<L123+1+8
+	pld
+	tsc
+	clc
+	adc	#L123+8
+	tcs
+	rtl
+L123	equ	10
+L124	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_printint
+	func
+~~fileio_printint:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L129
+	tcs
+	phd
+	tcd
+handle_0	set	4
+value_0	set	6
+stream_1	set	0
+n_1	set	4
+	pei	<L129+handle_0
+	jsl	~~map_handle
+	sta	<L129+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L129+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$1
+	bne	L10097
+	pea	#<$71
+	pea	#4
+	jsl	~~error
+L10097:
+	lda	<L129+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L129+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L129+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L129+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L130+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L130+stream_1+2
+	pea	#<$40
+	pei	<L130+stream_1+2
+	pei	<L130+stream_1
+	jsl	~~write
+	lda	#$18
+	sta	<L130+n_1
+L10100:
+	lda	<L129+value_0
+	ldx	<L130+n_1
+	xref	~~~asr
+	jsl	~~~asr
+	pha
+	pei	<L130+stream_1+2
+	pei	<L130+stream_1
+	jsl	~~write
+	lda	#$fff8
+	clc
+	adc	<L130+n_1
+	sta	<L130+n_1
+	lda	<L130+n_1
+	bpl	L10100
+	lda	<L129+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L129+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L129+2
+	sta	<L129+2+4
+	lda	<L129+1
+	sta	<L129+1+4
+	pld
+	tsc
+	clc
+	adc	#L129+4
+	tcs
+	rtl
+L129	equ	14
+L130	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_printfloat
+	func
+~~fileio_printfloat:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L134
+	tcs
+	phd
+	tcd
+handle_0	set	4
+value_0	set	6
+stream_1	set	0
+n_1	set	4
+temp_1	set	6
+	pei	<L134+handle_0
+	jsl	~~map_handle
+	sta	<L134+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L134+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$1
+	bne	L10101
+	pea	#<$71
+	pea	#4
+	jsl	~~error
+L10101:
+	lda	<L134+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L134+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L134+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L134+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L135+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L135+stream_1+2
+	pea	#<$88
+	pei	<L135+stream_1+2
+	pei	<L135+stream_1
+	jsl	~~write
+	pea	#^$4
+	pea	#<$4
+	pea	#0
+	clc
+	tdc
+	adc	#<L134+value_0
+	pha
+	pea	#0
+	clc
+	tdc
+	adc	#<L135+temp_1
+	pha
+	jsl	~~memmove
+	lda	|~~double_type
+	xref	~~~fsw
+	jsl	~~~fsw
+	dw	0
+	dw	4
+	dw	L10103-1
+	dw	L10104-1
+	dw	L10109-1
+	dw	L10114-1
+	dw	L10119-1
+L10104:
+	stz	<L135+n_1
+	bra	L10108
+L10107:
+	ldx	<L135+n_1
+	lda	<L135+temp_1,X
+	and	#$ff
+	pha
+	pei	<L135+stream_1+2
+	pei	<L135+stream_1
+	jsl	~~write
+	inc	<L135+n_1
+L10108:
+	lda	<L135+n_1
+	cmp	#<$4
+	bcc	L10107
+	bra	L10103
+L10109:
+	stz	<L135+n_1
+	bra	L10113
+L10112:
+	lda	<L135+n_1
+	eor	#<$4
+	tax
+	lda	<L135+temp_1,X
+	and	#$ff
+	pha
+	pei	<L135+stream_1+2
+	pei	<L135+stream_1
+	jsl	~~write
+	inc	<L135+n_1
+L10113:
+	lda	<L135+n_1
+	cmp	#<$4
+	bcc	L10112
+	bra	L10103
+L10114:
+	stz	<L135+n_1
+	bra	L10118
+L10117:
+	lda	<L135+n_1
+	eor	#<$3
+	tax
+	lda	<L135+temp_1,X
+	and	#$ff
+	pha
+	pei	<L135+stream_1+2
+	pei	<L135+stream_1
+	jsl	~~write
+	inc	<L135+n_1
+L10118:
+	lda	<L135+n_1
+	cmp	#<$4
+	bcc	L10117
+	bra	L10103
+L10119:
+	stz	<L135+n_1
+	bra	L10123
+L10122:
+	lda	<L135+n_1
+	eor	#<$7
+	tax
+	lda	<L135+temp_1,X
+	and	#$ff
+	pha
+	pei	<L135+stream_1+2
+	pei	<L135+stream_1
+	jsl	~~write
+	inc	<L135+n_1
+L10123:
+	lda	<L135+n_1
+	cmp	#<$4
+	bcc	L10122
+L10103:
+	lda	<L134+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L134+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L134+2
+	sta	<L134+2+6
+	lda	<L134+1
+	sta	<L134+1+6
+	pld
+	tsc
+	clc
+	adc	#L134+6
+	tcs
+	rtl
+L134	equ	18
+L135	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_printstring
+	func
+~~fileio_printstring:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L142
+	tcs
+	phd
+	tcd
+handle_0	set	4
+string_0	set	6
+length_0	set	10
+stream_1	set	0
+n_1	set	4
+temp_1	set	6
+result_1	set	8
+	pei	<L142+handle_0
+	jsl	~~map_handle
+	sta	<L142+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L142+handle_0
+	tax
+	lda	|~~fileinfo+4,X
+	cmp	#<$1
+	bne	L10124
+	pea	#<$71
+	pea	#4
+	jsl	~~error
+L10124:
+	lda	<L142+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L142+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L142+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L142+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L143+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L143+stream_1+2
+	sec
+	lda	<L142+length_0
+	sbc	#<$100
+	bvs	L145
+	eor	#$8000
+L145:
+	bmi	L10125
+	pea	#<$0
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	jsl	~~write
+	pei	<L142+length_0
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	jsl	~~write
+	sec
+	lda	#$0
+	sbc	<L142+length_0
+	bvs	L147
+	eor	#$8000
+L147:
+	bpl	*+5
+	brl	L10131
+	lda	#$ffff
+	clc
+	adc	<L142+length_0
+	sta	<L143+n_1
+	bra	L10130
+L10129:
+	ldy	<L143+n_1
+	lda	[<L142+string_0],Y
+	and	#$ff
+	pha
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	jsl	~~write
+	dec	<L143+n_1
+L10130:
+	lda	<L143+n_1
+	bpl	L10129
+	bra	L10131
+L10125:
+	pea	#<$1
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	jsl	~~write
+	lda	<L142+length_0
+	sta	<L143+temp_1
+	stz	<L143+n_1
+	bra	L10135
+L10134:
+	lda	<L143+temp_1
+	and	#<$ff
+	pha
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	jsl	~~write
+	lda	<L143+temp_1
+	ldx	#<$8
+	xref	~~~asr
+	jsl	~~~asr
+	sta	<L143+temp_1
+	inc	<L143+n_1
+L10135:
+	lda	<L143+n_1
+	cmp	#<$2
+	bcc	L10134
+	pei	<L143+stream_1+2
+	pei	<L143+stream_1
+	ldy	#$0
+	lda	<L142+length_0
+	bpl	L151
+	dey
+L151:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	pea	#^$1
+	pea	#<$1
+	pei	<L142+string_0+2
+	pei	<L142+string_0
+	jsl	~~fwrite
+	sta	<L143+result_1
+	cmp	<L142+length_0
+	beq	L10131
+	pea	#<$73
+	pea	#4
+	jsl	~~error
+L10131:
+	lda	<L142+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L142+handle_0
+	tax
+	sep	#$20
+	longa	off
+	lda	#$1
+	sta	|~~fileinfo+8,X
+	rep	#$20
+	longa	on
+	lda	<L142+2
+	sta	<L142+2+8
+	lda	<L142+1
+	sta	<L142+1+8
+	pld
+	tsc
+	clc
+	adc	#L142+8
+	tcs
+	rtl
+L142	equ	18
+L143	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_setptr
+	func
+~~fileio_setptr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L154
+	tcs
+	phd
+	tcd
+handle_0	set	4
+newoffset_0	set	6
+result_1	set	0
+	pei	<L154+handle_0
+	jsl	~~map_handle
+	sta	<L154+handle_0
+	pea	#<$0
+	ldy	#$0
+	lda	<L154+newoffset_0
+	bpl	L156
+	dey
+L156:
+	sta	<R0
+	sty	<R0+2
+	pei	<R0+2
+	pei	<R0
+	lda	<L154+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L154+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R2
+	ldy	#$2
+	lda	(<R2),Y
+	pha
+	lda	(<R2)
+	pha
+	jsl	~~fseek
+	sta	<L155+result_1
+	cmp	#<$ffffffff
+	bne	L10137
+	pea	#<$7d
+	pea	#4
+	jsl	~~error
+L10137:
+	lda	<L154+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L154+handle_0
+	tax
+	lda	#$0
+	sta	|~~fileinfo+6,X
+	lda	<L154+2
+	sta	<L154+2+4
+	lda	<L154+1
+	sta	<L154+1+4
+	pld
+	tsc
+	clc
+	adc	#L154+4
+	tcs
+	rtl
+L154	equ	14
+L155	equ	13
+	ends
+	efunc
+	code
+	xdef	~~fileio_getptr
+	func
+~~fileio_getptr:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L159
+	tcs
+	phd
+	tcd
+handle_0	set	4
+result_1	set	0
+	pei	<L159+handle_0
+	jsl	~~map_handle
+	sta	<L159+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L159+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	ldy	#$2
+	lda	(<R1),Y
+	pha
+	lda	(<R1)
+	pha
+	jsl	~~ftell
+	sta	<L160+result_1
+	cmp	#<$ffffffff
+	bne	L10138
+	pea	#<$7e
+	pea	#4
+	jsl	~~error
+L10138:
+	lda	<L160+result_1
+	tay
+	lda	<L159+2
+	sta	<L159+2+2
+	lda	<L159+1
+	sta	<L159+1+2
+	pld
+	tsc
+	clc
+	adc	#L159+2
+	tcs
+	tya
+	rtl
+L159	equ	10
+L160	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_getext
+	func
+~~fileio_getext:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L163
+	tcs
+	phd
+	tcd
+handle_0	set	4
+position_1	set	0
+length_1	set	4
+stream_1	set	8
+	pei	<L163+handle_0
+	jsl	~~map_handle
+	sta	<L163+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L163+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L164+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L164+stream_1+2
+	pha
+	pei	<L164+stream_1
+	jsl	~~ftell
+	sta	<L164+position_1
+	stx	<L164+position_1+2
+	cmp	#<$ffffffff
+	bne	L165
+	lda	<L164+position_1+2
+	cmp	#^$ffffffff
+L165:
+	bne	L10139
+	pea	#<$7f
+	pea	#4
+	jsl	~~error
+L10139:
+	pea	#<$2
+	pea	#^$0
+	pea	#<$0
+	pei	<L164+stream_1+2
+	pei	<L164+stream_1
+	jsl	~~fseek
+	pei	<L164+stream_1+2
+	pei	<L164+stream_1
+	jsl	~~ftell
+	sta	<L164+length_1
+	stx	<L164+length_1+2
+	pea	#<$0
+	pei	<L164+position_1+2
+	pei	<L164+position_1
+	pei	<L164+stream_1+2
+	pei	<L164+stream_1
+	jsl	~~fseek
+	lda	<L164+length_1
+	tay
+	lda	<L163+2
+	sta	<L163+2+2
+	lda	<L163+1
+	sta	<L163+1+2
+	pld
+	tsc
+	clc
+	adc	#L163+2
+	tcs
+	tya
+	rtl
+L163	equ	20
+L164	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_setext
+	func
+~~fileio_setext:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L168
+	tcs
+	phd
+	tcd
+handle_0	set	4
+newsize_0	set	6
+	pei	<L168+handle_0
+	jsl	~~map_handle
+	sta	<L168+handle_0
+	pea	#<$1
+	pea	#4
+	jsl	~~error
+	lda	<L168+2
+	sta	<L168+2+4
+	lda	<L168+1
+	sta	<L168+1+4
+	pld
+	tsc
+	clc
+	adc	#L168+4
+	tcs
+	rtl
+L168	equ	0
+L169	equ	1
+	ends
+	efunc
+	code
+	xdef	~~fileio_eof
+	func
+~~fileio_eof:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L171
+	tcs
+	phd
+	tcd
+handle_0	set	4
+position_1	set	0
+stream_1	set	4
+ateof_1	set	8
+	pei	<L171+handle_0
+	jsl	~~map_handle
+	sta	<L171+handle_0
+	asl	A
+	asl	A
+	asl	A
+	adc	<L171+handle_0
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	(<R1)
+	sta	<L172+stream_1
+	ldy	#$2
+	lda	(<R1),Y
+	sta	<L172+stream_1+2
+	pha
+	pei	<L172+stream_1
+	jsl	~~ftell
+	sta	<L172+position_1
+	stx	<L172+position_1+2
+	cmp	#<$ffffffff
+	bne	L173
+	lda	<L172+position_1+2
+	cmp	#^$ffffffff
+L173:
+	bne	L10140
+	pei	<L172+stream_1+2
+	pei	<L172+stream_1
+	jsl	~~feof
+	tax
+	beq	L175
+	lda	#$1
+	bra	L178
+L175:
+	lda	#$0
+L178:
+	tay
+	lda	<L171+2
+	sta	<L171+2+2
+	lda	<L171+1
+	sta	<L171+1+2
+	pld
+	tsc
+	clc
+	adc	#L171+2
+	tcs
+	tya
+	rtl
+L10140:
+	pea	#<$2
+	pea	#^$0
+	pea	#<$0
+	pei	<L172+stream_1+2
+	pei	<L172+stream_1
+	jsl	~~fseek
+	stz	<R0
+	pei	<L172+stream_1+2
+	pei	<L172+stream_1
+	jsl	~~ftell
+	stx	<R1+2
+	cmp	<L172+position_1
+	bne	L180
+	lda	<R1+2
+	cmp	<L172+position_1+2
+L180:
+	bne	L179
+	inc	<R0
+L179:
+	sep	#$20
+	longa	off
+	lda	<R0
+	sta	<L172+ateof_1
+	rep	#$20
+	longa	on
+	pea	#<$0
+	pei	<L172+position_1+2
+	pei	<L172+position_1
+	pei	<L172+stream_1+2
+	pei	<L172+stream_1
+	jsl	~~fseek
+	lda	<L172+ateof_1
+	and	#$ff
+	bra	L178
+L171	equ	17
+L172	equ	9
+	ends
+	efunc
+	code
+	xdef	~~fileio_shutdown
+	func
+~~fileio_shutdown:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L182
+	tcs
+	phd
+	tcd
+n_1	set	0
+count_1	set	2
+	stz	<L183+count_1
+	stz	<L183+n_1
+L10143:
+	lda	<L183+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L183+n_1
+	tax
+	lda	|~~fileinfo+4,X
+	beq	L10141
+	pei	<L183+n_1
+	jsl	~~close_file
+	inc	<L183+count_1
+L10141:
+	inc	<L183+n_1
+	sec
+	lda	<L183+n_1
+	sbc	#<$19
+	bvs	L185
+	eor	#$8000
+L185:
+	bpl	L10143
+	lda	<L183+count_1
+	cmp	#<$1
+	bne	L10145
+	pea	#<$8c
+	pea	#4
+	bra	L20002
+L10145:
+	sec
+	lda	#$1
+	sbc	<L183+count_1
+	bvs	L188
+	eor	#$8000
+L188:
+	bmi	L190
+	pei	<L183+count_1
+	pea	#<$8d
+	pea	#6
+L20002:
+	jsl	~~error
+L190:
+	pld
+	tsc
+	clc
+	adc	#L182
+	tcs
+	rtl
+L182	equ	8
+L183	equ	5
+	ends
+	efunc
+	code
+	func
+~~find_floatformat:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L191
+	tcs
+	phd
+	tcd
+value_1	set	0
+	lda	#$0
+	sta	<L192+value_1
+	lda	#$3f80
+	sta	<L192+value_1+2
+	sep	#$20
+	longa	off
+	lda	<L192+value_1+3
+	cmp	#<$3f
+	rep	#$20
+	longa	on
+	bne	L10148
+	stz	|~~double_type
+	bra	L197
+L10148:
+	sep	#$20
+	longa	off
+	lda	<L192+value_1+7
+	cmp	#<$3f
+	rep	#$20
+	longa	on
+	bne	L10150
+	lda	#$1
+	bra	L20003
+L20005:
+	lda	#$2
+	bra	L20003
+L20007:
+	lda	#$3
+L20003:
+	sta	|~~double_type
+	bra	L197
+L10150:
+	sep	#$20
+	longa	off
+	lda	<L192+value_1
+	cmp	#<$3f
+	rep	#$20
+	longa	on
+	beq	L20005
+	sep	#$20
+	longa	off
+	lda	<L192+value_1+4
+	cmp	#<$3f
+	rep	#$20
+	longa	on
+	beq	L20007
+	lda	#$1
+	sta	|~~double_type
+	pea	#<$91
+	pea	#4
+	jsl	~~error
+L197:
+	pld
+	tsc
+	clc
+	adc	#L191
+	tcs
+	rtl
+L191	equ	4
+L192	equ	1
+	ends
+	efunc
+	code
+	xdef	~~init_fileio
+	func
+~~init_fileio:
+	longa	on
+	longi	on
+	tsc
+	sec
+	sbc	#L198
+	tcs
+	phd
+	tcd
+n_1	set	0
+	stz	<L199+n_1
+L10158:
+	lda	<L199+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L199+n_1
+	clc
+	adc	#<~~fileinfo
+	sta	<R1
+	lda	#$0
+	sta	(<R1)
+	ldy	#$2
+	sta	(<R1),Y
+	lda	<L199+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L199+n_1
+	tax
+	lda	#$0
+	sta	|~~fileinfo+4,X
+	lda	<L199+n_1
+	asl	A
+	asl	A
+	asl	A
+	adc	<L199+n_1
+	tax
+	tya
+	sta	|~~fileinfo+6,X
+	inc	<L199+n_1
+	sec
+	lda	<L199+n_1
+	sbc	#<$19
+	bvs	L200
+	eor	#$8000
+L200:
+	bpl	L10158
+	jsl	~~find_floatformat
+	pld
+	tsc
+	clc
+	adc	#L198
+	tcs
+	rtl
+L198	equ	10
+L199	equ	9
+	ends
+	efunc
+	xref	~~error
+	xref	~~pow
+	xref	~~strpbrk
+	xref	~~strlen
+	xref	~~memmove
+	xref	~~feof
+	xref	~~fclose
+	xref	~~fflush
+	xref	~~fwrite
+	xref	~~ftell
+	xref	~~fseek
+	xref	~~fputc
+	xref	~~fgets
+	xref	~~fgetc
+	xref	~~fopen
+	udata
+~~fileinfo
+	ds	225
+	ends
+	udata
+	xdef	~~double_type
+~~double_type
+	ds	2
+	ends

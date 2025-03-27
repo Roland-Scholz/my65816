@@ -1,0 +1,1424 @@
+		.include "homebrew.inc"
+;		.include "myos.inc"
+		
+		.org $0A00
+		.a8
+		.i8
+		.smart
+
+DPAGE		=	$3333
+L19		=	0
+xp_1		=	$1
+plte_1		=	$3
+palette_1	=	$7
+R0		=	$11
+R1		=	$15
+
+		stz	mstate
+		
+mouseloop:	
+		stz	lbutton
+		stz	rbutton
+		
+		jsr	mousein
+		bit	#$40		;this bit must be one
+		beq	mouseloop
+		tay
+		
+		jsr	mousein
+		and	#$7f
+		sta	dx
+		jsr	mousein
+		and	#$7f
+		sta	dy
+
+		tya
+		asl
+		asl
+		asl
+		rol	lbutton
+		asl
+		rol	rbutton
+	
+		tay
+		and	#%11000000
+		ora	dy
+		sta	dy
+		
+		clc
+		
+		
+		
+		tya
+		asl
+		asl
+		ora	dx
+		sta	dx
+
+		lda	lbutton
+		jsr	jprinthex
+		jsr	jspace
+		lda	rbutton
+		jsr	jprinthex
+		jsr	jspace
+		lda	dx
+		jsr	jprinthex
+		jsr	jspace
+		lda	dy
+		jsr	jprinthex
+		jsr	jspace
+		
+		jsr	jnewline
+		bra	mouseloop
+		
+mousein:	lda	LSR1
+		and	#1
+		beq	mousein
+		lda	RBR1
+		rts
+
+dx:		.byte 0
+dy:		.byte 0
+lbutton:	.byte 0
+rbutton:	.byte 0
+mstate:		.byte 0
+
+xpos		.byte 0
+ypos		.byte 0
+
+
+
+
+		sei
+;		wdm 7
+		pea	DPAGE
+		pld
+		
+		rep	#M
+		.A16
+;				for(x = 0, xp = 0; x < y; x++, xp++) {
+		stz	<L19+xp_1
+L10030:	
+;					palette[xp] = *plte >> 5;
+		lda	#data
+		sta	L19+plte_1
+		lda	#0
+		sta	L19+plte_1+2
+		
+		lda	#$FC00
+		sta	palette_1
+		lda	#$00FF
+		sta	palette_1+2
+		
+		sep	#$20
+		.A8
+		lda	[<L19+plte_1]
+		lsr	A
+		lsr	A
+		lsr	A
+		lsr	A
+		lsr	A
+		ldy	<L19+xp_1
+		sta	[<L19+palette_1],Y
+		rep	#$20
+		.A16
+;					plte++;
+		inc	<L19+plte_1
+		bne	L33
+		inc	<L19+plte_1+2
+L33:	
+;					palette[xp] |= ((*plte >> 2) & 0x38);
+		lda	<L19+xp_1
+		sta	<R0
+		stz	<R0+2
+		lda	<L19+palette_1
+		clc
+		adc	<R0
+		sta	<R1
+		lda	<L19+palette_1+2
+		adc	<R0+2
+		sta	<R1+2
+		sep	#$20
+		.A8
+		lda	[<L19+plte_1]
+		lsr	A
+		lsr	A
+		and	#<$38
+		ora	[<R1]
+		sta	[<R1]
+		
+		pea	0
+		pld
+		rtl
+		
+data:		.byte	128, 8, 16, 32
+
+		
+		pea	$2
+		pld
+		
+		lda	#$CA
+		sta	$02CAFE
+	
+		lda	#$FE
+		sta	$60-2
+		lda	#$CA
+		sta	$61-2
+		lda	#$02
+		sta	$62-2
+		sta	$64-2
+		stz	$64-2
+		inc	$64-2
+		inc	$64-2
+		
+		lda	#$AC
+		ldy	#2
+		sta	[$60-2],y
+		
+		rep	#M
+		clc
+		lda	$60-2
+		adc	$64-2
+		sta	$60-2
+		lda	$62-2
+		adc	#0
+		sta	$62-2
+		sep	#M
+		
+		pea 	0
+		pld
+		lda	$62
+		jsr	jprinthex
+		lda	$61
+		jsr	jprinthex
+		lda	$60
+		jsr	jprinthex
+		
+;		sei
+		
+		pea	$2
+		pld
+		lda	#0
+		ldy	#0
+		lda	#$11
+		ora	[$5E]
+		pea	$0
+		pld		
+		jsr	jprinthex
+		lda	[$60],y
+		jsr	jprinthex
+		lda	[$60]
+		jsr	jprinthex
+		pea	$0
+		pld
+;		cli
+		rtl
+		
+		wdm	7
+		lda	#$6B
+		sta	$010000
+		JSL	$010000
+		WDM	6
+		RTL
+		
+		lda	#<copproc	;register IRQ-procedure
+		sta	COPVEC
+		lda	#>copproc	;register IRQ-procedure
+		sta	COPVEC+1
+		sei
+		wdm	7
+		lda	#$CA
+		xba
+		lda	#$FE
+		rep	#M+IX
+		tax
+		tay
+		sep	#M+IX
+		wdm	6
+		cli
+		
+		pha
+		lda	#$AA
+		sta	1,s
+		
+		tsc
+		phd
+		tcd
+		lda	$1
+		pld
+		plx
+		jsr	jprinthex
+		cli
+		rtl
+		
+
+
+
+;STACK: DIRECT L 	1	$1f0
+;	DIRECT H	2	$1f1
+;	DATA BANK	3
+;	Y L		4
+;	Y H		5
+;	X L		6
+;	X H		7
+;	A L		8
+;	A H		9
+;	PREGS		10	pushed by BRK intruction
+;	PC L		11	pushed by BRK intruction
+;	PC H		12	pushed by BRK intruction
+;	PROGRAM BANK	13	pushed by BRK intruction
+;	RETURN-1 L 	14	e.g. pushed by JSR
+;	RETURN-H H 	15		
+
+copproc:
+		rep	#M+IX
+		pha
+		phx
+		phy
+		phb
+		phd
+						
+		pea	0
+		pld
+		phk
+		plb		
+
+		sep	#M
+		stz	DEVICNO
+		
+		lda	#'A'
+		jsr	printChar
+		lda	9,s
+		jsr	jprinthex
+		lda	8,s
+		jsr	jprinthex
+
+		lda	#'X'
+		jsr	printChar
+		lda	7,s
+		jsr	jprinthex
+		lda	6,s
+		jsr	jprinthex
+		
+		lda	#'Y'
+		jsr	printChar
+		lda	5,s
+		jsr	jprinthex
+		lda	4,s
+		jsr	jprinthex
+		
+		lda	#'S'
+		jsr	printChar
+		lda	#'='
+		rep	#M
+		tsc
+		clc
+		adc	#13
+		sep	#M
+		xba
+		jsr	jprinthex
+		xba
+		jsr	jprinthex
+
+		lda	#'D'
+		jsr	printChar
+		lda	2,s
+		jsr	jprinthex
+		lda	1,s
+		jsr	jprinthex
+		
+		lda	#'B'
+		jsr	printChar
+		lda	3,s
+		jsr	jprinthex
+		
+		lda	#'P'
+		jsr	printChar
+		lda	10,s
+		jsr	jprinthex
+		
+		jsr	jspace
+		lda	13,s
+		jsr	jprinthex
+		lda	#'/'
+		jsr	jchrout
+		lda	12,s
+		jsr	jprinthex
+		lda	11,s
+		jsr	jprinthex
+
+		jsr	jspace
+				
+		ldy	#0
+		lda	13,s
+		pha
+		plb
+		lda	(11,s),y
+
+		jsr	jprinthex
+		
+		jsr	jnewline
+
+		inc	DEVICNO
+		rep	#M+IX
+		pld
+		plb
+		ply
+		plx
+		pla
+		rti
+
+printChar:	.A8
+		jsr	jspace
+		jsr	jchrout
+		lda	#'='
+		jmp	jchrout
+	
+	.IF 0=1
+		
+test_nop:
+		lda #$ff
+		nop
+		nop
+		wdm 1
+		rtl
+		
+test_v16:
+		clc
+		rep 	#M
+		lda	#$8000
+		adc	#$1
+		php
+test_v16a:	xba
+		sep	#M
+		jsr	jprinthex
+		xba
+		jsr	jprinthex
+		pla
+		and	#$40
+		jsr	jprinthex
+		
+		rtl
+		
+test_pei:	rep	#M
+		lda	#$CAFE
+		sta	$80
+		pei	($80)
+		pla
+		sep	#M
+		xba
+		jsr	jprinthex
+		xba
+		jsr	jprinthex
+		rtl
+		
+		lda	#$03
+sbc_loop:
+		sec
+		sbc	#$01
+		pha
+		php
+		jsr	jprinthex
+		pla
+		and	#1
+		jsr	jprinthex
+		jsr	jnewline
+		pla
+		cmp	#$fe
+		bne	sbc_loop
+		jsr	jnewline	
+;		jsr	jchrin
+
+		
+		ldx 	#15
+		stz	bin
+		lda	#$10
+		sta	bin+1
+		stz	bcd
+		stz	bcd+1
+dec_loop:	
+		sed	
+		asl 	bin
+		rol 	bin+1
+			
+		lda 	bcd
+		adc 	bcd
+		sta 	bcd
+		lda 	bcd+1
+		adc 	bcd+1
+		sta 	bcd+1
+		
+		cld
+
+		lda bcd+1
+		jsr jprinthex
+		lda bcd
+		jsr jprinthex
+		jsr jnewline
+
+		dex
+		bpl dec_loop
+
+		cld		
+		jsr jnewline
+;		jsr	jchrin
+
+		
+		rep #M
+		sed
+		lda #1234
+		sta bin
+		stz bcd
+		
+		ldx #15
+dec_loop_16:
+		asl bin
+		php
+		php
+		sep #M
+		cld
+		pla
+		and #1
+		jsr jprinthex
+		rep #M
+		plp
+		
+		
+		lda bcd
+		adc bcd
+		sta bcd
+		php
+		
+		sep #M
+		cld
+		lda bcd+1
+		jsr jprinthex
+		lda bcd
+		jsr jprinthex
+		pla
+		and #1
+		jsr jprinthex		
+		jsr jnewline
+		rep #M
+		sed
+		
+		dex
+		bpl dec_loop_16
+
+		cld
+		sep #M
+		jsr jnewline
+;		jsr	jchrin
+		
+addbcd16:	
+		rep #M
+		lda #$0002
+		sta bin
+
+addbcd16a:		
+		rep #M
+		sed
+		sec
+		lda bin
+		sbc #1
+		sta bin
+		php
+		cmp #$9995
+		beq addbcd16end
+		
+		cld
+		sep #M
+		xba
+		jsr jprinthex
+		xba
+		jsr jprinthex
+		pla
+		and #1
+		jsr jprinthex
+		jsr jnewline
+		bra addbcd16a
+
+addbcd16end:	
+		cld
+		sep #M
+		pla
+		rtl
+		
+
+
+
+bin:		.byte 0, 0
+bcd:		.byte 0, 0
+
+test_implied:
+	tsc
+	jsr	printWord
+	
+	ldx	#0
+	sec
+	sei
+	cld
+	clv
+	lda 	#0	;NVMXDIZC
+	php		;00110111
+	pla
+	cmp	#$37
+	beq	test_implied_1
+	brk
+test_implied_1:
+	tsc
+	jsr	printWord
+	
+	lda	#$CA
+	pha
+	plb
+	phb
+	tsc
+	jsr	printWord
+	
+	pla
+	cmp	#$CA
+	beq	test_implied_2
+	brk
+test_implied_2:
+	tsc
+	jsr	printWord
+	jsr	jnewline
+	phk
+	plb
+	
+	
+test_immediate:
+	inx
+	sec
+	lda	#0
+	sbc	#1
+	bcc	test_immediate_1
+	brk
+test_immediate_1:
+	cmp 	#$ff
+	beq	test_immediate_2
+	brk
+test_immediate_2:
+	tsc
+	jsr	printWord
+	pea	$CAFE
+	tsc
+	jsr	printWord
+	rep	#M
+	pla
+	cmp	#$CAFE
+	sep	#M
+	beq	test_immediate_3
+	brk
+test_immediate_3:
+	tsc
+	jsr	printWord
+	jsr	jnewline
+	
+test_branch:
+	clc
+	bcc	test_branch_1
+	lda	#2
+	jsr	jprinthex
+	jsr	jnewline
+	bra	test_rti
+test_branch_1:
+	lda	#1
+	jsr	jprinthex
+	sec
+	bcs	test_branch+1
+	brk
+	
+test_rti:
+	lda	#0
+	pha
+	lda	#>test_rti_1
+	pha
+	lda	#<test_rti_1
+	pha
+	lda	#$37
+	pha
+	rti
+	brk
+test_rti_1:
+	php
+	;brk
+	pla
+	jsr	jprinthex
+	jsr	jnewline
+	rtl
+
+
+printWord:
+	xba
+	jsr	jprinthex
+	xba
+	jsr	jprinthex
+	jmp	jspace
+;CLC
+;SEC
+;CLI
+;SEI
+;CLV
+;CLD
+;SED
+;PHP	NVMXDIZC	
+;ASL
+;PHD
+;INC
+;TCS
+;PLP
+;ROL
+;PLD
+;DEC
+;TSC
+;RTI
+;PHA
+;LSR
+;PHK
+;PHY
+;TCD
+;RTS
+;PLA
+;ROR
+;RTL
+;PLY
+;TDC
+;DEY
+;TXA
+;PHB
+;TYA
+;TXS
+;TXY
+;TAY
+;TAX
+;PLB
+;TSX
+;TYX
+;INY
+;DEX
+;WAI
+;PHX
+;STP
+;INX
+;NOP
+;XBA
+;PLX
+;XCE
+
+
+loop:		
+		sei
+		lda	#<irqproc	;register IRQ-procedure
+		sta	IRQVEC
+		lda	#>irqproc	;register IRQ-procedure
+		sta	IRQVEC+1
+		lda	#1
+		sta	TIMERST
+		stz 	skipone
+		stz 	extended
+		stz	ALTACT
+
+		inc	CLSFLG
+		inc	SHFLOK
+		
+		lda	#<200
+		sta	cnt
+		lda	#>200
+		sta	cnt+1
+		sta	WORDLO
+		sta	WORDHI
+		cli
+		bra	loop2
+		
+loop1:
+		lda	value
+		inc	value
+		sta	$010000
+		phb
+		rep	#M+IX
+		lda	#$FE
+		ldx	#$0
+		ldy	#$1
+		mvn	#$1,#$1
+		sep	#M+IX
+		plb
+;		lda	value
+;		jsr	jprinthex
+
+loop2:		
+		lda	IRQPS2S		;key available?
+;		bne	loop1		;Bit 0 = 0?, no =>
+		inc	IRQPS2S
+;		lda	IRQPS2D
+;		jsr	jchrout
+;		cmp	#'x'
+;		bne	loop1
+		rtl
+
+					;STACK: DIRECT L 	1	$1f0
+					;	DIRECT H	2	$1f1
+					;	DATA BANK	3
+					;	Y L		4
+					;	Y H		5
+					;	X L		6
+					;	X H		7
+					;	A L		8
+					;	A H		9
+					;	PREGS		10	pushed by BRK intruction
+					;	PC L		11	pushed by BRK intruction
+					;	PC H		12	pushed by BRK intruction
+					;	PROGRAM BANK	13	pushed by BRK intruction
+					;	RETURN-1 L 	14	e.g. pushed by JSR
+					;	RETURN-H H 	15		
+
+irqproc:
+		rep	#M+IX
+		pha
+		phx
+		phy
+		
+		phb
+;		phd
+						
+;		pea	0
+;		pld
+;		phk
+;		plb
+		
+		sep	#M+IX
+;		lda	#$CA
+;		pha
+		lda	TIMERST
+;		lda	#0
+;		sta	TIMERST
+		
+;		lda	PS2STATUS	;key available?
+;		bne	irqproc1	;Bit 0 = 0?, no =>
+;		jsr	KGBIRQ
+
+irqproc1:
+		rep	#M+IX
+
+		
+		lda	WORDLO
+		ina
+		sta	WORDLO
+		
+		dec	cnt
+		bne	irqex
+
+		lda	#200
+		sta	cnt
+		
+		sep	#M+IX	
+		lda	DOTS
+		ina
+		sta	DOTS
+;		lda	#'A'
+;		sta	THR0
+
+irqex:		
+		rep	#$30		;M=I=0=16bit
+
+;		pld
+
+;		sep	#M
+;		lda	#1
+;		sta	SOFTRESET
+;		rep	#M
+		
+		plb
+		
+;		sep	#M
+;		lda	#0
+;		sta	SOFTRESET
+;		rep	#M
+
+		ply
+		plx
+		pla
+		rti
+
+
+KGBIRQ:	
+		.A8
+		.I8
+
+;		tya
+;		pha
+		
+;		ldx	#40
+;KGB6:		dex		;wait some time for parity and stop bit to arrive
+;		bne	KGB6
+
+;		lda	skipone
+;		jsr	printhex
+;		lda	SHFLOK
+;		jsr	printhex
+;		lda	extended
+;		jsr	printhex
+;		lda	ALTACT
+;		jsr	printhex
+				
+		ldx	#0
+		lda	PS2DATA
+;		sta	PS2DATA		;reset PS2
+;		cmp	#$E1		;pause/break?
+;		bne	KGBIRQ1		;no
+;		
+;		tsx
+;		clc
+;		lda 	$105,X
+;		sta 	memptr
+;		adc	#2
+;		sta	$105,x
+;		lda 	$106,X
+;		sta	memptr+1
+;		adc	#0
+;		sta	$106,x
+;
+;		ldy	#0
+;		lda	(memptr),y
+;		sta	opcode
+;		jmp	BRKENTRY1
+		
+KGBIRQ1:	ldy	skipone
+		stx	SUPERF	;X = 0
+
+		cmp	#$E1	;Pause key?
+		bne  	KGB0
+;		jmp	reset
+		
+KGB0:		cmp	#$F0	;break scancode?
+		bne	KGB5	;no
+		sta	skipone	;skipone <> 0 denotes 
+		jmp	KGBEX	;ignore next key
+		
+KGB5:		cmp	#CLSHIFT	;process left-shift
+		beq	KGB9		;yes =>
+		cmp	#CRSHIFT	;process right-shift
+		bne	KGB8		;no =>		
+KGB9:		sty	SHFLOK		;Y=skipone, shift = 0 denotes shift pressed!
+
+KGB8:		cmp	#CLSTRG
+		bne	KGB2
+		sty	CLSFLG		;Y=skipone, CLSFLG = 0 denotes CLS pressed!
+
+KGB2:		cmp	#$e0		;extended scancode
+		bne	KGB7		;no =>
+		sta	extended
+		beq	KGBEX
+		
+KGB7:		ldy	skipone		;make-key?
+		beq	KGB3		;yes =>
+
+;		ldx #0			;hence break-key, clear break
+		stx	skipone		;X already 0
+		stx	extended
+		stx	ALTACT
+		bne	KGBEX		;read next key
+		
+KGB3:		cmp	#CCAPS		;CAPS-LOCK?
+		beq	KGBCAPS		;yes =>
+
+;
+; special keys have been processed, now tranform scancode into ASCII
+;
+		ldy	extended
+		bne	KGBEXTEND
+
+		ldy	SHFLOK		;shift = 0, upper case
+		beq	KGBUPPER
+		
+		ldy	ALTACT		;ALTGR active?
+		bne	KGBALTGR	;yes, handle ALTGR-keys
+		
+		tay			;read ASCII-char lower-case
+		lda	CHARTABLE_NOSHIFT,y
+KGB4:		beq	KGBEX		;if undefined, read next key
+		ldx	CLSFLG		;STRG-pressed?
+		bne	KGBKEYEX	;no, exit
+		sec
+		sbc 	#('a'-1)
+		bcs	KGBKEYEX
+		
+KGBUPPER:	tay			;read ASCII-char upper-case
+		lda	CHARTABLE_SHIFT,y
+		jmp	KGB4
+			
+KGBCAPS:	lda	SHFLOK		;shift = 0?
+		beq	KGBCAPS1
+		stx	SHFLOK		;X = 0
+		bne	KGBEX		;read next key
+		
+KGBCAPS1:	inc	SHFLOK		;shift := 1
+		bne	KGBEX		;read next key
+
+KGBEXTEND:	cmp	#ALTGR
+		bne	KGBEXTEND2
+		sta	ALTACT
+		stx	extended	;X = 0
+		beq	KGBEX
+KGBEXTEND2:	ldy	#(EXT_TABLE - EXT_TABLE_IND - 1)
+KGBEXTEND1:	cmp	EXT_TABLE_IND,y
+		beq	KGBEXTFND
+		dey
+		bpl	KGBEXTEND1
+		bmi	KGBEX
+		
+KGBEXTFND:	lda	EXT_TABLE,y
+		cmp	#CCHM		;cursor home?
+		bne	KGBEXTFND1	;no
+		ldx	CLSFLG		;STRG pressed?
+		bne	KGBEXTFND1	;no
+		lda	#CLS		;clear screen
+		bne	KGBKEYEX
+
+KGBEXTFND1:	ldx	EXT_TABLE_SUPERF,y
+		stx	SUPERF
+
+KGBKEYEX:	sta	IRQPS2D
+		lda	#0
+		sta	IRQPS2S
+KGBEX:		rts
+		
+KGBALTGR:	ldx	#(ALTGR_TABLE - ALTGR_TABLE_IND - 1)
+KGBALTGR1:	cmp	ALTGR_TABLE_IND,x
+		bne	KGBALTGR2
+		lda	ALTGR_TABLE,x
+		bne	KGBKEYEX	;never 0			
+KGBALTGR2:	dex
+		bpl	KGBALTGR1
+		bmi	KGBEX
+
+CHARTABLE_NOSHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,TABU, '^',   0	; 00
+		.byte     0,   0,   0,   0,   0, 'q', '1',   0,   0,   0, 'y', 's', 'a', 'w', '2',   0	; 10
+		.byte	  0, 'c', 'x', 'd', 'e', '4', '3',   0,   0, ' ', 'v', 'f', 't', 'r', '5',   0	; 20 
+		.byte	  0, 'n', 'b', 'h', 'g', 'z', '6',   0,   0,   0, 'm', 'j', 'u', '7', '8',   0	; 30 
+		.byte	  0, ',', 'k', 'i', 'o', '0', '9',   0,   0, '.', '-', 'l', $94, 'p', '\',   0	; 40 
+		.byte	  0,   0, $84,  'X',$81, '`',   0,   0,   0,   0, EOL, '+',   0, '#',   0,   0	; 50 
+		.byte	  0, '<',   0,   0,   0,   0,BACK,   0,   0, '1',   0, '4', '7',   0,   0,   0	; 60 
+		.byte	 '0', '.', '2', '5', '6', '8', 27,   0,  11, '+', '3', '-', '*', '9', CLS,   0	; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0	; 80
+
+CHARTABLE_SHIFT:
+;		 	 00   01   02   03   04   05   06   07   08   09   0A   0B   0C   0D   0E   0F 
+		.byte	  0,   9,   0,   5,   3,   1,   2,  12,   0,  10,   8,   6,   4,TABU, $F8,   0	; 00
+		.byte     0,   0,   0,   0,   0, 'Q', '!',   0,   0,   0, 'Y', 'S', 'A', 'W', '"',   0	; 10
+		.byte	  0, 'C', 'X', 'D', 'E', '$', $15,   0,   0, ' ', 'V', 'F', 'T', 'R', '%',   0	; 20 
+		.byte	  0, 'N', 'B', 'H', 'G', 'Z', '&',   0,   0,   0, 'M', 'J', 'U', '/', '(',   0	; 30 
+		.byte	  0, ';', 'K', 'I', 'O', '=', ')',   0,   0, ':', '_', 'L', $99, 'P', '?',   0	; 40 
+		.byte	  0,   0, $8E,   0, $9A, '?',   0,   0,   0,   0,  EOL, '*', 0,  $27,   0,   0	; 50 
+		.byte	  0, '>',   0,   0,   0,   0,CDCH,   0,   0, '1',   0, CCLF, '7',   0,  0,   0	; 60 
+		.byte	'0', '.', CCDN, '5', CCRT, CCUP,  0,   0,  11, '+', '3', '-', '*', '9', 0,   0  ; 70 
+		.byte	  0,   0,   0,   7,   0,   0,   0,   0,   0,   0,   0,   0,   0,  0,    0,   0	; 80
+
+ALTGR_TABLE_IND:
+		.byte	$15	; q = @
+		.byte	$61	; <> = |
+		.byte	$5B	; *+ = ~
+		.byte	$4E	; ?ß = \
+		
+ALTGR_TABLE:	.byte	'@'
+		.byte	'|'
+		.byte	'~'
+		.byte	'\'
+		
+EXT_TABLE_IND:	.byte	$4A	; /
+		.byte	$5A	; ENTER
+		.byte	$69	; END
+		.byte	$6B	; LEFT
+		.byte	$6C	; HOME
+		.byte	$70	; INS
+		.byte	$71	; DEL
+		.byte	$72	; DOWN
+		.byte	$74	; RIGHT
+		.byte	$75	; Up
+		.byte	$7A	; PAGE DOWN
+		.byte	$7D	; PAGE UP
+		
+EXT_TABLE:	.byte	'/'	; NumPad division symbol
+		.byte	EOL
+		.byte	CCBT	; with SuperFlag
+		.byte	CCLF
+		.byte	CCHM	; with SuperFLag
+		.byte	CICH
+		.byte	CDCH
+		.byte	CCDN
+		.byte	CCRT
+		.byte	CCUP
+		.byte	CCLM	; with SuperFLag
+		.byte	CCRM	; with SuperFLag
+
+EXT_TABLE_SUPERF:
+		.byte	0
+		.byte	0
+		.byte	1
+		.byte	0
+		.byte	1
+		.byte	0
+		.byte	0
+		.byte	0
+		.byte	0
+		.byte	0
+		.byte	1
+		.byte	1
+		
+value:		.byte 0
+
+cnt:		.word $103
+		
+		jmp test2
+		brk
+test4:		brl test5
+		brk
+test1:		per test3-1
+		rts
+test2:		per test1-1
+		rts
+		
+test3:		brl test4
+		nop
+		nop
+		brk
+		
+test5:		rep #M+IX
+		tsx
+		txa
+		sep #M+IX
+		xba
+		jsr jprinthex
+		xba
+		jsr jprinthex
+		jsr jnewline
+		
+		rep #M
+		clc
+		sed
+		lda #$9999
+		adc #1
+		sep #M
+		cld
+		php
+		xba
+		jsr jprinthex
+		xba
+		jsr jprinthex
+		
+		pla
+		and #1
+		jsr jprinthex
+
+		jsr jnewline
+		
+		clc
+		;sed
+		lda #$01	
+		sbc #1
+		cld
+		php
+		jsr jprinthex
+		pla
+		and #1
+		jsr jprinthex
+		
+		lda #'*'
+		pha
+		lda 1,s
+		jsr jchrout
+		pla	
+		
+		lda #$CC
+		sta $500
+		rep #M+IX
+		ldx #$500
+		txy
+		iny
+		lda #$180-2
+		mvn $0,$0
+		sep #M+IX
+		rtl
+
+
+		lda #0
+		sta screenBaseLo
+		lda #$80
+		sta screenBaseHi
+		lda #$3f
+		sta screenBaseBank
+
+		lda #$01
+		sta control
+		rtl
+		
+		jmp manta
+loop:		rep #M+IX
+		lda CLOCKTICKS
+		sta clock
+		lda CLOCKTICKS+2
+		sta clock+2
+		lda CPUTICKS
+		sta cpu
+		lda CLOCKTICKS+2
+		sta cpu+2
+		
+		sep #M+IX
+		
+		lda clock+3
+		jsr jprinthex
+		lda clock+2
+		jsr jprinthex
+		lda clock+1
+		jsr jprinthex
+		lda clock+0
+		jsr jprinthex
+		jsr jspace
+		
+		lda cpu+3
+		jsr jprinthex
+		lda cpu+2
+		jsr jprinthex
+		lda cpu+1
+		jsr jprinthex
+		lda cpu+0
+		jsr jprinthex
+		jsr jnewline
+		jsr jchrin
+		jmp loop
+
+clock:		.word 0,0
+cpu:		.word 0,0
+		
+manta:		lda #2
+		sta control		;320x200
+		lda #1
+		sta spriteCntl		;first sprite on
+
+		ldx #6
+		lda #0
+clearXpos:
+		sta xpos6,x
+		dex
+		dex
+		bpl clearXpos
+
+		sta xpos7
+		
+		lda screenBaseLo
+		sta save
+		lda screenBaseHi
+		sta save+1
+		lda screenBaseBank
+		sta save+2
+		
+		lda #0
+		sta screenBaseLo
+		lda #$80
+		sta screenBaseHi
+		lda #$3f
+		sta screenBaseBank
+		
+		stz memptr
+		stz memptr+1
+		lda #$7C
+		sta memptr+2
+
+		rep #M+IX
+		lda #raster
+		sta RASVEC
+		lda #200
+		sta rasterLo		
+	
+		ldx #30
+fillSprPal:	lda spritePal,x
+		sta spritePalette,x
+		dex
+		dex
+		bpl fillSprPal
+
+;		lda $7C0040
+;		bne ende
+		
+		ldx #0
+		txa
+clear:		sta $7F0000,x
+		sta $7E0000,x
+		sta $7C0000,x
+		inx
+		inx
+		bne clear
+		
+		sep #M
+	
+copySprites:	lda #$4d
+		sta cnt
+		ldx #0
+		txy		
+copySprites1:	jsr copySprite
+		dec cnt
+		bne copySprites1
+		jmp ende
+		
+copySprite:	lda #64
+		sta cnt+1
+copySprite2:	jsr copy8bits
+		inx
+		dec cnt+1
+		bne copySprite2
+		rts
+		
+copy8bits:	lda mantaShipSprites,x
+		pha
+		jsr copy2bits
+		jsr copy2bits
+		jsr copy2bits
+		jsr copy2bits
+		pla
+		sta mantaShipSprites,x
+		rts
+		
+copy2bits:	lda #0
+		asl mantaShipSprites,x
+		rol
+		asl mantaShipSprites,x
+		rol
+		sta bits
+		asl
+		asl
+		asl
+		asl
+		ora bits
+		sta [memptr],y
+		iny
+		rts
+
+ende:		
+		.a8
+		.i8
+		sep #M+IX
+		
+		lda #$12
+		sta control
+		stz TEMP
+		stz TEMP+1
+		lda #$7E
+		sta TEMP+2
+		rtl
+		
+
+		
+; receives control M+IX 16-Bit
+raster:
+		.a16
+		.i16
+		
+		lda vcountLo
+		sta colorBorderLo
+		cmp #250
+		bcs rasterDoit
+		lda #268
+		sta rasterLo
+		rts
+		
+rasterDoit:	lda #0
+		sta rasterLo
+
+		dec velocity
+		bne rasterXpos
+		lda #3
+		sta velocity
+		
+		lda #21
+		sta cnt
+		
+		ldx shipcnt
+		ldy ypos
+		
+rCopyLine1:	
+		phb
+		lda #11
+		mvn #$7C,#$7E
+		plb
+		tya
+		clc
+		adc #4
+		tay
+		dec cnt
+		bne rCopyLine1
+		
+		inx
+		inx
+		inx
+		inx
+		cpx #256*$0f
+		bcc raster2
+		ldx #0
+raster2:	stx shipcnt
+		lda ypos
+		clc
+		adc #16
+		cmp #16*200
+		bcc raster3
+		lda #0
+raster3:	sta ypos
+
+rasterXpos:		
+		sep #M
+		lda xposHi
+		lsr
+		bcc rasterXinc
+		lda xpos0
+		cmp #190
+		bcc rasterXinc
+		lda #100
+		sta xpos0
+		lda #0
+		sta xposHi
+		bra rasterXend
+rasterXinc:	lda xpos0
+		ina
+		sta xpos0
+		bne rasterXend
+		ina
+		sta xposHi
+rasterXend:	rep #M
+		lda #%000111111
+		sta colorBorderLo
+		rts
+
+		
+		
+spritePal:	.word %000000000	;, %000000000, %000000000, %000000000
+		.word %111000000	;, %000000111, %000000111, %000000111
+		.word %001000000	;, %000111000, %000111000, %000111000 
+		.word %111111111	;, %111000000, %111000000, %111000000
+		.word %000111111	;, %000111111, %000111111, %000111111
+		.word %111000111	;, %111000111, %111000111, %111000111
+		.word %111111000	;, %111111000, %111111000, %111111000
+		.word %111111111	;, %111111111, %111111111, %111111111
+		.word %000000000
+		.word %000000111
+		.word %000111000
+		.word %111000000
+		.word %000111111
+		.word %111000111
+		.word %111111000
+		.word %111111111
+
+
+		.include "manta.a65"
+		.include "enemy.a65"
+ 
+save:		.byte 0,0,0
+cnt:		.byte 0,0
+cnt1:		.byte 0,0
+shipcnt:	.word 0
+velocity:	.word 5
+ypos:		.word 0
+bits:		.byte 0
+
+	.ENDIF

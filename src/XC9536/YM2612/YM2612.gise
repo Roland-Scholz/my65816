@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<generated_project xmlns="http://www.xilinx.com/XMLSchema" xmlns:xil_pn="http://www.xilinx.com/XMLSchema">
+
+  <!--                                                          -->
+
+  <!--             For tool use only. Do not edit.              -->
+
+  <!--                                                          -->
+
+  <!-- ProjectNavigator created generated project file.         -->
+
+  <!-- For use in tracking generated file and other information -->
+
+  <!-- allowing preservation of process status.                 -->
+
+  <!--                                                          -->
+
+  <!-- Copyright (c) 1995-2013 Xilinx, Inc.  All rights reserved. -->
+
+  <version xmlns="http://www.xilinx.com/XMLSchema">11.1</version>
+
+  <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="YM2612.xise"/>
+
+  <files xmlns="http://www.xilinx.com/XMLSchema">
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="_ngo"/>
+    <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/ngdbuild.xmsgs"/>
+    <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/xst.xmsgs"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="webtalk_pn.xml"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xlnx_auto_0_xdb"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xst"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGDBUILD_LOG" xil_pn:name="ym2612.bld"/>
+    <file xil_pn:fileType="FILE_CMD_LOG" xil_pn:name="ym2612.cmd_log"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_GYD" xil_pn:name="ym2612.gyd"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_JEDEC" xil_pn:name="ym2612.jed"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_LSO" xil_pn:name="ym2612.lso"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_MFD" xil_pn:name="ym2612.mfd"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGA" xil_pn:name="ym2612.nga"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGC" xil_pn:name="ym2612.ngc"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGD" xil_pn:name="ym2612.ngd"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGR" xil_pn:name="ym2612.ngr"/>
+    <file xil_pn:fileType="FILE_PAD_MISC" xil_pn:name="ym2612.pad"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_PNX" xil_pn:name="ym2612.pnx"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ym2612.prj"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ym2612.rpt"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_STX" xil_pn:name="ym2612.stx"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_REPORT" xil_pn:name="ym2612.syr"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ym2612.tim"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ym2612.tspec"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_VM6" xil_pn:name="ym2612.vm6"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ym2612.xml"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST" xil_pn:name="ym2612.xst"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ym2612_build.xml"/>
+    <file xil_pn:fileType="FILE_HTML" xil_pn:name="ym2612_envsettings.html"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="ym2612_html"/>
+    <file xil_pn:fileType="FILE_XRPT" xil_pn:name="ym2612_ngdbuild.xrpt"/>
+    <file xil_pn:fileType="FILE_PAD_EXCEL_REPORT" xil_pn:name="ym2612_pad.csv"/>
+    <file xil_pn:fileType="FILE_HTML" xil_pn:name="ym2612_summary.html"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ym2612_vhdl.prj"/>
+    <file xil_pn:fileType="FILE_XRPT" xil_pn:name="ym2612_xst.xrpt"/>
+  </files>
+
+  <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1550436399" xil_pn:name="TRAN_copyInitialToXSTAbstractSynthesis" xil_pn:start_ts="1550436399">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1550436399" xil_pn:name="TRAN_schematicsToHdl" xil_pn:prop_ck="7892942463546551100" xil_pn:start_ts="1550436399">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1550563618" xil_pn:in_ck="5771290792159201" xil_pn:name="TRANEXT_xstsynthesize_CPLD" xil_pn:prop_ck="4356974506361567728" xil_pn:start_ts="1550563611">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="_xmsgs/xst.xmsgs"/>
+      <outfile xil_pn:name="webtalk_pn.xml"/>
+      <outfile xil_pn:name="xst"/>
+      <outfile xil_pn:name="ym2612.lso"/>
+      <outfile xil_pn:name="ym2612.ngc"/>
+      <outfile xil_pn:name="ym2612.ngr"/>
+      <outfile xil_pn:name="ym2612.prj"/>
+      <outfile xil_pn:name="ym2612.stx"/>
+      <outfile xil_pn:name="ym2612.syr"/>
+      <outfile xil_pn:name="ym2612.xst"/>
+      <outfile xil_pn:name="ym2612_vhdl.prj"/>
+      <outfile xil_pn:name="ym2612_xst.xrpt"/>
+    </transform>
+    <transform xil_pn:end_ts="1550436530" xil_pn:in_ck="5771290792157949" xil_pn:name="TRAN_compileBCD2" xil_pn:prop_ck="-5893608851128841751" xil_pn:start_ts="1550436530">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1550563624" xil_pn:in_ck="2838858556145367412" xil_pn:name="TRAN_ngdbuild" xil_pn:prop_ck="912646182597258046" xil_pn:start_ts="1550563618">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="_ngo"/>
+      <outfile xil_pn:name="_xmsgs/ngdbuild.xmsgs"/>
+      <outfile xil_pn:name="ym2612.bld"/>
+      <outfile xil_pn:name="ym2612.ngd"/>
+      <outfile xil_pn:name="ym2612_ngdbuild.xrpt"/>
+    </transform>
+    <transform xil_pn:end_ts="1550563632" xil_pn:in_ck="5771290792150456" xil_pn:name="TRANEXT_vm6File_xc9500" xil_pn:prop_ck="985428684502260523" xil_pn:start_ts="1550563624">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="ym2612.gyd"/>
+      <outfile xil_pn:name="ym2612.mfd"/>
+      <outfile xil_pn:name="ym2612.nga"/>
+      <outfile xil_pn:name="ym2612.pad"/>
+      <outfile xil_pn:name="ym2612.pnx"/>
+      <outfile xil_pn:name="ym2612.rpt"/>
+      <outfile xil_pn:name="ym2612.tim"/>
+      <outfile xil_pn:name="ym2612.tspec"/>
+      <outfile xil_pn:name="ym2612.vm6"/>
+      <outfile xil_pn:name="ym2612.xml"/>
+      <outfile xil_pn:name="ym2612_build.xml"/>
+      <outfile xil_pn:name="ym2612_html"/>
+      <outfile xil_pn:name="ym2612_pad.csv"/>
+    </transform>
+    <transform xil_pn:end_ts="1550563633" xil_pn:in_ck="5771290792159320" xil_pn:name="TRANEXT_crtProg_xc9500" xil_pn:prop_ck="-9204593535224376705" xil_pn:start_ts="1550563632">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="ym2612.jed"/>
+    </transform>
+    <transform xil_pn:end_ts="1550563662" xil_pn:in_ck="5771290792146034" xil_pn:name="TRAN_impactProgrammingTool_CPLD" xil_pn:prop_ck="1297849028806239550" xil_pn:start_ts="1550563662">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1550436549" xil_pn:in_ck="5771290792159320" xil_pn:name="TRAN_timRpt" xil_pn:prop_ck="111903974446" xil_pn:start_ts="1550436547">
+      <status xil_pn:value="AbortedRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="InputChanged"/>
+    </transform>
+  </transforms>
+
+</generated_project>

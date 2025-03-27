@@ -1,0 +1,14 @@
+call change
+call cd
+call clock
+call dir
+call disass
+call dump
+call gunzip
+call kill
+call kilo
+call png
+call stat
+call tasks
+call rainbow
+call save
