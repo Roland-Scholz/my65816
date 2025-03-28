@@ -12,9 +12,6 @@
 
 #include <lib65816/cpu.h>
 #include "io.h"
-#include "kimo.h"
-#include "display.h"
-#include "mouse.h"
 #include "lib65816/cpu.h"
 
 int io_initialize(void) {
@@ -30,9 +27,10 @@ int io_initialize(void) {
 	 success = timers_initialize();
 	 if( !success ) fprintf( stderr, "TIMERS failed to initialize\n" );
 
-	 */
+	 
 
 	success = mouse_initialize();
+	*/
 	if (!success)
 		fprintf( stderr, "MOUSE failed to initialize\n");
 
@@ -44,7 +42,7 @@ void io_expunge(void) {
 }
 
 byte io_read(word32 address, word32 timestamp) {
-	word32 adr_palette = address & IOMASK_PALETTE;
+	//word32 adr_palette = address & IOMASK_PALETTE;
 
 	/*
 	 if( ( address & IOMASK_MGIA ) == IOBASE_MGIA )
@@ -53,6 +51,7 @@ byte io_read(word32 address, word32 timestamp) {
 	 if( ( address & IOMASK_IRQC ) == IOBASE_IRQC )
 	 return irqc_read( address, timestamp );
 	 */
+	/*
 	if ((address & IOMASK_MOUSE) == IOBASE_MOUSE)
 		return mouse_read(address, timestamp);
 	else if ((address & IOMASK_KIMO) == IOBASE_KIMO)
@@ -63,7 +62,7 @@ byte io_read(word32 address, word32 timestamp) {
 		return timer_read(address, timestamp);
 	else if (adr_palette == IOBASE_PALETTE0 || adr_palette == IOBASE_PALETTE1)
 		return display_read_palette(address, timestamp);
-
+	*/	
 	/*
 	 if( ( address & IOMASK_TIMERS ) == IOBASE_TIMERS )
 	 return timers_read( address, timestamp );
@@ -75,6 +74,7 @@ byte io_read(word32 address, word32 timestamp) {
 }
 
 void io_write(word32 address, byte b, word32 timestamp) {
+	/*
 	word32 adr_palette = address & IOMASK_PALETTE;
 
 	if ((address & IOMASK_MOUSE) == IOBASE_MOUSE)
@@ -88,7 +88,7 @@ void io_write(word32 address, byte b, word32 timestamp) {
 	else if (adr_palette == IOBASE_PALETTE0 || adr_palette == IOBASE_PALETTE1) {
 		display_write_palette(address, b, timestamp);
 	}
-
+	*/
 	/*
 	 else if( ( address & IOMASK_TIMERS ) == IOBASE_TIMERS )
 	 timers_write( address, b, timestamp );

@@ -17,8 +17,6 @@
 #include "ram.h"
 #include "rom.h"
 #include "io.h"
-#include "kimo.h"
-#include "display.h"
 
 
 FILE *hardfile; /* Used in serbus.c */
@@ -30,10 +28,6 @@ static int k2_initialize(void) {
 	if (!rom_initialize())
 		goto no_rom;
 	if (!io_initialize())
-		goto no_io;
-	if (!display_initialize())
-		goto no_io;
-	if (!kimo_initialize())
 		goto no_io;
 
 	MEM_initialize();
