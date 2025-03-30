@@ -1,0 +1,41 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/my65816.dir/decoder.c.obj"
+  "CMakeFiles/my65816.dir/decoder.c.obj.d"
+  "CMakeFiles/my65816.dir/io.c.obj"
+  "CMakeFiles/my65816.dir/io.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/cpu.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/cpu.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/cpuevent.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/cpuevent.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/debugger.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/debugger.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/dispatch.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/dispatch.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/opcodes1.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/opcodes1.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/opcodes2.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/opcodes2.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/opcodes3.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/opcodes3.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/opcodes4.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/opcodes4.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/opcodes5.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/opcodes5.c.obj.d"
+  "CMakeFiles/my65816.dir/lib65816/table.c.obj"
+  "CMakeFiles/my65816.dir/lib65816/table.c.obj.d"
+  "CMakeFiles/my65816.dir/main.c.obj"
+  "CMakeFiles/my65816.dir/main.c.obj.d"
+  "CMakeFiles/my65816.dir/ram.c.obj"
+  "CMakeFiles/my65816.dir/ram.c.obj.d"
+  "CMakeFiles/my65816.dir/rom.c.obj"
+  "CMakeFiles/my65816.dir/rom.c.obj.d"
+  "libmy65816.dll.a"
+  "my65816.exe"
+  "my65816.exe.manifest"
+  "my65816.pdb"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/my65816.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

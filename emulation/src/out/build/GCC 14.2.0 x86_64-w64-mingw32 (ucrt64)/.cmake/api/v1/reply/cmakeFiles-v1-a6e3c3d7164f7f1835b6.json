@@ -1,0 +1,176 @@
+{
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/4.0.0-rc5/CMakeSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows-Initialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/4.0.0-rc5/CMakeCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/WindowsPaths.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Compiler/GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows-GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows-GNU.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/4.0.0-rc5/CMakeRCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeRCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows-windres.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Windows-GNU-C-ABI.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Internal/CMakeCLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Internal/CMakeCommonLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Linker/GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Linker/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Linker/Windows-GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Linker/Windows-GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/Platform/Linker/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CTest.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CTestUseLaunchers.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/CTestTargets.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/ROLAND.SCHOLZ/cmake-4.0.0-rc5-windows-x86_64/share/cmake-4.0/Modules/DartConfiguration.tcl.in"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "C:/github/my65816/emulation/src/out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)",
+		"source" : "C:/github/my65816/emulation/src"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 1
+	}
+}

@@ -1,0 +1,1 @@
+add_executable(my65816 decoder.c io.c main.c ram.c rom.c lib65816/cpu.c lib65816/cpuevent.c lib65816/debugger.c lib65816/dispatch.c lib65816/opcodes1.c lib65816/opcodes2.c lib65816/opcodes3.c lib65816/opcodes4.c lib65816/opcodes5.c lib65816/table.c)
