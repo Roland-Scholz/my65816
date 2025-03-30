@@ -1,0 +1,181 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include "FreeRTOS.h"
+    11                        ;#include "task.h"
+    12                        ;#include <homebrew.h>
+    13                        ;#include <errno.h>
+    14                        ;
+    15                        ;
+    16                        ;int main(int argc, char**argv) {
+    17                        	code
+    18                        	xdef	~~main
+    19                        	func
+    20                        ~~main:
+    21                        	longa	on
+    22                        	longi	on
+    23 00:0000: 3B           	tsc
+    24 00:0001: 38           	sec
+    25 00:0002: E9 09 00     	sbc	#L2
+    26 00:0005: 1B           	tcs
+    27 00:0006: 0B           	phd
+    28 00:0007: 5B           	tcd
+    29             00000004   argc_0	set	4
+    30             00000006   argv_0	set	6
+    31                        ;	
+    32                        ;	char *p, c;
+    33                        ;	
+    34                        ;	printf("dump address>");
+    35             00000000   p_1	set	0
+    36             00000004   c_1	set	4
+    37 00:0008: F4 xx xx     	pea	#^L1
+    38 00:000B: F4 xx xx     	pea	#<L1
+    39 00:000E: F4 06 00     	pea	#6
+    40 00:0011: 22 xx xx xx  	jsl	~~printf
+    41                        ;	
+    42                        ;	if (argc >= 2) {
+    43 00:0015: 38           	sec
+    44 00:0016: A5 0D        	lda	<L2+argc_0
+    45 00:0018: E9 02 00     	sbc	#<$2
+    46 00:001B: 70 03        	bvs	L4
+    47 00:001D: 49 00 80     	eor	#$8000
+    48                        L4:
+    49 00:0020: 10 31        	bpl	L10001
+    50                        ;		p = (char *)str2hex(argv[1]);
+    51 00:0022: A0 06 00     	ldy	#$6
+    52 00:0025: B7 0F        	lda	[<L2+argv_0],Y
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    53 00:0027: 48           	pha
+    54 00:0028: 88           	dey
+    55 00:0029: 88           	dey
+    56 00:002A: B7 0F        	lda	[<L2+argv_0],Y
+    57 00:002C: 48           	pha
+    58 00:002D: 22 xx xx xx  	jsl	~~str2hex
+    59 00:0031: 86 03        	stx	<R0+2
+    60 00:0033: 85 05        	sta	<L3+p_1
+    61 00:0035: A5 03        	lda	<R0+2
+    62 00:0037: 85 07        	sta	<L3+p_1+2
+    63                        ;		printf("%s",argv[1]);
+    64 00:0039: A0 06 00     	ldy	#$6
+    65 00:003C: B7 0F        	lda	[<L2+argv_0],Y
+    66 00:003E: 48           	pha
+    67 00:003F: 88           	dey
+    68 00:0040: 88           	dey
+    69 00:0041: B7 0F        	lda	[<L2+argv_0],Y
+    70 00:0043: 48           	pha
+    71 00:0044: F4 xx xx     	pea	#^L1+14
+    72 00:0047: F4 xx xx     	pea	#<L1+14
+    73 00:004A: F4 0A 00     	pea	#10
+    74 00:004D: 22 xx xx xx  	jsl	~~printf
+    75                        ;	} else {	
+    76 00:0051: 80 0C        	bra	L10002
+    77                        L10001:
+    78                        ;		p = (char *)getHex8();
+    79 00:0053: 22 xx xx xx  	jsl	~~getHex8
+    80 00:0057: 86 03        	stx	<R0+2
+    81 00:0059: 85 05        	sta	<L3+p_1
+    82 00:005B: A5 03        	lda	<R0+2
+    83 00:005D: 85 07        	sta	<L3+p_1+2
+    84                        ;	}
+    85                        L10002:
+    86                        ;	
+    87                        ;	printf("\n");
+    88 00:005F: F4 xx xx     	pea	#^L1+17
+    89 00:0062: F4 xx xx     	pea	#<L1+17
+    90 00:0065: F4 06 00     	pea	#6
+    91 00:0068: 22 xx xx xx  	jsl	~~printf
+    92                        ;
+    93                        ;	for (;;) {		
+    94                        L10005:
+    95                        ;		dump(p, 256, 1);
+    96 00:006C: F4 01 00     	pea	#<$1
+    97 00:006F: F4 00 01     	pea	#<$100
+    98 00:0072: D4 07        	pei	<L3+p_1+2
+    99 00:0074: D4 05        	pei	<L3+p_1
+   100 00:0076: 22 xx xx xx  	jsl	~~dump
+   101                        ;		c = toupper(getchar());
+   102 00:007A: AD xx xx     	lda	|~~stdin+2
+   103 00:007D: 48           	pha
+   104 00:007E: AD xx xx     	lda	|~~stdin
+   105 00:0081: 48           	pha
+   106 00:0082: 22 xx xx xx  	jsl	~~fgetc
+   107 00:0086: 48           	pha
+   108 00:0087: 22 xx xx xx  	jsl	~~toupper
+   109 00:008B: E2 20        	sep	#$20
+   110                        	longa	off
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   111 00:008D: 85 09        	sta	<L3+c_1
+   112                        ;		if (c == 'X') break;
+   113 00:008F: C9 58        	cmp	#<$58
+   114 00:0091: C2 20        	rep	#$20
+   115                        	longa	on
+   116 00:0093: F0 0E        	beq	L8
+   117                        ;		p += 256;
+   118 00:0095: A9 00 01     	lda	#$100
+   119 00:0098: 18           	clc
+   120 00:0099: 65 05        	adc	<L3+p_1
+   121 00:009B: 85 05        	sta	<L3+p_1
+   122 00:009D: 90 CD        	bcc	L10005
+   123 00:009F: E6 07        	inc	<L3+p_1+2
+   124                        ;	}
+   125 00:00A1: 80 C9        	bra	L10005
+   126                        ;
+   127                        ;}
+   128                        L8:
+   129 00:00A3: A8           	tay
+   130 00:00A4: A5 0B        	lda	<L2+2
+   131 00:00A6: 85 11        	sta	<L2+2+6
+   132 00:00A8: A5 0A        	lda	<L2+1
+   133 00:00AA: 85 10        	sta	<L2+1+6
+   134 00:00AC: 2B           	pld
+   135 00:00AD: 3B           	tsc
+   136 00:00AE: 18           	clc
+   137 00:00AF: 69 0F 00     	adc	#L2+6
+   138 00:00B2: 1B           	tcs
+   139 00:00B3: 98           	tya
+   140 00:00B4: 6B           	rtl
+   141             00000009   L2	equ	9
+   142             00000005   L3	equ	5
+   143                        	ends
+   144                        	efunc
+   145                        	data
+   146                        L1:
+   147 00:0000: 64 75 6D 70  	db	$64,$75,$6D,$70,$20,$61,$64,$64,$72,$65,
+                    $73,$73,$3E,$00,$25
+       00:0004: 20 61 64 64 
+       00:0008: 72 65 73 73 
+       00:000C: 3E 00 25 
+   148 00:000F: 73 00 0A 00  	db	$73,$00,$0A,$00
+   149 00:0013:              	ends
+   150                        ;
+   151                        ;
+   152                        	xref	~~toupper
+   153                        	xref	~~dump
+   154                        	xref	~~str2hex
+   155                        	xref	~~getHex8
+   156                        	xref	~~fgetc
+   157                        	xref	~~printf
+   158                        	xref	~~stdin
+
+
+      Lines assembled: 158
+      Errors: 0

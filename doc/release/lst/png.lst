@@ -1,0 +1,2322 @@
+  Thu Jan 13 2022 10:23                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include <errno.h>
+    11                        ;#include <unistd.h>
+    12                        ;#include <dirent.h>
+    13                        ;#include <sys/stat.h>
+    14                        ;
+    15                        ;#include "freeRTOS.h"
+    16                        ;#include "task.h"
+    17                        ;#include <homebrew.h>
+    18                        ;//#include "tinf.h"
+    19                        ;//#include "puff.h"
+    20                        ;
+    21                        ;int inflate(char *, char *, unsigned long *);
+    22                        ;
+    23                        ;struct image {
+    24                        ;	char *data;
+    25                        ;	unsigned long width;
+    26                        ;	unsigned long height;
+    27                        ;	char palette[256];
+    28                        ;	unsigned int depth;
+    29                        ;	unsigned int colorType;
+    30                        ;	unsigned long dataLength; 
+    31                        ;	unsigned int bytesPerPixel;
+    32                        ;	unsigned int bytesPerScanline;
+    33                        ;};	
+    34                        ;typedef struct image t_image;
+    35                        ;
+    36                        ;struct header {
+    37                        ;	char png[4];
+    38                        ;	char txt[4];
+    39                        ;};
+    40                        ;typedef struct header t_header;
+    41                        ;
+    42                        ;struct chunk {
+    43                        ;	unsigned long len;
+    44                        ;	char name[4];
+    45                        ;};
+    46                        ;typedef struct chunk t_chunk;
+    47                        ;
+    48                        ;struct chunkIDAT {
+    49                        ;	unsigned long len;
+    50                        ;	char name[4];
+    51                        ;	unsigned long width;
+    52                        ;	unsigned long height;
+  Thu Jan 13 2022 10:23                                                Page 2
+
+
+    53                        ;	char depth;
+    54                        ;	char colorType;
+    55                        ;	char compression;
+    56                        ;	char filter;
+    57                        ;	char interlace;
+    58                        ;	unsigned long crc;
+    59                        ;};
+    60                        ;typedef struct chunkIDAT t_chunkIDAT;
+    61                        ;
+    62                        ;
+    63                        ;//FILE *stdin, *stdout, *stderr;
+    64                        ;t_image image;
+    65                        ;
+    66                        ;	
+    67                        ;size_t swapLong(size_t in) {
+    68                        	code
+    69                        	xdef	~~swapLong
+    70                        	func
+    71                        ~~swapLong:
+    72                        	longa	on
+    73                        	longi	on
+    74 00:0000: 3B           	tsc
+    75 00:0001: 38           	sec
+    76 00:0002: E9 0C 00     	sbc	#L2
+    77 00:0005: 1B           	tcs
+    78 00:0006: 0B           	phd
+    79 00:0007: 5B           	tcd
+    80             00000004   in_0	set	4
+    81                        ;	size_t out;
+    82                        ;	char *s, *d;
+    83                        ;
+    84                        ;	s = (char *)&in;
+    85             00000000   out_1	set	0
+    86             00000004   s_1	set	4
+    87             00000008   d_1	set	8
+    88 00:0008: 18           	clc
+    89 00:0009: 7B           	tdc
+    90 00:000A: 69 10 00     	adc	#<L2+in_0
+    91 00:000D: 85 05        	sta	<L3+s_1
+    92 00:000F: A9 00 00     	lda	#$0
+    93 00:0012: 85 07        	sta	<L3+s_1+2
+    94                        ;	d = (char *)&out;
+    95 00:0014: 18           	clc
+    96 00:0015: 7B           	tdc
+    97 00:0016: 69 01 00     	adc	#<L3+out_1
+    98 00:0019: 85 09        	sta	<L3+d_1
+    99 00:001B: A9 00 00     	lda	#$0
+   100 00:001E: 85 0B        	sta	<L3+d_1+2
+   101                        ;	
+   102                        ;	d[0] = s[3];
+   103 00:0020: E2 20        	sep	#$20
+   104                        	longa	off
+   105 00:0022: A0 03 00     	ldy	#$3
+   106 00:0025: B7 05        	lda	[<L3+s_1],Y
+   107 00:0027: 87 09        	sta	[<L3+d_1]
+   108                        ;	d[1] = s[2];
+   109 00:0029: 88           	dey
+   110 00:002A: B7 05        	lda	[<L3+s_1],Y
+  Thu Jan 13 2022 10:23                                                Page 3
+
+
+   111 00:002C: 88           	dey
+   112 00:002D: 97 09        	sta	[<L3+d_1],Y
+   113                        ;	d[2] = s[1];
+   114 00:002F: B7 05        	lda	[<L3+s_1],Y
+   115 00:0031: C8           	iny
+   116 00:0032: 97 09        	sta	[<L3+d_1],Y
+   117                        ;	d[3] = s[0];
+   118 00:0034: A7 05        	lda	[<L3+s_1]
+   119 00:0036: C8           	iny
+   120 00:0037: 97 09        	sta	[<L3+d_1],Y
+   121 00:0039: C2 20        	rep	#$20
+   122                        	longa	on
+   123                        ;	
+   124                        ;	return out;
+   125 00:003B: A6 03        	ldx	<L3+out_1+2
+   126 00:003D: A5 01        	lda	<L3+out_1
+   127 00:003F: A8           	tay
+   128 00:0040: A5 0E        	lda	<L2+2
+   129 00:0042: 85 12        	sta	<L2+2+4
+   130 00:0044: A5 0D        	lda	<L2+1
+   131 00:0046: 85 11        	sta	<L2+1+4
+   132 00:0048: 2B           	pld
+   133 00:0049: 3B           	tsc
+   134 00:004A: 18           	clc
+   135 00:004B: 69 10 00     	adc	#L2+4
+   136 00:004E: 1B           	tcs
+   137 00:004F: 98           	tya
+   138 00:0050: 6B           	rtl
+   139                        ;}
+   140             0000000C   L2	equ	12
+   141             00000001   L3	equ	1
+   142                        	ends
+   143                        	efunc
+   144                        ;
+   145                        ;unsigned int computeBytesPerScanline(unsigned int
+                     bytesPerPixel, unsigned int imageWidth) {
+   146                        	code
+   147                        	xdef	~~computeBytesPerScanline
+   148                        	func
+   149                        ~~computeBytesPerScanline:
+   150                        	longa	on
+   151                        	longi	on
+   152 00:0051: 3B           	tsc
+   153 00:0052: 38           	sec
+   154 00:0053: E9 02 00     	sbc	#L5
+   155 00:0056: 1B           	tcs
+   156 00:0057: 0B           	phd
+   157 00:0058: 5B           	tcd
+   158             00000004   bytesPerPixel_0	set	4
+   159             00000006   imageWidth_0	set	6
+   160                        ;	
+   161                        ;	unsigned int bytesPerScanline;
+   162                        ;	
+   163                        ;	bytesPerScanline = imageWidth * bytesPerPixel;
+   164             00000000   bytesPerScanline_1	set	0
+   165 00:0059: A5 08        	lda	<L5+imageWidth_0
+   166 00:005B: A6 06        	ldx	<L5+bytesPerPixel_0
+   167                        	xref	~~~mul
+  Thu Jan 13 2022 10:23                                                Page 4
+
+
+   168 00:005D: 22 xx xx xx  	jsl	~~~mul
+   169 00:0061: 85 01        	sta	<L6+bytesPerScanline_1
+   170                        ;	
+   171                        ;	switch(image.depth) {
+   172 00:0063: AD xx xx     	lda	|~~image+268
+   173                        	xref	~~~swt
+   174 00:0066: 22 xx xx xx  	jsl	~~~swt
+   175 00:006A: 04 00        	dw	4
+   176 00:006C: 01 00        	dw	1
+   177 00:006E: xx xx        	dw	L10003-1
+   178 00:0070: 02 00        	dw	2
+   179 00:0072: xx xx        	dw	L10004-1
+   180 00:0074: 04 00        	dw	4
+   181 00:0076: xx xx        	dw	L10005-1
+   182 00:0078: 10 00        	dw	16
+   183 00:007A: xx xx        	dw	L10007-1
+   184 00:007C: xx xx        	dw	L10002-1
+   185                        ;	case 1:
+   186                        L10003:
+   187                        ;		bytesPerScanline >>= 3;
+   188 00:007E: A5 01        	lda	<L6+bytesPerScanline_1
+   189 00:0080: 4A           	lsr	A
+   190 00:0081: 4A           	lsr	A
+   191 00:0082: 4A           	lsr	A
+   192 00:0083: 85 01        	sta	<L6+bytesPerScanline_1
+   193                        ;		break;		
+   194                        L10002:
+   195                        ;
+   196                        ;	return bytesPerScanline;
+   197 00:0085: A5 01        	lda	<L6+bytesPerScanline_1
+   198 00:0087: A8           	tay
+   199 00:0088: A5 04        	lda	<L5+2
+   200 00:008A: 85 08        	sta	<L5+2+4
+   201 00:008C: A5 03        	lda	<L5+1
+   202 00:008E: 85 07        	sta	<L5+1+4
+   203 00:0090: 2B           	pld
+   204 00:0091: 3B           	tsc
+   205 00:0092: 18           	clc
+   206 00:0093: 69 06 00     	adc	#L5+4
+   207 00:0096: 1B           	tcs
+   208 00:0097: 98           	tya
+   209 00:0098: 6B           	rtl
+   210                        ;	case 2:
+   211                        L10004:
+   212                        ;		bytesPerScanline >>= 2;
+   213 00:0099: 46 01        	lsr	<L6+bytesPerScanline_1
+   214 00:009B: 46 01        	lsr	<L6+bytesPerScanline_1
+   215                        ;		break;		
+   216 00:009D: 80 E6        	bra	L10002
+   217                        ;	case 4:
+   218                        L10005:
+   219                        ;		bytesPerScanline >>= 1;
+   220 00:009F: 46 01        	lsr	<L6+bytesPerScanline_1
+   221                        ;		if (imageWidth & 0x1) bytesPerScanline++
+                    ;
+   222 00:00A1: A5 08        	lda	<L5+imageWidth_0
+   223 00:00A3: 29 01 00     	and	#<$1
+   224 00:00A6: F0 DD        	beq	L10002
+  Thu Jan 13 2022 10:23                                                Page 5
+
+
+   225 00:00A8: E6 01        	inc	<L6+bytesPerScanline_1
+   226                        ;		break;		
+   227 00:00AA: 80 D9        	bra	L10002
+   228                        ;	case 16:
+   229                        L10007:
+   230                        ;		bytesPerScanline <<= 1;
+   231 00:00AC: 06 01        	asl	<L6+bytesPerScanline_1
+   232                        ;		break;
+   233 00:00AE: 80 D5        	bra	L10002
+   234                        ;	}
+   235                        ;}
+   236             00000002   L5	equ	2
+   237             00000001   L6	equ	1
+   238                        	ends
+   239                        	efunc
+   240                        ;
+   241                        ;
+   242                        ;unsigned int computeBytesPerPixel(unsigned int co
+                    lorType) {
+   243                        	code
+   244                        	xdef	~~computeBytesPerPixel
+   245                        	func
+   246                        ~~computeBytesPerPixel:
+   247                        	longa	on
+   248                        	longi	on
+   249 00:00B0: 3B           	tsc
+   250 00:00B1: 38           	sec
+   251 00:00B2: E9 02 00     	sbc	#L9
+   252 00:00B5: 1B           	tcs
+   253 00:00B6: 0B           	phd
+   254 00:00B7: 5B           	tcd
+   255             00000004   colorType_0	set	4
+   256                        ;	
+   257                        ;	unsigned int bytesPerPixel;
+   258                        ;	
+   259                        ;	bytesPerPixel = 1;
+   260             00000000   bytesPerPixel_1	set	0
+   261 00:00B8: A9 01 00     	lda	#$1
+   262 00:00BB: 85 01        	sta	<L10+bytesPerPixel_1
+   263                        ;	
+   264                        ;	switch(colorType) {
+   265 00:00BD: A5 06        	lda	<L9+colorType_0
+   266                        	xref	~~~swt
+   267 00:00BF: 22 xx xx xx  	jsl	~~~swt
+   268 00:00C3: 03 00        	dw	3
+   269 00:00C5: 02 00        	dw	2
+   270 00:00C7: xx xx        	dw	L10010-1
+   271 00:00C9: 04 00        	dw	4
+   272 00:00CB: xx xx        	dw	L10011-1
+   273 00:00CD: 06 00        	dw	6
+   274 00:00CF: xx xx        	dw	L10012-1
+   275 00:00D1: xx xx        	dw	L10009-1
+   276                        ;	//depth: 1,2,4,8,16  Each pixel is a grayscale s
+                    ample.
+   277                        ;	//case 0:
+   278                        ;	//	break;
+   279                        ;	//depth: 8,16        Each pixel is an R,G,B trip
+                    le.
+  Thu Jan 13 2022 10:23                                                Page 6
+
+
+   280                        ;	case 2:
+   281                        L10010:
+   282                        ;		bytesPerPixel = 3;
+   283 00:00D3: A9 03 00     	lda	#$3
+   284                        L20000:
+   285 00:00D6: 85 01        	sta	<L10+bytesPerPixel_1
+   286                        ;		break;
+   287                        L10009:
+   288                        ;	
+   289                        ;	if (image.depth == 16)
+   290                        ;		bytesPerPixel <<= 1;
+   291 00:00D8: AD xx xx     	lda	|~~image+268
+   292 00:00DB: C9 10 00     	cmp	#<$10
+   293 00:00DE: D0 02        	bne	L10014
+   294                        ;	default:
+   295                        ;		break;
+   296                        ;	}
+   297 00:00E0: 06 01        	asl	<L10+bytesPerPixel_1
+   298                        ;	
+   299                        ;	return bytesPerPixel;
+   300                        L10014:
+   301 00:00E2: A5 01        	lda	<L10+bytesPerPixel_1
+   302 00:00E4: A8           	tay
+   303 00:00E5: A5 04        	lda	<L9+2
+   304 00:00E7: 85 06        	sta	<L9+2+2
+   305 00:00E9: A5 03        	lda	<L9+1
+   306 00:00EB: 85 05        	sta	<L9+1+2
+   307 00:00ED: 2B           	pld
+   308 00:00EE: 3B           	tsc
+   309 00:00EF: 18           	clc
+   310 00:00F0: 69 04 00     	adc	#L9+2
+   311 00:00F3: 1B           	tcs
+   312 00:00F4: 98           	tya
+   313 00:00F5: 6B           	rtl
+   314                        ;	//depth: 1,2,4,8     Each pixel is a palette ind
+                    ex;
+   315                        ;	//case 3:
+   316                        ;	//	break;
+   317                        ;	//depth: 8,16        Each pixel is a grayscale s
+                    ample, followed by an alpha sample.	
+   318                        ;	case 4:
+   319                        L10011:
+   320                        ;		bytesPerPixel = 2;
+   321 00:00F6: A9 02 00     	lda	#$2
+   322 00:00F9: 80 DB        	bra	L20000
+   323                        ;		break;
+   324                        ;	//depth: 8,16        Each pixel is an R,G,B trip
+                    le, followed by an alpha sample.
+   325                        ;	case 6:
+   326                        L10012:
+   327                        ;		bytesPerPixel = 4;
+   328 00:00FB: A9 04 00     	lda	#$4
+   329 00:00FE: 80 D6        	bra	L20000
+   330                        ;		break;
+   331                        ;}
+   332             00000002   L9	equ	2
+   333             00000001   L10	equ	1
+   334                        	ends
+  Thu Jan 13 2022 10:23                                                Page 7
+
+
+   335                        	efunc
+   336                        ;
+   337                        ;void standardPalette() {
+   338                        	code
+   339                        	xdef	~~standardPalette
+   340                        	func
+   341                        ~~standardPalette:
+   342                        	longa	on
+   343                        	longi	on
+   344 00:0100: 3B           	tsc
+   345 00:0101: 38           	sec
+   346 00:0102: E9 0C 00     	sbc	#L13
+   347 00:0105: 1B           	tcs
+   348 00:0106: 0B           	phd
+   349 00:0107: 5B           	tcd
+   350                        ;	unsigned int *palette;
+   351                        ;	unsigned int i, c;
+   352                        ;
+   353                        ;	palette	= (unsigned int *)PALETTE;
+   354             00000000   palette_1	set	0
+   355             00000004   i_1	set	4
+   356             00000006   c_1	set	6
+   357 00:0108: A9 00 FC     	lda	#$fc00
+   358 00:010B: 85 05        	sta	<L14+palette_1
+   359 00:010D: A9 FF 00     	lda	#$ff
+   360 00:0110: 85 07        	sta	<L14+palette_1+2
+   361                        ;	
+   362                        ;	for (i = 0; i < 256; i++) {
+   363 00:0112: 64 09        	stz	<L14+i_1
+   364                        L10017:
+   365                        ;		c = i << 1;
+   366 00:0114: A5 09        	lda	<L14+i_1
+   367 00:0116: 0A           	asl	A
+   368 00:0117: 85 0B        	sta	<L14+c_1
+   369                        ;		c &= 0xff80;
+   370 00:0119: A9 7F 00     	lda	#$7f
+   371 00:011C: 14 0B        	trb	<L14+c_1
+   372                        ;		c |= i & 0x3f;
+   373 00:011E: A5 09        	lda	<L14+i_1
+   374 00:0120: 29 3F 00     	and	#<$3f
+   375 00:0123: 04 0B        	tsb	<L14+c_1
+   376                        ;		*palette = c;
+   377 00:0125: A5 0B        	lda	<L14+c_1
+   378 00:0127: 87 05        	sta	[<L14+palette_1]
+   379                        ;		palette++;
+   380 00:0129: A9 02 00     	lda	#$2
+   381 00:012C: 18           	clc
+   382 00:012D: 65 05        	adc	<L14+palette_1
+   383 00:012F: 85 05        	sta	<L14+palette_1
+   384 00:0131: 90 02        	bcc	L10015
+   385 00:0133: E6 07        	inc	<L14+palette_1+2
+   386                        ;	}
+   387                        L10015:
+   388 00:0135: E6 09        	inc	<L14+i_1
+   389 00:0137: A5 09        	lda	<L14+i_1
+   390 00:0139: C9 00 01     	cmp	#<$100
+   391 00:013C: 90 D6        	bcc	L10017
+   392                        ;}
+  Thu Jan 13 2022 10:23                                                Page 8
+
+
+   393 00:013E: 2B           	pld
+   394 00:013F: 3B           	tsc
+   395 00:0140: 18           	clc
+   396 00:0141: 69 0C 00     	adc	#L13
+   397 00:0144: 1B           	tcs
+   398 00:0145: 6B           	rtl
+   399             0000000C   L13	equ	12
+   400             00000005   L14	equ	5
+   401                        	ends
+   402                        	efunc
+   403                        ;
+   404                        ;int doPNG(char *buf, size_t len) {
+   405                        	code
+   406                        	xdef	~~doPNG
+   407                        	func
+   408                        ~~doPNG:
+   409                        	longa	on
+   410                        	longi	on
+   411 00:0146: 3B           	tsc
+   412 00:0147: 38           	sec
+   413 00:0148: E9 35 00     	sbc	#L18
+   414 00:014B: 1B           	tcs
+   415 00:014C: 0B           	phd
+   416 00:014D: 5B           	tcd
+   417             00000004   buf_0	set	4
+   418             00000008   len_0	set	8
+   419                        ;	t_header *header;
+   420                        ;	t_chunk *chunk;
+   421                        ;	t_chunkIDAT *idat;
+   422                        ;	char name[5], *plte, *compressedData, *palette;
+   423                        ;	unsigned long chunklen, imageLen;
+   424                        ;	unsigned int x, y, xp;
+   425                        ;	int rc;
+   426                        ;	
+   427                        ;	header = (t_header *) buf;
+   428             00000000   header_1	set	0
+   429             00000004   chunk_1	set	4
+   430             00000008   idat_1	set	8
+   431             0000000C   name_1	set	12
+   432             00000011   plte_1	set	17
+   433             00000015   compressedData_1	set	21
+   434             00000019   palette_1	set	25
+   435             0000001D   chunklen_1	set	29
+   436             00000021   imageLen_1	set	33
+   437             00000025   x_1	set	37
+   438             00000027   y_1	set	39
+   439             00000029   xp_1	set	41
+   440             0000002B   rc_1	set	43
+   441 00:014E: A5 39        	lda	<L18+buf_0
+   442 00:0150: 85 09        	sta	<L19+header_1
+   443 00:0152: A5 3B        	lda	<L18+buf_0+2
+   444 00:0154: 85 0B        	sta	<L19+header_1+2
+   445                        ;	name[4] = 0;
+   446 00:0156: E2 20        	sep	#$20
+   447                        	longa	off
+   448 00:0158: 64 19        	stz	<L19+name_1+4
+   449 00:015A: C2 20        	rep	#$20
+   450                        	longa	on
+  Thu Jan 13 2022 10:23                                                Page 9
+
+
+   451                        ;	compressedData = NULL;
+   452 00:015C: 64 1E        	stz	<L19+compressedData_1
+   453 00:015E: 64 20        	stz	<L19+compressedData_1+2
+   454                        ;	imageLen = 0;
+   455 00:0160: 64 2A        	stz	<L19+imageLen_1
+   456 00:0162: 64 2C        	stz	<L19+imageLen_1+2
+   457                        ;	palette = (char *)PALETTE;
+   458 00:0164: A9 00 FC     	lda	#$fc00
+   459 00:0167: 85 22        	sta	<L19+palette_1
+   460 00:0169: A9 FF 00     	lda	#$ff
+   461 00:016C: 85 24        	sta	<L19+palette_1+2
+   462                        ;	
+   463                        ;	standardPalette();
+   464 00:016E: 22 xx xx xx  	jsl	~~standardPalette
+   465                        ;	
+   466                        ;	if (!(header->png[0] == 0x89 &&
+   467                        ;		header->png[1] == 'P' &&
+   468                        ;		header->png[2] == 'N' &&
+   469                        ;		header->png[3] == 'G')) {
+   470 00:0172: E2 20        	sep	#$20
+   471                        	longa	off
+   472 00:0174: A7 09        	lda	[<L19+header_1]
+   473 00:0176: C9 89        	cmp	#<$89
+   474 00:0178: C2 20        	rep	#$20
+   475                        	longa	on
+   476 00:017A: D0 23        	bne	L20
+   477 00:017C: E2 20        	sep	#$20
+   478                        	longa	off
+   479 00:017E: A0 01 00     	ldy	#$1
+   480 00:0181: B7 09        	lda	[<L19+header_1],Y
+   481 00:0183: C9 50        	cmp	#<$50
+   482 00:0185: C2 20        	rep	#$20
+   483                        	longa	on
+   484 00:0187: D0 16        	bne	L20
+   485 00:0189: E2 20        	sep	#$20
+   486                        	longa	off
+   487 00:018B: C8           	iny
+   488 00:018C: B7 09        	lda	[<L19+header_1],Y
+   489 00:018E: C9 4E        	cmp	#<$4e
+   490 00:0190: C2 20        	rep	#$20
+   491                        	longa	on
+   492 00:0192: D0 0B        	bne	L20
+   493 00:0194: E2 20        	sep	#$20
+   494                        	longa	off
+   495 00:0196: C8           	iny
+   496 00:0197: B7 09        	lda	[<L19+header_1],Y
+   497 00:0199: C9 47        	cmp	#<$47
+   498 00:019B: C2 20        	rep	#$20
+   499                        	longa	on
+   500 00:019D: F0 22        	beq	L10018
+   501                        L20:
+   502                        ;			
+   503                        ;		printf("no PNG file!\n");
+   504 00:019F: F4 xx xx     	pea	#^L1
+   505 00:01A2: F4 xx xx     	pea	#<L1
+   506 00:01A5: F4 06 00     	pea	#6
+   507 00:01A8: 22 xx xx xx  	jsl	~~printf
+   508                        ;		return -1;
+  Thu Jan 13 2022 10:23                                                Page 10
+
+
+   509                        L20004:
+   510 00:01AC: A9 FF FF     	lda	#$ffff
+   511                        L25:
+   512 00:01AF: A8           	tay
+   513 00:01B0: A5 37        	lda	<L18+2
+   514 00:01B2: 85 3F        	sta	<L18+2+8
+   515 00:01B4: A5 36        	lda	<L18+1
+   516 00:01B6: 85 3E        	sta	<L18+1+8
+   517 00:01B8: 2B           	pld
+   518 00:01B9: 3B           	tsc
+   519 00:01BA: 18           	clc
+   520 00:01BB: 69 3D 00     	adc	#L18+8
+   521 00:01BE: 1B           	tcs
+   522 00:01BF: 98           	tya
+   523 00:01C0: 6B           	rtl
+   524                        ;	}
+   525                        ;	
+   526                        ;	buf += sizeof(t_header);
+   527                        L10018:
+   528 00:01C1: 18           	clc
+   529 00:01C2: A9 08 00     	lda	#$8
+   530                        L20007:
+   531 00:01C5: 65 39        	adc	<L18+buf_0
+   532 00:01C7: 85 39        	sta	<L18+buf_0
+   533 00:01C9: 90 02        	bcc	L10021
+   534 00:01CB: E6 3B        	inc	<L18+buf_0+2
+   535                        ;	
+   536                        ;	for(;;) {
+   537                        L10021:
+   538                        ;		chunk = (t_chunk *) buf;
+   539 00:01CD: A5 39        	lda	<L18+buf_0
+   540 00:01CF: 85 0D        	sta	<L19+chunk_1
+   541 00:01D1: A5 3B        	lda	<L18+buf_0+2
+   542 00:01D3: 85 0F        	sta	<L19+chunk_1+2
+   543                        ;		if (!memcmp(chunk->name, "IHDR", 4)) {
+   544 00:01D5: F4 00 00     	pea	#^$4
+   545 00:01D8: F4 04 00     	pea	#<$4
+   546 00:01DB: F4 xx xx     	pea	#^L1+14
+   547 00:01DE: F4 xx xx     	pea	#<L1+14
+   548 00:01E1: A9 04 00     	lda	#$4
+   549 00:01E4: 18           	clc
+   550 00:01E5: 65 0D        	adc	<L19+chunk_1
+   551 00:01E7: 85 01        	sta	<R0
+   552 00:01E9: A9 00 00     	lda	#$0
+   553 00:01EC: 65 0F        	adc	<L19+chunk_1+2
+   554 00:01EE: 48           	pha
+   555 00:01EF: D4 01        	pei	<R0
+   556 00:01F1: 22 xx xx xx  	jsl	~~memcmp
+   557 00:01F5: AA           	tax
+   558 00:01F6: F0 03        	beq	*+5
+   559 00:01F8: 82 8E 00     	brl	L10022
+   560                        ;			idat = (t_chunkIDAT *) chunk;
+   561 00:01FB: A5 0D        	lda	<L19+chunk_1
+   562 00:01FD: 85 11        	sta	<L19+idat_1
+   563 00:01FF: A5 0F        	lda	<L19+chunk_1+2
+   564 00:0201: 85 13        	sta	<L19+idat_1+2
+   565                        ;			image.width = swapLong(idat->wid
+                    th);
+  Thu Jan 13 2022 10:23                                                Page 11
+
+
+   566 00:0203: A0 0A 00     	ldy	#$a
+   567 00:0206: B7 11        	lda	[<L19+idat_1],Y
+   568 00:0208: 48           	pha
+   569 00:0209: 88           	dey
+   570 00:020A: 88           	dey
+   571 00:020B: B7 11        	lda	[<L19+idat_1],Y
+   572 00:020D: 48           	pha
+   573 00:020E: 22 xx xx xx  	jsl	~~swapLong
+   574 00:0212: 8D xx xx     	sta	|~~image+4
+   575 00:0215: 8E xx xx     	stx	|~~image+4+2
+   576                        ;			image.height = swapLong(idat->he
+                    ight);
+   577 00:0218: A0 0E 00     	ldy	#$e
+   578 00:021B: B7 11        	lda	[<L19+idat_1],Y
+   579 00:021D: 48           	pha
+   580 00:021E: 88           	dey
+   581 00:021F: 88           	dey
+   582 00:0220: B7 11        	lda	[<L19+idat_1],Y
+   583 00:0222: 48           	pha
+   584 00:0223: 22 xx xx xx  	jsl	~~swapLong
+   585 00:0227: 8D xx xx     	sta	|~~image+8
+   586 00:022A: 8E xx xx     	stx	|~~image+8+2
+   587                        ;			image.depth = idat->depth;
+   588 00:022D: A0 10 00     	ldy	#$10
+   589 00:0230: B7 11        	lda	[<L19+idat_1],Y
+   590 00:0232: 29 FF 00     	and	#$ff
+   591 00:0235: 8D xx xx     	sta	|~~image+268
+   592                        ;			image.colorType = idat->colorTyp
+                    e;
+   593 00:0238: C8           	iny
+   594 00:0239: B7 11        	lda	[<L19+idat_1],Y
+   595 00:023B: 29 FF 00     	and	#$ff
+   596 00:023E: 8D xx xx     	sta	|~~image+270
+   597                        ;			image.bytesPerPixel = computeByt
+                    esPerPixel(image.colorType);
+   598 00:0241: 48           	pha
+   599 00:0242: 22 xx xx xx  	jsl	~~computeBytesPerPixel
+   600 00:0246: 8D xx xx     	sta	|~~image+276
+   601                        ;			image.bytesPerScanline = compute
+                    BytesPerScanline(image.bytesPerPixel, image.width);
+   602 00:0249: AD xx xx     	lda	|~~image+4
+   603 00:024C: 48           	pha
+   604 00:024D: AD xx xx     	lda	|~~image+276
+   605 00:0250: 48           	pha
+   606 00:0251: 22 xx xx xx  	jsl	~~computeBytesPerScanline
+   607 00:0255: 8D xx xx     	sta	|~~image+278
+   608                        ;
+   609                        ;			printf("width: %lu, height: %lu,
+                     depth: %d, colType: %d, bpP: %d, bpS: %d\n", 
+   610                        ;					image.width, ima
+                    ge.height, image.depth, image.colorType, image.bytesPerPixel
+                    , image.bytesPerScanline);
+   611 00:0258: 48           	pha
+   612 00:0259: AD xx xx     	lda	|~~image+276
+   613 00:025C: 48           	pha
+   614 00:025D: AD xx xx     	lda	|~~image+270
+   615 00:0260: 48           	pha
+   616 00:0261: AD xx xx     	lda	|~~image+268
+  Thu Jan 13 2022 10:23                                                Page 12
+
+
+   617 00:0264: 48           	pha
+   618 00:0265: AD xx xx     	lda	|~~image+8+2
+   619 00:0268: 48           	pha
+   620 00:0269: AD xx xx     	lda	|~~image+8
+   621 00:026C: 48           	pha
+   622 00:026D: AD xx xx     	lda	|~~image+4+2
+   623 00:0270: 48           	pha
+   624 00:0271: AD xx xx     	lda	|~~image+4
+   625 00:0274: 48           	pha
+   626 00:0275: F4 xx xx     	pea	#^L1+19
+   627 00:0278: F4 xx xx     	pea	#<L1+19
+   628 00:027B: F4 16 00     	pea	#22
+   629 00:027E: 22 xx xx xx  	jsl	~~printf
+   630                        ;					
+   631                        ;			buf += sizeof(t_chunkIDAT);
+   632 00:0282: 18           	clc
+   633 00:0283: A9 19 00     	lda	#$19
+   634 00:0286: 82 3C FF     	brl	L20007
+   635                        ;			continue;
+   636                        ;		}
+   637                        ;	
+   638                        ;		memcpy(name, chunk->name, 4);
+   639                        L10022:
+   640 00:0289: F4 00 00     	pea	#^$4
+   641 00:028C: F4 04 00     	pea	#<$4
+   642 00:028F: A9 04 00     	lda	#$4
+   643 00:0292: 18           	clc
+   644 00:0293: 65 0D        	adc	<L19+chunk_1
+   645 00:0295: 85 01        	sta	<R0
+   646 00:0297: A9 00 00     	lda	#$0
+   647 00:029A: 65 0F        	adc	<L19+chunk_1+2
+   648 00:029C: 48           	pha
+   649 00:029D: D4 01        	pei	<R0
+   650 00:029F: F4 00 00     	pea	#0
+   651 00:02A2: 18           	clc
+   652 00:02A3: 7B           	tdc
+   653 00:02A4: 69 15 00     	adc	#<L19+name_1
+   654 00:02A7: 48           	pha
+   655 00:02A8: 22 xx xx xx  	jsl	~~memcpy
+   656                        ;		chunklen = swapLong(chunk->len);
+   657 00:02AC: A0 02 00     	ldy	#$2
+   658 00:02AF: B7 0D        	lda	[<L19+chunk_1],Y
+   659 00:02B1: 48           	pha
+   660 00:02B2: A7 0D        	lda	[<L19+chunk_1]
+   661 00:02B4: 48           	pha
+   662 00:02B5: 22 xx xx xx  	jsl	~~swapLong
+   663 00:02B9: 85 26        	sta	<L19+chunklen_1
+   664 00:02BB: 86 28        	stx	<L19+chunklen_1+2
+   665                        ;		
+   666                        ;		//printf("chunk: %s, len: %lu\n", name, 
+                    chunklen);
+   667                        ;		
+   668                        ;		if (!memcmp(chunk->name, "IDAT", 4)) {
+   669 00:02BD: F4 00 00     	pea	#^$4
+   670 00:02C0: F4 04 00     	pea	#<$4
+   671 00:02C3: F4 xx xx     	pea	#^L1+86
+   672 00:02C6: F4 xx xx     	pea	#<L1+86
+   673 00:02C9: A9 04 00     	lda	#$4
+  Thu Jan 13 2022 10:23                                                Page 13
+
+
+   674 00:02CC: 18           	clc
+   675 00:02CD: 65 0D        	adc	<L19+chunk_1
+   676 00:02CF: 85 01        	sta	<R0
+   677 00:02D1: A9 00 00     	lda	#$0
+   678 00:02D4: 65 0F        	adc	<L19+chunk_1+2
+   679 00:02D6: 85 03        	sta	<R0+2
+   680 00:02D8: 48           	pha
+   681 00:02D9: D4 01        	pei	<R0
+   682 00:02DB: 22 xx xx xx  	jsl	~~memcmp
+   683 00:02DF: AA           	tax
+   684 00:02E0: F0 03        	beq	*+5
+   685 00:02E2: 82 D4 00     	brl	L10023
+   686                        ;			
+   687                        ;			image.dataLength = (image.width 
+                    * image.bytesPerPixel + 1) * image.height;
+   688 00:02E5: AD xx xx     	lda	|~~image+276
+   689 00:02E8: 85 01        	sta	<R0
+   690 00:02EA: 64 03        	stz	<R0+2
+   691 00:02EC: AD xx xx     	lda	|~~image+4+2
+   692 00:02EF: 48           	pha
+   693 00:02F0: AD xx xx     	lda	|~~image+4
+   694 00:02F3: 48           	pha
+   695 00:02F4: D4 03        	pei	<R0+2
+   696 00:02F6: D4 01        	pei	<R0
+   697                        	xref	~~~lmul
+   698 00:02F8: 22 xx xx xx  	jsl	~~~lmul
+   699 00:02FC: 85 01        	sta	<R0
+   700 00:02FE: 86 03        	stx	<R0+2
+   701 00:0300: A9 01 00     	lda	#$1
+   702 00:0303: 18           	clc
+   703 00:0304: 65 01        	adc	<R0
+   704 00:0306: 85 05        	sta	<R1
+   705 00:0308: A9 00 00     	lda	#$0
+   706 00:030B: 65 03        	adc	<R0+2
+   707 00:030D: 85 07        	sta	<R1+2
+   708 00:030F: AD xx xx     	lda	|~~image+8+2
+   709 00:0312: 48           	pha
+   710 00:0313: AD xx xx     	lda	|~~image+8
+   711 00:0316: 48           	pha
+   712 00:0317: D4 07        	pei	<R1+2
+   713 00:0319: D4 05        	pei	<R1
+   714                        	xref	~~~lmul
+   715 00:031B: 22 xx xx xx  	jsl	~~~lmul
+   716 00:031F: 8D xx xx     	sta	|~~image+272
+   717 00:0322: 8E xx xx     	stx	|~~image+272+2
+   718                        ;			
+   719                        ;			if (imageLen == 0) {
+   720 00:0325: A5 2A        	lda	<L19+imageLen_1
+   721 00:0327: 05 2C        	ora	<L19+imageLen_1+2
+   722 00:0329: D0 38        	bne	L10024
+   723                        ;				imageLen = chunklen - 2;
+                    	//subtract zlib header
+   724 00:032B: A9 FE FF     	lda	#$fffe
+   725 00:032E: 18           	clc
+   726 00:032F: 65 26        	adc	<L19+chunklen_1
+   727 00:0331: 85 2A        	sta	<L19+imageLen_1
+   728 00:0333: A9 FF FF     	lda	#$ffff
+   729 00:0336: 65 28        	adc	<L19+chunklen_1+2
+  Thu Jan 13 2022 10:23                                                Page 14
+
+
+   730 00:0338: 85 2C        	sta	<L19+imageLen_1+2
+   731                        ;				compressedData = malloc(
+                    imageLen);
+   732 00:033A: 48           	pha
+   733 00:033B: D4 2A        	pei	<L19+imageLen_1
+   734 00:033D: 22 xx xx xx  	jsl	~~malloc
+   735 00:0341: 85 1E        	sta	<L19+compressedData_1
+   736 00:0343: 86 20        	stx	<L19+compressedData_1+2
+   737                        ;				memcpy(compressedData, b
+                    uf + sizeof(t_chunk) + 2, imageLen);
+   738 00:0345: D4 2C        	pei	<L19+imageLen_1+2
+   739 00:0347: D4 2A        	pei	<L19+imageLen_1
+   740 00:0349: A9 0A 00     	lda	#$a
+   741 00:034C: 18           	clc
+   742 00:034D: 65 39        	adc	<L18+buf_0
+   743 00:034F: 85 01        	sta	<R0
+   744 00:0351: A9 00 00     	lda	#$0
+   745 00:0354: 65 3B        	adc	<L18+buf_0+2
+   746 00:0356: 48           	pha
+   747 00:0357: D4 01        	pei	<R0
+   748 00:0359: D4 20        	pei	<L19+compressedData_1+2
+   749 00:035B: D4 1E        	pei	<L19+compressedData_1
+   750 00:035D: 22 xx xx xx  	jsl	~~memcpy
+   751                        ;			} else {
+   752 00:0361: 80 4D        	bra	L10025
+   753                        L10024:
+   754                        ;				compressedData = realloc
+                    (compressedData, imageLen + chunklen);
+   755 00:0363: A5 2A        	lda	<L19+imageLen_1
+   756 00:0365: 18           	clc
+   757 00:0366: 65 26        	adc	<L19+chunklen_1
+   758 00:0368: 85 01        	sta	<R0
+   759 00:036A: A5 2C        	lda	<L19+imageLen_1+2
+   760 00:036C: 65 28        	adc	<L19+chunklen_1+2
+   761 00:036E: 48           	pha
+   762 00:036F: D4 01        	pei	<R0
+   763 00:0371: D4 20        	pei	<L19+compressedData_1+2
+   764 00:0373: D4 1E        	pei	<L19+compressedData_1
+   765 00:0375: 22 xx xx xx  	jsl	~~realloc
+   766 00:0379: 85 1E        	sta	<L19+compressedData_1
+   767 00:037B: 86 20        	stx	<L19+compressedData_1+2
+   768                        ;				memcpy(compressedData + 
+                    imageLen, buf + sizeof(t_chunk), chunklen);
+   769 00:037D: D4 28        	pei	<L19+chunklen_1+2
+   770 00:037F: D4 26        	pei	<L19+chunklen_1
+   771 00:0381: A9 08 00     	lda	#$8
+   772 00:0384: 18           	clc
+   773 00:0385: 65 39        	adc	<L18+buf_0
+   774 00:0387: 85 01        	sta	<R0
+   775 00:0389: A9 00 00     	lda	#$0
+   776 00:038C: 65 3B        	adc	<L18+buf_0+2
+   777 00:038E: 48           	pha
+   778 00:038F: D4 01        	pei	<R0
+   779 00:0391: A5 1E        	lda	<L19+compressedData_1
+   780 00:0393: 18           	clc
+   781 00:0394: 65 2A        	adc	<L19+imageLen_1
+   782 00:0396: 85 05        	sta	<R1
+   783 00:0398: A5 20        	lda	<L19+compressedData_1+2
+  Thu Jan 13 2022 10:23                                                Page 15
+
+
+   784 00:039A: 65 2C        	adc	<L19+imageLen_1+2
+   785 00:039C: 48           	pha
+   786 00:039D: D4 05        	pei	<R1
+   787 00:039F: 22 xx xx xx  	jsl	~~memcpy
+   788                        ;				imageLen  += chunklen;
+   789 00:03A3: A5 2A        	lda	<L19+imageLen_1
+   790 00:03A5: 18           	clc
+   791 00:03A6: 65 26        	adc	<L19+chunklen_1
+   792 00:03A8: 85 2A        	sta	<L19+imageLen_1
+   793 00:03AA: A5 2C        	lda	<L19+imageLen_1+2
+   794 00:03AC: 65 28        	adc	<L19+chunklen_1+2
+   795 00:03AE: 85 2C        	sta	<L19+imageLen_1+2
+   796                        ;			}
+   797                        L10025:
+   798                        ;			
+   799                        ;			if (!compressedData) {
+   800 00:03B0: A5 1E        	lda	<L19+compressedData_1
+   801 00:03B2: 05 20        	ora	<L19+compressedData_1+2
+   802 00:03B4: D0 03        	bne	*+5
+   803 00:03B6: 82 F3 FD     	brl	L20004
+   804                        ;				return -1;
+   805                        ;			}
+   806                        ;
+   807                        ;		}
+   808                        ;		
+   809                        ;		if (!memcmp(chunk->name, "PLTE", 4)) {
+   810                        L10023:
+   811 00:03B9: F4 00 00     	pea	#^$4
+   812 00:03BC: F4 04 00     	pea	#<$4
+   813 00:03BF: F4 xx xx     	pea	#^L1+91
+   814 00:03C2: F4 xx xx     	pea	#<L1+91
+   815 00:03C5: A9 04 00     	lda	#$4
+   816 00:03C8: 18           	clc
+   817 00:03C9: 65 0D        	adc	<L19+chunk_1
+   818 00:03CB: 85 01        	sta	<R0
+   819 00:03CD: A9 00 00     	lda	#$0
+   820 00:03D0: 65 0F        	adc	<L19+chunk_1+2
+   821 00:03D2: 85 03        	sta	<R0+2
+   822 00:03D4: 48           	pha
+   823 00:03D5: D4 01        	pei	<R0
+   824 00:03D7: 22 xx xx xx  	jsl	~~memcmp
+   825 00:03DB: AA           	tax
+   826 00:03DC: F0 03        	beq	*+5
+   827 00:03DE: 82 B7 00     	brl	L10027
+   828                        ;			plte = buf + sizeof(t_chunk);
+   829 00:03E1: A9 08 00     	lda	#$8
+   830 00:03E4: 18           	clc
+   831 00:03E5: 65 39        	adc	<L18+buf_0
+   832 00:03E7: 85 1A        	sta	<L19+plte_1
+   833 00:03E9: A9 00 00     	lda	#$0
+   834 00:03EC: 65 3B        	adc	<L18+buf_0+2
+   835 00:03EE: 85 1C        	sta	<L19+plte_1+2
+   836                        ;			
+   837                        ;			y = chunklen / 3;
+   838 00:03F0: F4 00 00     	pea	#^$3
+   839 00:03F3: F4 03 00     	pea	#<$3
+   840 00:03F6: D4 28        	pei	<L19+chunklen_1+2
+   841 00:03F8: D4 26        	pei	<L19+chunklen_1
+  Thu Jan 13 2022 10:23                                                Page 16
+
+
+   842                        	xref	~~~ludv
+   843 00:03FA: 22 xx xx xx  	jsl	~~~ludv
+   844 00:03FE: 86 03        	stx	<R0+2
+   845 00:0400: 85 30        	sta	<L19+y_1
+   846                        ;			
+   847                        ;			printf("doing palette, colors: %
+                    d\n", y);
+   848 00:0402: 48           	pha
+   849 00:0403: F4 xx xx     	pea	#^L1+96
+   850 00:0406: F4 xx xx     	pea	#<L1+96
+   851 00:0409: F4 08 00     	pea	#8
+   852 00:040C: 22 xx xx xx  	jsl	~~printf
+   853                        ;			
+   854                        ;			
+   855                        ;			//asm {sei; wdm 7;};
+   856                        ;			for(x = 0, xp = 0; x < y; x++, x
+                    p++) {
+   857 00:0410: 64 2E        	stz	<L19+x_1
+   858 00:0412: 64 32        	stz	<L19+xp_1
+   859 00:0414: 80 79        	bra	L10031
+   860                        L10030:
+   861                        ;				palette[xp] = *plte >> 5
+                    ;
+   862 00:0416: E2 20        	sep	#$20
+   863                        	longa	off
+   864 00:0418: A7 1A        	lda	[<L19+plte_1]
+   865 00:041A: 4A           	lsr	A
+   866 00:041B: 4A           	lsr	A
+   867 00:041C: 4A           	lsr	A
+   868 00:041D: 4A           	lsr	A
+   869 00:041E: 4A           	lsr	A
+   870 00:041F: A4 32        	ldy	<L19+xp_1
+   871 00:0421: 97 22        	sta	[<L19+palette_1],Y
+   872 00:0423: C2 20        	rep	#$20
+   873                        	longa	on
+   874                        ;				plte++;
+   875 00:0425: E6 1A        	inc	<L19+plte_1
+   876 00:0427: D0 02        	bne	L33
+   877 00:0429: E6 1C        	inc	<L19+plte_1+2
+   878                        L33:
+   879                        ;				palette[xp] |= ((*plte >
+                    > 2) & 0x38);
+   880 00:042B: A5 32        	lda	<L19+xp_1
+   881 00:042D: 85 01        	sta	<R0
+   882 00:042F: 64 03        	stz	<R0+2
+   883 00:0431: A5 22        	lda	<L19+palette_1
+   884 00:0433: 18           	clc
+   885 00:0434: 65 01        	adc	<R0
+   886 00:0436: 85 05        	sta	<R1
+   887 00:0438: A5 24        	lda	<L19+palette_1+2
+   888 00:043A: 65 03        	adc	<R0+2
+   889 00:043C: 85 07        	sta	<R1+2
+   890 00:043E: E2 20        	sep	#$20
+   891                        	longa	off
+   892 00:0440: A7 1A        	lda	[<L19+plte_1]
+   893 00:0442: 4A           	lsr	A
+   894 00:0443: 4A           	lsr	A
+   895 00:0444: 29 38        	and	#<$38
+  Thu Jan 13 2022 10:23                                                Page 17
+
+
+   896 00:0446: 07 05        	ora	[<R1]
+   897 00:0448: 87 05        	sta	[<R1]
+   898 00:044A: C2 20        	rep	#$20
+   899                        	longa	on
+   900                        ;				plte++;
+   901 00:044C: E6 1A        	inc	<L19+plte_1
+   902 00:044E: D0 02        	bne	L34
+   903 00:0450: E6 1C        	inc	<L19+plte_1+2
+   904                        L34:
+   905                        ;				palette[xp] |= ((*plte <
+                    < 1) & 0xC0);
+   906 00:0452: A5 32        	lda	<L19+xp_1
+   907 00:0454: 85 01        	sta	<R0
+   908 00:0456: 64 03        	stz	<R0+2
+   909 00:0458: A5 22        	lda	<L19+palette_1
+   910 00:045A: 18           	clc
+   911 00:045B: 65 01        	adc	<R0
+   912 00:045D: 85 05        	sta	<R1
+   913 00:045F: A5 24        	lda	<L19+palette_1+2
+   914 00:0461: 65 03        	adc	<R0+2
+   915 00:0463: 85 07        	sta	<R1+2
+   916 00:0465: E2 20        	sep	#$20
+   917                        	longa	off
+   918 00:0467: A7 1A        	lda	[<L19+plte_1]
+   919 00:0469: 0A           	asl	A
+   920 00:046A: 29 C0        	and	#<$c0
+   921 00:046C: 07 05        	ora	[<R1]
+   922 00:046E: 87 05        	sta	[<R1]
+   923 00:0470: C2 20        	rep	#$20
+   924                        	longa	on
+   925                        ;				//printf("%p:%02X ", pal
+                    ette+xp, palette[xp]);
+   926                        ;				xp++;
+   927 00:0472: E6 32        	inc	<L19+xp_1
+   928                        ;				palette[xp] = *plte >> 7
+                    ;
+   929 00:0474: A7 1A        	lda	[<L19+plte_1]
+   930 00:0476: A2 07 00     	ldx	#<$7
+   931                        	xref	~~~clsr
+   932 00:0479: 22 xx xx xx  	jsl	~~~clsr
+   933 00:047D: E2 20        	sep	#$20
+   934                        	longa	off
+   935 00:047F: A4 32        	ldy	<L19+xp_1
+   936 00:0481: 97 22        	sta	[<L19+palette_1],Y
+   937 00:0483: C2 20        	rep	#$20
+   938                        	longa	on
+   939                        ;				plte++;
+   940 00:0485: E6 1A        	inc	<L19+plte_1
+   941 00:0487: D0 02        	bne	L10028
+   942 00:0489: E6 1C        	inc	<L19+plte_1+2
+   943                        ;				//printf("%02X\n", palet
+                    te[xp]);
+   944                        ;			}
+   945                        L10028:
+   946 00:048B: E6 32        	inc	<L19+xp_1
+   947 00:048D: E6 2E        	inc	<L19+x_1
+   948                        L10031:
+   949 00:048F: A5 2E        	lda	<L19+x_1
+  Thu Jan 13 2022 10:23                                                Page 18
+
+
+   950 00:0491: C5 30        	cmp	<L19+y_1
+   951 00:0493: B0 03        	bcs	*+5
+   952 00:0495: 82 7E FF     	brl	L10030
+   953                        ;			//asm {wdm 6; cli;};
+   954                        ;
+   955                        ;		}
+   956                        ;		
+   957                        ;		//getchar();
+   958                        ;		
+   959                        ;		if (!memcmp(chunk->name, "IEND", 4)) {
+   960                        L10027:
+   961 00:0498: F4 00 00     	pea	#^$4
+   962 00:049B: F4 04 00     	pea	#<$4
+   963 00:049E: F4 xx xx     	pea	#^L1+123
+   964 00:04A1: F4 xx xx     	pea	#<L1+123
+   965 00:04A4: A9 04 00     	lda	#$4
+   966 00:04A7: 18           	clc
+   967 00:04A8: 65 0D        	adc	<L19+chunk_1
+   968 00:04AA: 85 01        	sta	<R0
+   969 00:04AC: A9 00 00     	lda	#$0
+   970 00:04AF: 65 0F        	adc	<L19+chunk_1+2
+   971 00:04B1: 48           	pha
+   972 00:04B2: D4 01        	pei	<R0
+   973 00:04B4: 22 xx xx xx  	jsl	~~memcmp
+   974 00:04B8: AA           	tax
+   975 00:04B9: F0 03        	beq	*+5
+   976 00:04BB: 82 7D 00     	brl	L10032
+   977                        ;			image.data = malloc(image.dataLe
+                    ngth);
+   978 00:04BE: AD xx xx     	lda	|~~image+272+2
+   979 00:04C1: 48           	pha
+   980 00:04C2: AD xx xx     	lda	|~~image+272
+   981 00:04C5: 48           	pha
+   982 00:04C6: 22 xx xx xx  	jsl	~~malloc
+   983 00:04CA: 8D xx xx     	sta	|~~image
+   984 00:04CD: 8E xx xx     	stx	|~~image+2
+   985                        ;			printf("datain: %p, dataout: %p,
+                     len: %lu\n", compressedData, image.data, image.dataLength);
+   986 00:04D0: AD xx xx     	lda	|~~image+272+2
+   987 00:04D3: 48           	pha
+   988 00:04D4: AD xx xx     	lda	|~~image+272
+   989 00:04D7: 48           	pha
+   990 00:04D8: AD xx xx     	lda	|~~image+2
+   991 00:04DB: 48           	pha
+   992 00:04DC: AD xx xx     	lda	|~~image
+   993 00:04DF: 48           	pha
+   994 00:04E0: D4 20        	pei	<L19+compressedData_1+2
+   995 00:04E2: D4 1E        	pei	<L19+compressedData_1
+   996 00:04E4: F4 xx xx     	pea	#^L1+128
+   997 00:04E7: F4 xx xx     	pea	#<L1+128
+   998 00:04EA: F4 12 00     	pea	#18
+   999 00:04ED: 22 xx xx xx  	jsl	~~printf
+  1000                        ;			
+  1001                        ;			imageLen -= 4;
+  1002 00:04F1: A9 FC FF     	lda	#$fffc
+  1003 00:04F4: 18           	clc
+  1004 00:04F5: 65 2A        	adc	<L19+imageLen_1
+  1005 00:04F7: 85 2A        	sta	<L19+imageLen_1
+  Thu Jan 13 2022 10:23                                                Page 19
+
+
+  1006 00:04F9: A9 FF FF     	lda	#$ffff
+  1007 00:04FC: 65 2C        	adc	<L19+imageLen_1+2
+  1008 00:04FE: 85 2C        	sta	<L19+imageLen_1+2
+  1009                        ;			//asm{wdm 1;}
+  1010                        ;			//rc = puff(image.data, &image.d
+                    ataLength, compressedData, &imageLen);
+  1011                        ;			//asm{wdm 2;}
+  1012                        ;			asm{wdm 1;}
+  1013                        	asmstart
+  1014 00:0500: 42 01        	wdm 1
+  1015                        	asmend
+  1016                        ;			rc = inflate(compressedData, ima
+                    ge.data, &image.dataLength);
+  1017 00:0502: A9 xx xx     	lda	#<~~image+272
+  1018 00:0505: 85 01        	sta	<R0
+  1019                        	xref	_BEG_DATA
+  1020 00:0507: A9 xx xx     	lda	#_BEG_DATA>>16
+  1021 00:050A: 48           	pha
+  1022 00:050B: D4 01        	pei	<R0
+  1023 00:050D: AD xx xx     	lda	|~~image+2
+  1024 00:0510: 48           	pha
+  1025 00:0511: AD xx xx     	lda	|~~image
+  1026 00:0514: 48           	pha
+  1027 00:0515: D4 20        	pei	<L19+compressedData_1+2
+  1028 00:0517: D4 1E        	pei	<L19+compressedData_1
+  1029 00:0519: 22 xx xx xx  	jsl	~~inflate
+  1030 00:051D: 85 34        	sta	<L19+rc_1
+  1031                        ;			asm{wdm 2;}
+  1032                        	asmstart
+  1033 00:051F: 42 02        	wdm 2
+  1034                        	asmend
+  1035                        ;
+  1036                        ;			printf("rc: %d, len: %lu\n", rc,
+                     image.dataLength);
+  1037 00:0521: AD xx xx     	lda	|~~image+272+2
+  1038 00:0524: 48           	pha
+  1039 00:0525: AD xx xx     	lda	|~~image+272
+  1040 00:0528: 48           	pha
+  1041 00:0529: D4 34        	pei	<L19+rc_1
+  1042 00:052B: F4 xx xx     	pea	#^L1+163
+  1043 00:052E: F4 xx xx     	pea	#<L1+163
+  1044 00:0531: F4 0C 00     	pea	#12
+  1045 00:0534: 22 xx xx xx  	jsl	~~printf
+  1046                        ;
+  1047                        ;			//if (rc != 0) return -1;
+  1048                        ;			break;
+  1049 00:0538: 82 74 FC     	brl	L25
+  1050                        ;		}
+  1051                        ;		
+  1052                        ;		buf += sizeof(t_chunk) + chunklen + size
+                    of(long);
+  1053                        L10032:
+  1054 00:053B: A9 0C 00     	lda	#$c
+  1055 00:053E: 18           	clc
+  1056 00:053F: 65 26        	adc	<L19+chunklen_1
+  1057 00:0541: 85 01        	sta	<R0
+  1058 00:0543: A9 00 00     	lda	#$0
+  1059 00:0546: 65 28        	adc	<L19+chunklen_1+2
+  Thu Jan 13 2022 10:23                                                Page 20
+
+
+  1060 00:0548: 85 03        	sta	<R0+2
+  1061 00:054A: A5 39        	lda	<L18+buf_0
+  1062 00:054C: 18           	clc
+  1063 00:054D: 65 01        	adc	<R0
+  1064 00:054F: 85 39        	sta	<L18+buf_0
+  1065 00:0551: A5 3B        	lda	<L18+buf_0+2
+  1066 00:0553: 65 03        	adc	<R0+2
+  1067 00:0555: 85 3B        	sta	<L18+buf_0+2
+  1068                        ;
+  1069                        ;	}
+  1070 00:0557: 82 73 FC     	brl	L10021
+  1071                        ;}
+  1072             00000035   L18	equ	53
+  1073             00000009   L19	equ	9
+  1074                        	ends
+  1075                        	efunc
+  1076                        	data
+  1077                        L1:
+  1078 00:0000: 6E 6F 20 50  	db	$6E,$6F,$20,$50,$4E,$47,$20,$66,$69,$6C,
+                    $65,$21,$0A,$00,$49
+       00:0004: 4E 47 20 66 
+       00:0008: 69 6C 65 21 
+       00:000C: 0A 00 49 
+  1079 00:000F: 48 44 52 00  	db	$48,$44,$52,$00,$77,$69,$64,$74,$68,$3A,
+                    $20,$25,$6C,$75,$2C
+       00:0013: 77 69 64 74 
+       00:0017: 68 3A 20 25 
+       00:001B: 6C 75 2C 
+  1080 00:001E: 20 68 65 69  	db	$20,$68,$65,$69,$67,$68,$74,$3A,$20,$25,
+                    $6C,$75,$2C,$20,$64
+       00:0022: 67 68 74 3A 
+       00:0026: 20 25 6C 75 
+       00:002A: 2C 20 64 
+  1081 00:002D: 65 70 74 68  	db	$65,$70,$74,$68,$3A,$20,$25,$64,$2C,$20,
+                    $63,$6F,$6C,$54,$79
+       00:0031: 3A 20 25 64 
+       00:0035: 2C 20 63 6F 
+       00:0039: 6C 54 79 
+  1082 00:003C: 70 65 3A 20  	db	$70,$65,$3A,$20,$25,$64,$2C,$20,$62,$70,
+                    $50,$3A,$20,$25,$64
+       00:0040: 25 64 2C 20 
+       00:0044: 62 70 50 3A 
+       00:0048: 20 25 64 
+  1083 00:004B: 2C 20 62 70  	db	$2C,$20,$62,$70,$53,$3A,$20,$25,$64,$0A,
+                    $00,$49,$44,$41,$54
+       00:004F: 53 3A 20 25 
+       00:0053: 64 0A 00 49 
+       00:0057: 44 41 54 
+  1084 00:005A: 00 50 4C 54  	db	$00,$50,$4C,$54,$45,$00,$64,$6F,$69,$6E,
+                    $67,$20,$70,$61,$6C
+       00:005E: 45 00 64 6F 
+       00:0062: 69 6E 67 20 
+       00:0066: 70 61 6C 
+  1085 00:0069: 65 74 74 65  	db	$65,$74,$74,$65,$2C,$20,$63,$6F,$6C,$6F,
+                    $72,$73,$3A,$20,$25
+       00:006D: 2C 20 63 6F 
+       00:0071: 6C 6F 72 73 
+       00:0075: 3A 20 25 
+  Thu Jan 13 2022 10:23                                                Page 21
+
+
+  1086 00:0078: 64 0A 00 49  	db	$64,$0A,$00,$49,$45,$4E,$44,$00,$64,$61,
+                    $74,$61,$69,$6E,$3A
+       00:007C: 45 4E 44 00 
+       00:0080: 64 61 74 61 
+       00:0084: 69 6E 3A 
+  1087 00:0087: 20 25 70 2C  	db	$20,$25,$70,$2C,$20,$64,$61,$74,$61,$6F,
+                    $75,$74,$3A,$20,$25
+       00:008B: 20 64 61 74 
+       00:008F: 61 6F 75 74 
+       00:0093: 3A 20 25 
+  1088 00:0096: 70 2C 20 6C  	db	$70,$2C,$20,$6C,$65,$6E,$3A,$20,$25,$6C,
+                    $75,$0A,$00,$72,$63
+       00:009A: 65 6E 3A 20 
+       00:009E: 25 6C 75 0A 
+       00:00A2: 00 72 63 
+  1089 00:00A5: 3A 20 25 64  	db	$3A,$20,$25,$64,$2C,$20,$6C,$65,$6E,$3A,
+                    $20,$25,$6C,$75,$0A
+       00:00A9: 2C 20 6C 65 
+       00:00AD: 6E 3A 20 25 
+       00:00B1: 6C 75 0A 
+  1090 00:00B4: 00           	db	$00
+  1091 00:00B5:              	ends
+  1092                        ;
+  1093                        ;
+  1094                        ;
+  1095                        ;void reconcile(char *scanLine, char *scanLineOld,
+                     char *imageData, unsigned int bytesPerPixel) {
+  1096                        	code
+  1097                        	xdef	~~reconcile
+  1098                        	func
+  1099                        ~~reconcile:
+  1100                        	longa	on
+  1101                        	longi	on
+  1102 00:055A: 3B           	tsc
+  1103 00:055B: 38           	sec
+  1104 00:055C: E9 20 00     	sbc	#L39
+  1105 00:055F: 1B           	tcs
+  1106 00:0560: 0B           	phd
+  1107 00:0561: 5B           	tcd
+  1108             00000004   scanLine_0	set	4
+  1109             00000008   scanLineOld_0	set	8
+  1110             0000000C   imageData_0	set	12
+  1111             00000010   bytesPerPixel_0	set	16
+  1112                        ;	unsigned int x0, a, b, c, r, x, filter;
+  1113                        ;	int p, xprev, pa, pb, pc;
+  1114                        ;	
+  1115                        ;	filter = *imageData;
+  1116             00000000   x0_1	set	0
+  1117             00000002   a_1	set	2
+  1118             00000004   b_1	set	4
+  1119             00000006   c_1	set	6
+  1120             00000008   r_1	set	8
+  1121             0000000A   x_1	set	10
+  1122             0000000C   filter_1	set	12
+  1123             0000000E   p_1	set	14
+  1124             00000010   xprev_1	set	16
+  1125             00000012   pa_1	set	18
+  1126             00000014   pb_1	set	20
+  Thu Jan 13 2022 10:23                                                Page 22
+
+
+  1127             00000016   pc_1	set	22
+  1128 00:0562: A7 2C        	lda	[<L39+imageData_0]
+  1129 00:0564: 29 FF 00     	and	#$ff
+  1130 00:0567: 85 15        	sta	<L40+filter_1
+  1131                        ;	imageData++;
+  1132 00:0569: E6 2C        	inc	<L39+imageData_0
+  1133 00:056B: D0 02        	bne	L41
+  1134 00:056D: E6 2E        	inc	<L39+imageData_0+2
+  1135                        L41:
+  1136                        ;	
+  1137                        ;	
+  1138                        ;	if (filter == 0) {
+  1139 00:056F: A5 15        	lda	<L40+filter_1
+  1140 00:0571: D0 27        	bne	L10033
+  1141                        ;		memcpy(scanLine, imageData, image.bytesP
+                    erScanline);
+  1142 00:0573: AD xx xx     	lda	|~~image+278
+  1143 00:0576: 85 01        	sta	<R0
+  1144 00:0578: 64 03        	stz	<R0+2
+  1145 00:057A: D4 03        	pei	<R0+2
+  1146 00:057C: D4 01        	pei	<R0
+  1147 00:057E: D4 2E        	pei	<L39+imageData_0+2
+  1148 00:0580: D4 2C        	pei	<L39+imageData_0
+  1149 00:0582: D4 26        	pei	<L39+scanLine_0+2
+  1150 00:0584: D4 24        	pei	<L39+scanLine_0
+  1151 00:0586: 22 xx xx xx  	jsl	~~memcpy
+  1152                        ;		return;
+  1153                        L43:
+  1154 00:058A: A5 22        	lda	<L39+2
+  1155 00:058C: 85 30        	sta	<L39+2+14
+  1156 00:058E: A5 21        	lda	<L39+1
+  1157 00:0590: 85 2F        	sta	<L39+1+14
+  1158 00:0592: 2B           	pld
+  1159 00:0593: 3B           	tsc
+  1160 00:0594: 18           	clc
+  1161 00:0595: 69 2E 00     	adc	#L39+14
+  1162 00:0598: 1B           	tcs
+  1163 00:0599: 6B           	rtl
+  1164                        ;	}
+  1165                        ;	
+  1166                        ;	for (x = 0, xprev = -bytesPerPixel; x < image.by
+                    tesPerScanline; x++, xprev++) {
+  1167                        L10033:
+  1168 00:059A: 64 13        	stz	<L40+x_1
+  1169 00:059C: 38           	sec
+  1170 00:059D: A9 00 00     	lda	#$0
+  1171 00:05A0: E5 30        	sbc	<L39+bytesPerPixel_0
+  1172 00:05A2: 85 19        	sta	<L40+xprev_1
+  1173 00:05A4: 82 2A 01     	brl	L10037
+  1174                        L10039:
+  1175                        ;				scanLine[x] = imageData[
+                    x];
+  1176 00:05A7: E2 20        	sep	#$20
+  1177                        	longa	off
+  1178 00:05A9: A4 13        	ldy	<L40+x_1
+  1179 00:05AB: B7 2C        	lda	[<L39+imageData_0],Y
+  1180 00:05AD: 97 24        	sta	[<L39+scanLine_0],Y
+  1181 00:05AF: C2 20        	rep	#$20
+  Thu Jan 13 2022 10:23                                                Page 23
+
+
+  1182                        	longa	on
+  1183                        ;			}
+  1184                        ;			continue;
+  1185 00:05B1: 82 19 01     	brl	L10034
+  1186                        ;		}
+  1187                        ;		
+  1188                        ;		//up
+  1189                        ;		if (filter == 2) {
+  1190                        L10038:
+  1191 00:05B4: A5 15        	lda	<L40+filter_1
+  1192 00:05B6: C9 02 00     	cmp	#<$2
+  1193 00:05B9: D0 10        	bne	L10041
+  1194                        ;			scanLine[x] = imageData[x] + sca
+                    nLineOld[x];
+  1195 00:05BB: E2 20        	sep	#$20
+  1196                        	longa	off
+  1197 00:05BD: 18           	clc
+  1198 00:05BE: A4 13        	ldy	<L40+x_1
+  1199 00:05C0: B7 2C        	lda	[<L39+imageData_0],Y
+  1200 00:05C2: 77 28        	adc	[<L39+scanLineOld_0],Y
+  1201 00:05C4: 97 24        	sta	[<L39+scanLine_0],Y
+  1202 00:05C6: C2 20        	rep	#$20
+  1203                        	longa	on
+  1204                        ;			continue;
+  1205 00:05C8: 82 02 01     	brl	L10034
+  1206                        ;		}
+  1207                        ;		
+  1208                        ;		if (filter == 3) {
+  1209                        L10041:
+  1210 00:05CB: A5 15        	lda	<L40+filter_1
+  1211 00:05CD: C9 03 00     	cmp	#<$3
+  1212 00:05D0: D0 2E        	bne	L10042
+  1213                        ;			r = scanLineOld[x];
+  1214 00:05D2: A4 13        	ldy	<L40+x_1
+  1215 00:05D4: B7 28        	lda	[<L39+scanLineOld_0],Y
+  1216 00:05D6: 29 FF 00     	and	#$ff
+  1217 00:05D9: 85 11        	sta	<L40+r_1
+  1218                        ;			if (xprev >= 0) {
+  1219 00:05DB: A5 19        	lda	<L40+xprev_1
+  1220 00:05DD: 30 0C        	bmi	L10043
+  1221                        ;				r += scanLine[xprev];
+  1222 00:05DF: A4 19        	ldy	<L40+xprev_1
+  1223 00:05E1: B7 24        	lda	[<L39+scanLine_0],Y
+  1224 00:05E3: 29 FF 00     	and	#$ff
+  1225 00:05E6: 18           	clc
+  1226 00:05E7: 65 11        	adc	<L40+r_1
+  1227 00:05E9: 85 11        	sta	<L40+r_1
+  1228                        ;			}
+  1229                        ;			r >>= 1;
+  1230                        L10043:
+  1231 00:05EB: 46 11        	lsr	<L40+r_1
+  1232                        ;			scanLine[x] = r + imageData[x];
+  1233 00:05ED: A4 13        	ldy	<L40+x_1
+  1234 00:05EF: B7 2C        	lda	[<L39+imageData_0],Y
+  1235 00:05F1: 29 FF 00     	and	#$ff
+  1236 00:05F4: 18           	clc
+  1237 00:05F5: 65 11        	adc	<L40+r_1
+  1238 00:05F7: E2 20        	sep	#$20
+  Thu Jan 13 2022 10:23                                                Page 24
+
+
+  1239                        	longa	off
+  1240 00:05F9: 97 24        	sta	[<L39+scanLine_0],Y
+  1241 00:05FB: C2 20        	rep	#$20
+  1242                        	longa	on
+  1243                        ;			continue;
+  1244 00:05FD: 82 CD 00     	brl	L10034
+  1245                        ;		}
+  1246                        ;		
+  1247                        ;		if (filter == 4) {
+  1248                        L10042:
+  1249 00:0600: A5 15        	lda	<L40+filter_1
+  1250 00:0602: C9 04 00     	cmp	#<$4
+  1251 00:0605: F0 03        	beq	*+5
+  1252 00:0607: 82 C3 00     	brl	L10034
+  1253                        ;			b = p = scanLineOld[x];		
+                    //b			
+  1254 00:060A: A4 13        	ldy	<L40+x_1
+  1255 00:060C: B7 28        	lda	[<L39+scanLineOld_0],Y
+  1256 00:060E: 29 FF 00     	and	#$ff
+  1257 00:0611: 85 17        	sta	<L40+p_1
+  1258 00:0613: 85 0D        	sta	<L40+b_1
+  1259                        ;
+  1260                        ;			if (xprev >= 0) {
+  1261 00:0615: A5 19        	lda	<L40+xprev_1
+  1262 00:0617: 30 3E        	bmi	L10045
+  1263                        ;				a = scanLine[xprev];
+  1264 00:0619: A4 19        	ldy	<L40+xprev_1
+  1265 00:061B: B7 24        	lda	[<L39+scanLine_0],Y
+  1266 00:061D: 29 FF 00     	and	#$ff
+  1267 00:0620: 85 0B        	sta	<L40+a_1
+  1268                        ;				c = scanLineOld[xprev];
+  1269 00:0622: B7 28        	lda	[<L39+scanLineOld_0],Y
+  1270 00:0624: 29 FF 00     	and	#$ff
+  1271 00:0627: 85 0F        	sta	<L40+c_1
+  1272                        ;
+  1273                        ;				p += a - c;
+  1274 00:0629: 38           	sec
+  1275 00:062A: A5 0B        	lda	<L40+a_1
+  1276 00:062C: E5 0F        	sbc	<L40+c_1
+  1277 00:062E: 18           	clc
+  1278 00:062F: 65 17        	adc	<L40+p_1
+  1279 00:0631: 85 17        	sta	<L40+p_1
+  1280                        ;				pa = p - a;
+  1281 00:0633: 38           	sec
+  1282 00:0634: E5 0B        	sbc	<L40+a_1
+  1283 00:0636: 85 1B        	sta	<L40+pa_1
+  1284                        ;				pc = p - c;
+  1285 00:0638: 38           	sec
+  1286 00:0639: A5 17        	lda	<L40+p_1
+  1287 00:063B: E5 0F        	sbc	<L40+c_1
+  1288 00:063D: 85 1F        	sta	<L40+pc_1
+  1289                        ;				if (pa < 0) pa = -pa;
+  1290 00:063F: A5 1B        	lda	<L40+pa_1
+  1291 00:0641: 10 08        	bpl	L10046
+  1292 00:0643: 38           	sec
+  1293 00:0644: A9 00 00     	lda	#$0
+  1294 00:0647: E5 1B        	sbc	<L40+pa_1
+  1295 00:0649: 85 1B        	sta	<L40+pa_1
+  Thu Jan 13 2022 10:23                                                Page 25
+
+
+  1296                        ;				if (pc < 0) pc = -pc;
+  1297                        L10046:
+  1298 00:064B: A5 1F        	lda	<L40+pc_1
+  1299 00:064D: 10 20        	bpl	L10048
+  1300 00:064F: 38           	sec
+  1301 00:0650: A9 00 00     	lda	#$0
+  1302 00:0653: E5 1F        	sbc	<L40+pc_1
+  1303 00:0655: 80 16        	bra	L20008
+  1304                        ;			} else {
+  1305                        L10045:
+  1306                        ;				a = c = 0;
+  1307 00:0657: 64 0F        	stz	<L40+c_1
+  1308 00:0659: 64 0B        	stz	<L40+a_1
+  1309                        ;				pa = p;
+  1310 00:065B: A5 17        	lda	<L40+p_1
+  1311 00:065D: 85 1B        	sta	<L40+pa_1
+  1312                        ;				if (pa < 0) pa = -pa;
+  1313 00:065F: A5 1B        	lda	<L40+pa_1
+  1314 00:0661: 10 08        	bpl	L10049
+  1315 00:0663: 38           	sec
+  1316 00:0664: A9 00 00     	lda	#$0
+  1317 00:0667: E5 1B        	sbc	<L40+pa_1
+  1318 00:0669: 85 1B        	sta	<L40+pa_1
+  1319                        ;				pc = pa;
+  1320                        L10049:
+  1321 00:066B: A5 1B        	lda	<L40+pa_1
+  1322                        L20008:
+  1323 00:066D: 85 1F        	sta	<L40+pc_1
+  1324                        ;			}
+  1325                        L10048:
+  1326                        ;			pb = p - b;
+  1327 00:066F: 38           	sec
+  1328 00:0670: A5 17        	lda	<L40+p_1
+  1329 00:0672: E5 0D        	sbc	<L40+b_1
+  1330 00:0674: 85 1D        	sta	<L40+pb_1
+  1331                        ;			if (pb < 0) pb = -pb;
+  1332 00:0676: A5 1D        	lda	<L40+pb_1
+  1333 00:0678: 10 08        	bpl	L10050
+  1334 00:067A: 38           	sec
+  1335 00:067B: A9 00 00     	lda	#$0
+  1336 00:067E: E5 1D        	sbc	<L40+pb_1
+  1337 00:0680: 85 1D        	sta	<L40+pb_1
+  1338                        ;						
+  1339                        ;			if ((unsigned int)pa <= (unsigne
+                    d int)pb & (unsigned int)pa <= (unsigned int)pc) {		
+                    		
+  1340                        L10050:
+  1341 00:0682: 64 01        	stz	<R0
+  1342 00:0684: A5 1D        	lda	<L40+pb_1
+  1343 00:0686: C5 1B        	cmp	<L40+pa_1
+  1344 00:0688: 90 02        	bcc	L55
+  1345 00:068A: E6 01        	inc	<R0
+  1346                        L55:
+  1347 00:068C: 64 05        	stz	<R1
+  1348 00:068E: A5 1F        	lda	<L40+pc_1
+  1349 00:0690: C5 1B        	cmp	<L40+pa_1
+  1350 00:0692: 90 02        	bcc	L57
+  1351 00:0694: E6 05        	inc	<R1
+  Thu Jan 13 2022 10:23                                                Page 26
+
+
+  1352                        L57:
+  1353 00:0696: A5 05        	lda	<R1
+  1354 00:0698: 25 01        	and	<R0
+  1355 00:069A: F0 0F        	beq	L10051
+  1356                        ;				scanLine[x] =  imageData
+                    [x] + (char)a;
+  1357 00:069C: E2 20        	sep	#$20
+  1358                        	longa	off
+  1359 00:069E: 18           	clc
+  1360 00:069F: A4 13        	ldy	<L40+x_1
+  1361 00:06A1: B7 2C        	lda	[<L39+imageData_0],Y
+  1362 00:06A3: 65 0B        	adc	<L40+a_1
+  1363 00:06A5: 97 24        	sta	[<L39+scanLine_0],Y
+  1364 00:06A7: C2 20        	rep	#$20
+  1365                        	longa	on
+  1366                        ;				continue;
+  1367 00:06A9: 80 22        	bra	L10034
+  1368                        ;			}
+  1369                        ;			
+  1370                        ;			if ((unsigned int)pb <= (unsigne
+                    d int)pc) {
+  1371                        L10051:
+  1372 00:06AB: A5 1F        	lda	<L40+pc_1
+  1373 00:06AD: C5 1D        	cmp	<L40+pb_1
+  1374 00:06AF: 90 0F        	bcc	L10052
+  1375                        ;				scanLine[x] = imageData[
+                    x] + (char)b;
+  1376 00:06B1: E2 20        	sep	#$20
+  1377                        	longa	off
+  1378 00:06B3: 18           	clc
+  1379 00:06B4: A4 13        	ldy	<L40+x_1
+  1380 00:06B6: B7 2C        	lda	[<L39+imageData_0],Y
+  1381 00:06B8: 65 0D        	adc	<L40+b_1
+  1382 00:06BA: 97 24        	sta	[<L39+scanLine_0],Y
+  1383 00:06BC: C2 20        	rep	#$20
+  1384                        	longa	on
+  1385                        ;				continue;
+  1386 00:06BE: 80 0D        	bra	L10034
+  1387                        ;			}
+  1388                        ;			
+  1389                        ;			scanLine[x] = imageData[x] + (ch
+                    ar)c;
+  1390                        L10052:
+  1391 00:06C0: E2 20        	sep	#$20
+  1392                        	longa	off
+  1393 00:06C2: 18           	clc
+  1394 00:06C3: A4 13        	ldy	<L40+x_1
+  1395 00:06C5: B7 2C        	lda	[<L39+imageData_0],Y
+  1396 00:06C7: 65 0F        	adc	<L40+c_1
+  1397 00:06C9: 97 24        	sta	[<L39+scanLine_0],Y
+  1398 00:06CB: C2 20        	rep	#$20
+  1399                        	longa	on
+  1400                        ;		}		
+  1401                        ;	}
+  1402                        L10034:
+  1403 00:06CD: E6 19        	inc	<L40+xprev_1
+  1404 00:06CF: E6 13        	inc	<L40+x_1
+  1405                        L10037:
+  Thu Jan 13 2022 10:23                                                Page 27
+
+
+  1406 00:06D1: A5 13        	lda	<L40+x_1
+  1407 00:06D3: CD xx xx     	cmp	|~~image+278
+  1408 00:06D6: 90 03        	bcc	*+5
+  1409 00:06D8: 82 AF FE     	brl	L43
+  1410                        ;		
+  1411                        ;		//none
+  1412                        ;		/*
+  1413                        ;		if (filter == 0) {
+  1414                        ;			scanLine[x] = imageData[x];
+  1415                        ;			continue;
+  1416                        ;		}*/ 
+  1417                        ;		
+  1418                        ;		//sub
+  1419                        ;		if (filter == 1) {
+  1420 00:06DB: A5 15        	lda	<L40+filter_1
+  1421 00:06DD: C9 01 00     	cmp	#<$1
+  1422 00:06E0: F0 03        	beq	*+5
+  1423 00:06E2: 82 CF FE     	brl	L10038
+  1424                        ;			if (xprev >= 0) {
+  1425 00:06E5: A5 19        	lda	<L40+xprev_1
+  1426 00:06E7: 10 03        	bpl	*+5
+  1427 00:06E9: 82 BB FE     	brl	L10039
+  1428                        ;				scanLine[x] = imageData[
+                    x] + scanLine[xprev];
+  1429 00:06EC: E2 20        	sep	#$20
+  1430                        	longa	off
+  1431 00:06EE: 18           	clc
+  1432 00:06EF: A4 13        	ldy	<L40+x_1
+  1433 00:06F1: B7 2C        	lda	[<L39+imageData_0],Y
+  1434 00:06F3: A4 19        	ldy	<L40+xprev_1
+  1435 00:06F5: 77 24        	adc	[<L39+scanLine_0],Y
+  1436 00:06F7: A4 13        	ldy	<L40+x_1
+  1437 00:06F9: 97 24        	sta	[<L39+scanLine_0],Y
+  1438 00:06FB: C2 20        	rep	#$20
+  1439                        	longa	on
+  1440                        ;			} else {
+  1441 00:06FD: 80 CE        	bra	L10034
+  1442                        ;}
+  1443             00000020   L39	equ	32
+  1444             00000009   L40	equ	9
+  1445                        	ends
+  1446                        	efunc
+  1447                        ;
+  1448                        ;void display(char *scanLine, unsigned int y) {
+  1449                        	code
+  1450                        	xdef	~~display
+  1451                        	func
+  1452                        ~~display:
+  1453                        	longa	on
+  1454                        	longi	on
+  1455 00:06FF: 3B           	tsc
+  1456 00:0700: 38           	sec
+  1457 00:0701: E9 0C 00     	sbc	#L62
+  1458 00:0704: 1B           	tcs
+  1459 00:0705: 0B           	phd
+  1460 00:0706: 5B           	tcd
+  1461             00000004   scanLine_0	set	4
+  1462             00000008   y_0	set	8
+  Thu Jan 13 2022 10:23                                                Page 28
+
+
+  1463                        ;	unsigned int x, g;
+  1464                        ;	char *graph;
+  1465                        ;
+  1466                        ;	if (y >= 200) return;
+  1467             00000000   x_1	set	0
+  1468             00000002   g_1	set	2
+  1469             00000004   graph_1	set	4
+  1470 00:0707: A5 14        	lda	<L62+y_0
+  1471 00:0709: C9 C8 00     	cmp	#<$c8
+  1472 00:070C: 90 10        	bcc	L10053
+  1473                        L65:
+  1474 00:070E: A5 0E        	lda	<L62+2
+  1475 00:0710: 85 14        	sta	<L62+2+6
+  1476 00:0712: A5 0D        	lda	<L62+1
+  1477 00:0714: 85 13        	sta	<L62+1+6
+  1478 00:0716: 2B           	pld
+  1479 00:0717: 3B           	tsc
+  1480 00:0718: 18           	clc
+  1481 00:0719: 69 12 00     	adc	#L62+6
+  1482 00:071C: 1B           	tcs
+  1483 00:071D: 6B           	rtl
+  1484                        ;	
+  1485                        ;	graph = (char *)0x7F0000 + y * 320;
+  1486                        L10053:
+  1487 00:071E: A5 14        	lda	<L62+y_0
+  1488 00:0720: A2 40 01     	ldx	#<$140
+  1489                        	xref	~~~mul
+  1490 00:0723: 22 xx xx xx  	jsl	~~~mul
+  1491 00:0727: 85 01        	sta	<R0
+  1492 00:0729: 64 03        	stz	<R0+2
+  1493 00:072B: A9 00 00     	lda	#$0
+  1494 00:072E: 18           	clc
+  1495 00:072F: 65 01        	adc	<R0
+  1496 00:0731: 85 09        	sta	<L63+graph_1
+  1497 00:0733: A9 7F 00     	lda	#$7f
+  1498 00:0736: 65 03        	adc	<R0+2
+  1499 00:0738: 85 0B        	sta	<L63+graph_1+2
+  1500                        ;	
+  1501                        ;	for (x = 0, g = 0; x < image.bytesPerScanline; x
+                     += image.bytesPerPixel) {
+  1502 00:073A: 64 05        	stz	<L63+x_1
+  1503 00:073C: 64 07        	stz	<L63+g_1
+  1504 00:073E: 82 79 00     	brl	L10057
+  1505                        ;			case 4:
+  1506                        L10062:
+  1507                        ;				*graph = scanLine[x] >> 
+                    4;
+  1508 00:0741: E2 20        	sep	#$20
+  1509                        	longa	off
+  1510 00:0743: A4 05        	ldy	<L63+x_1
+  1511 00:0745: B7 10        	lda	[<L62+scanLine_0],Y
+  1512 00:0747: 4A           	lsr	A
+  1513 00:0748: 4A           	lsr	A
+  1514 00:0749: 4A           	lsr	A
+  1515 00:074A: 4A           	lsr	A
+  1516 00:074B: 87 09        	sta	[<L63+graph_1]
+  1517 00:074D: C2 20        	rep	#$20
+  1518                        	longa	on
+  Thu Jan 13 2022 10:23                                                Page 29
+
+
+  1519                        ;				graph++;		
+                    		
+  1520 00:074F: E6 09        	inc	<L63+graph_1
+  1521 00:0751: D0 02        	bne	L68
+  1522 00:0753: E6 0B        	inc	<L63+graph_1+2
+  1523                        L68:
+  1524                        ;				*graph = scanLine[x] & 0
+                    x0f;
+  1525 00:0755: E2 20        	sep	#$20
+  1526                        	longa	off
+  1527 00:0757: A4 05        	ldy	<L63+x_1
+  1528 00:0759: B7 10        	lda	[<L62+scanLine_0],Y
+  1529 00:075B: 29 0F        	and	#<$f
+  1530 00:075D: 87 09        	sta	[<L63+graph_1]
+  1531 00:075F: C2 20        	rep	#$20
+  1532                        	longa	on
+  1533                        ;				break;			
+                    					
+  1534 00:0761: 80 47        	bra	L10065
+  1535                        ;			case 8:
+  1536                        L10063:
+  1537                        ;				*graph = scanLine[x];
+  1538 00:0763: E2 20        	sep	#$20
+  1539                        	longa	off
+  1540 00:0765: A4 05        	ldy	<L63+x_1
+  1541 00:0767: B7 10        	lda	[<L62+scanLine_0],Y
+  1542 00:0769: 87 09        	sta	[<L63+graph_1]
+  1543 00:076B: C2 20        	rep	#$20
+  1544                        	longa	on
+  1545                        ;				break;
+  1546 00:076D: 80 3B        	bra	L10065
+  1547                        ;			default:
+  1548                        ;				break;
+  1549                        ;			}
+  1550                        ;	
+  1551                        ;		} else {
+  1552                        L10059:
+  1553                        ;			if (image.depth == 8) {
+  1554 00:076F: AD xx xx     	lda	|~~image+268
+  1555 00:0772: C9 08 00     	cmp	#<$8
+  1556 00:0775: D0 33        	bne	L10065
+  1557                        ;				*graph 	= (scanLine[x] >
+                    > 5);
+  1558 00:0777: E2 20        	sep	#$20
+  1559                        	longa	off
+  1560 00:0779: A4 05        	ldy	<L63+x_1
+  1561 00:077B: B7 10        	lda	[<L62+scanLine_0],Y
+  1562 00:077D: 4A           	lsr	A
+  1563 00:077E: 4A           	lsr	A
+  1564 00:077F: 4A           	lsr	A
+  1565 00:0780: 4A           	lsr	A
+  1566 00:0781: 4A           	lsr	A
+  1567 00:0782: 87 09        	sta	[<L63+graph_1]
+  1568 00:0784: C2 20        	rep	#$20
+  1569                        	longa	on
+  1570                        ;				asm {iny;}
+  1571                        	asmstart
+  1572 00:0786: C8           	iny
+  Thu Jan 13 2022 10:23                                                Page 30
+
+
+  1573                        	asmend
+  1574                        ;				*graph |= (scanLine[x] >
+                    > 2) & 0x38;
+  1575 00:0787: E2 20        	sep	#$20
+  1576                        	longa	off
+  1577 00:0789: B7 10        	lda	[<L62+scanLine_0],Y
+  1578 00:078B: 4A           	lsr	A
+  1579 00:078C: 4A           	lsr	A
+  1580 00:078D: 29 38        	and	#<$38
+  1581 00:078F: 85 01        	sta	<R0
+  1582 00:0791: A7 09        	lda	[<L63+graph_1]
+  1583 00:0793: 05 01        	ora	<R0
+  1584 00:0795: 87 09        	sta	[<L63+graph_1]
+  1585 00:0797: C2 20        	rep	#$20
+  1586                        	longa	on
+  1587                        ;				asm {iny;}
+  1588                        	asmstart
+  1589 00:0799: C8           	iny
+  1590                        	asmend
+  1591                        ;				*graph |= scanLine[x] & 
+                    0xc0;
+  1592 00:079A: E2 20        	sep	#$20
+  1593                        	longa	off
+  1594 00:079C: B7 10        	lda	[<L62+scanLine_0],Y
+  1595 00:079E: 29 C0        	and	#<$c0
+  1596 00:07A0: 85 01        	sta	<R0
+  1597 00:07A2: A7 09        	lda	[<L63+graph_1]
+  1598 00:07A4: 05 01        	ora	<R0
+  1599 00:07A6: 87 09        	sta	[<L63+graph_1]
+  1600 00:07A8: C2 20        	rep	#$20
+  1601                        	longa	on
+  1602                        ;			}
+  1603                        ;		}
+  1604                        L10065:
+  1605                        ;		
+  1606                        ;		graph++;
+  1607 00:07AA: E6 09        	inc	<L63+graph_1
+  1608 00:07AC: D0 02        	bne	L70
+  1609 00:07AE: E6 0B        	inc	<L63+graph_1+2
+  1610                        L70:
+  1611                        ;		g++;
+  1612 00:07B0: E6 07        	inc	<L63+g_1
+  1613                        ;	}
+  1614 00:07B2: A5 05        	lda	<L63+x_1
+  1615 00:07B4: 18           	clc
+  1616 00:07B5: 6D xx xx     	adc	|~~image+276
+  1617 00:07B8: 85 05        	sta	<L63+x_1
+  1618                        L10057:
+  1619 00:07BA: A5 05        	lda	<L63+x_1
+  1620 00:07BC: CD xx xx     	cmp	|~~image+278
+  1621 00:07BF: 90 03        	bcc	*+5
+  1622 00:07C1: 82 4A FF     	brl	L65
+  1623                        ;		if (g >= 320) return;
+  1624 00:07C4: A5 07        	lda	<L63+g_1
+  1625 00:07C6: C9 40 01     	cmp	#<$140
+  1626 00:07C9: 90 03        	bcc	*+5
+  1627 00:07CB: 82 40 FF     	brl	L65
+  1628                        ;		if (image.bytesPerPixel == 1) {
+  Thu Jan 13 2022 10:23                                                Page 31
+
+
+  1629 00:07CE: AD xx xx     	lda	|~~image+276
+  1630 00:07D1: C9 01 00     	cmp	#<$1
+  1631 00:07D4: D0 99        	bne	L10059
+  1632                        ;			switch (image.depth) {
+  1633 00:07D6: AD xx xx     	lda	|~~image+268
+  1634                        	xref	~~~swt
+  1635 00:07D9: 22 xx xx xx  	jsl	~~~swt
+  1636 00:07DD: 02 00        	dw	2
+  1637 00:07DF: 04 00        	dw	4
+  1638 00:07E1: xx xx        	dw	L10062-1
+  1639 00:07E3: 08 00        	dw	8
+  1640 00:07E5: xx xx        	dw	L10063-1
+  1641 00:07E7: xx xx        	dw	L10065-1
+  1642                        ;}
+  1643             0000000C   L62	equ	12
+  1644             00000005   L63	equ	5
+  1645                        	ends
+  1646                        	efunc
+  1647                        ;
+  1648                        ;int bitstream() {
+  1649                        	code
+  1650                        	xdef	~~bitstream
+  1651                        	func
+  1652                        ~~bitstream:
+  1653                        	longa	on
+  1654                        	longi	on
+  1655 00:07E9: 3B           	tsc
+  1656 00:07EA: 38           	sec
+  1657 00:07EB: E9 1E 00     	sbc	#L72
+  1658 00:07EE: 1B           	tcs
+  1659 00:07EF: 0B           	phd
+  1660 00:07F0: 5B           	tcd
+  1661                        ;	unsigned long rc;
+  1662                        ;	FILE *fin;
+  1663                        ;	unsigned int y;
+  1664                        ;	char *scanLineOld, *scanLine, *imageData, *graph
+                    ;
+  1665                        ;			
+  1666                        ;	imageData = image.data;
+  1667             00000000   rc_1	set	0
+  1668             00000004   fin_1	set	4
+  1669             00000008   y_1	set	8
+  1670             0000000A   scanLineOld_1	set	10
+  1671             0000000E   scanLine_1	set	14
+  1672             00000012   imageData_1	set	18
+  1673             00000016   graph_1	set	22
+  1674 00:07F1: AD xx xx     	lda	|~~image
+  1675 00:07F4: 85 17        	sta	<L73+imageData_1
+  1676 00:07F6: AD xx xx     	lda	|~~image+2
+  1677 00:07F9: 85 19        	sta	<L73+imageData_1+2
+  1678                        ;	graph = (char *)0x7F0000;
+  1679 00:07FB: A9 00 00     	lda	#$0
+  1680 00:07FE: 85 1B        	sta	<L73+graph_1
+  1681 00:0800: A9 7F 00     	lda	#$7f
+  1682 00:0803: 85 1D        	sta	<L73+graph_1+2
+  1683                        ;	memset(graph, 0, 0xf800);
+  1684 00:0805: F4 00 00     	pea	#^$f800
+  1685 00:0808: F4 00 F8     	pea	#<$f800
+  Thu Jan 13 2022 10:23                                                Page 32
+
+
+  1686 00:080B: F4 00 00     	pea	#<$0
+  1687 00:080E: D4 1D        	pei	<L73+graph_1+2
+  1688 00:0810: D4 1B        	pei	<L73+graph_1
+  1689 00:0812: 22 xx xx xx  	jsl	~~memset
+  1690                        ;	//getchar();
+  1691                        ;	
+  1692                        ;	
+  1693                        ;	scanLine = calloc(image.bytesPerScanline, 1);
+  1694 00:0816: F4 00 00     	pea	#^$1
+  1695 00:0819: F4 01 00     	pea	#<$1
+  1696 00:081C: AD xx xx     	lda	|~~image+278
+  1697 00:081F: 85 01        	sta	<R0
+  1698 00:0821: 64 03        	stz	<R0+2
+  1699 00:0823: D4 03        	pei	<R0+2
+  1700 00:0825: D4 01        	pei	<R0
+  1701 00:0827: 22 xx xx xx  	jsl	~~calloc
+  1702 00:082B: 85 13        	sta	<L73+scanLine_1
+  1703 00:082D: 86 15        	stx	<L73+scanLine_1+2
+  1704                        ;	scanLineOld = NULL;
+  1705 00:082F: 64 0F        	stz	<L73+scanLineOld_1
+  1706 00:0831: 64 11        	stz	<L73+scanLineOld_1+2
+  1707                        ;	
+  1708                        ;	//if (image.bytesPerPixel != 1) {
+  1709                        ;	//	CONTROL |= 0x08;
+  1710                        ;	//}
+  1711                        ;	
+  1712                        ;	for (y = 0; y < image.height; y++) {
+  1713 00:0833: 64 0D        	stz	<L73+y_1
+  1714 00:0835: 80 58        	bra	L10070
+  1715                        L10069:
+  1716                        ;		free(scanLineOld);
+  1717 00:0837: D4 11        	pei	<L73+scanLineOld_1+2
+  1718 00:0839: D4 0F        	pei	<L73+scanLineOld_1
+  1719 00:083B: 22 xx xx xx  	jsl	~~free
+  1720                        ;		scanLineOld = scanLine;
+  1721 00:083F: A5 13        	lda	<L73+scanLine_1
+  1722 00:0841: 85 0F        	sta	<L73+scanLineOld_1
+  1723 00:0843: A5 15        	lda	<L73+scanLine_1+2
+  1724 00:0845: 85 11        	sta	<L73+scanLineOld_1+2
+  1725                        ;		scanLine = malloc(image.bytesPerScanline
+                    );
+  1726 00:0847: AD xx xx     	lda	|~~image+278
+  1727 00:084A: 85 01        	sta	<R0
+  1728 00:084C: 64 03        	stz	<R0+2
+  1729 00:084E: D4 03        	pei	<R0+2
+  1730 00:0850: D4 01        	pei	<R0
+  1731 00:0852: 22 xx xx xx  	jsl	~~malloc
+  1732 00:0856: 85 13        	sta	<L73+scanLine_1
+  1733 00:0858: 86 15        	stx	<L73+scanLine_1+2
+  1734                        ;		
+  1735                        ;		reconcile(scanLine, scanLineOld, imageDa
+                    ta, image.bytesPerPixel);
+  1736 00:085A: AD xx xx     	lda	|~~image+276
+  1737 00:085D: 48           	pha
+  1738 00:085E: D4 19        	pei	<L73+imageData_1+2
+  1739 00:0860: D4 17        	pei	<L73+imageData_1
+  1740 00:0862: D4 11        	pei	<L73+scanLineOld_1+2
+  1741 00:0864: D4 0F        	pei	<L73+scanLineOld_1
+  Thu Jan 13 2022 10:23                                                Page 33
+
+
+  1742 00:0866: D4 15        	pei	<L73+scanLine_1+2
+  1743 00:0868: D4 13        	pei	<L73+scanLine_1
+  1744 00:086A: 22 xx xx xx  	jsl	~~reconcile
+  1745                        ;		display(scanLine, y);
+  1746 00:086E: D4 0D        	pei	<L73+y_1
+  1747 00:0870: D4 15        	pei	<L73+scanLine_1+2
+  1748 00:0872: D4 13        	pei	<L73+scanLine_1
+  1749 00:0874: 22 xx xx xx  	jsl	~~display
+  1750                        ;		
+  1751                        ;		imageData += image.bytesPerScanline + 1;
+  1752 00:0878: AD xx xx     	lda	|~~image+278
+  1753 00:087B: 1A           	ina
+  1754 00:087C: 85 01        	sta	<R0
+  1755 00:087E: 64 03        	stz	<R0+2
+  1756 00:0880: A5 17        	lda	<L73+imageData_1
+  1757 00:0882: 18           	clc
+  1758 00:0883: 65 01        	adc	<R0
+  1759 00:0885: 85 17        	sta	<L73+imageData_1
+  1760 00:0887: A5 19        	lda	<L73+imageData_1+2
+  1761 00:0889: 65 03        	adc	<R0+2
+  1762 00:088B: 85 19        	sta	<L73+imageData_1+2
+  1763                        ;	}
+  1764 00:088D: E6 0D        	inc	<L73+y_1
+  1765                        L10070:
+  1766 00:088F: A5 0D        	lda	<L73+y_1
+  1767 00:0891: 85 01        	sta	<R0
+  1768 00:0893: 64 03        	stz	<R0+2
+  1769 00:0895: A5 01        	lda	<R0
+  1770 00:0897: CD xx xx     	cmp	|~~image+8
+  1771 00:089A: A5 03        	lda	<R0+2
+  1772 00:089C: ED xx xx     	sbc	|~~image+8+2
+  1773 00:089F: 90 96        	bcc	L10069
+  1774                        ;	
+  1775                        ;	//asm {WDM 2;}
+  1776                        ;}
+  1777 00:08A1: A8           	tay
+  1778 00:08A2: 2B           	pld
+  1779 00:08A3: 3B           	tsc
+  1780 00:08A4: 18           	clc
+  1781 00:08A5: 69 1E 00     	adc	#L72
+  1782 00:08A8: 1B           	tcs
+  1783 00:08A9: 98           	tya
+  1784 00:08AA: 6B           	rtl
+  1785             0000001E   L72	equ	30
+  1786             00000005   L73	equ	5
+  1787                        	ends
+  1788                        	efunc
+  1789                        ;
+  1790                        ;int main(int argc, char **argv) {
+  1791                        	code
+  1792                        	xdef	~~main
+  1793                        	func
+  1794                        ~~main:
+  1795                        	longa	on
+  1796                        	longi	on
+  1797 00:08AB: 3B           	tsc
+  1798 00:08AC: 38           	sec
+  1799 00:08AD: E9 26 00     	sbc	#L76
+  Thu Jan 13 2022 10:23                                                Page 34
+
+
+  1800 00:08B0: 1B           	tcs
+  1801 00:08B1: 0B           	phd
+  1802 00:08B2: 5B           	tcd
+  1803             00000004   argc_0	set	4
+  1804             00000006   argv_0	set	6
+  1805                        ;	FILE *fin;
+  1806                        ;	char *graph, *buf, *vbuf, *fname, hi, bank;
+  1807                        ;	size_t flen;
+  1808                        ;	struct stat st;
+  1809                        ;	int fd;
+  1810                        ;	
+  1811                        ;	if (argc < 2) {
+  1812             00000000   fin_1	set	0
+  1813             00000004   graph_1	set	4
+  1814             00000008   buf_1	set	8
+  1815             0000000C   vbuf_1	set	12
+  1816             00000010   fname_1	set	16
+  1817             00000014   hi_1	set	20
+  1818             00000015   bank_1	set	21
+  1819             00000016   flen_1	set	22
+  1820             0000001A   st_1	set	26
+  1821             00000020   fd_1	set	32
+  1822 00:08B3: A5 2A        	lda	<L76+argc_0
+  1823 00:08B5: 30 04        	bmi	L78
+  1824 00:08B7: 3A           	dea
+  1825 00:08B8: 3A           	dea
+  1826 00:08B9: 10 0B        	bpl	L10071
+  1827                        L78:
+  1828                        ;		fname = adjustFilename("bu*.*", 0);
+  1829 00:08BB: F4 00 00     	pea	#<$0
+  1830 00:08BE: F4 xx xx     	pea	#^L38
+  1831 00:08C1: F4 xx xx     	pea	#<L38
+  1832 00:08C4: 80 0E        	bra	L20012
+  1833                        ;		//printf("png <filename.png>\n");
+  1834                        ;		//return 0;
+  1835                        ;	} else {
+  1836                        L10071:
+  1837                        ;		fname = adjustFilename(argv[1], 0);
+  1838 00:08C6: F4 00 00     	pea	#<$0
+  1839 00:08C9: A0 06 00     	ldy	#$6
+  1840 00:08CC: B7 2C        	lda	[<L76+argv_0],Y
+  1841 00:08CE: 48           	pha
+  1842 00:08CF: 88           	dey
+  1843 00:08D0: 88           	dey
+  1844 00:08D1: B7 2C        	lda	[<L76+argv_0],Y
+  1845 00:08D3: 48           	pha
+  1846                        L20012:
+  1847 00:08D4: 22 xx xx xx  	jsl	~~adjustFilename
+  1848 00:08D8: 85 15        	sta	<L77+fname_1
+  1849 00:08DA: 86 17        	stx	<L77+fname_1+2
+  1850                        ;	}
+  1851                        ;	
+  1852                        ;	if (stat(fname, &st) == -1) {
+  1853 00:08DC: F4 00 00     	pea	#0
+  1854 00:08DF: 18           	clc
+  1855 00:08E0: 7B           	tdc
+  1856 00:08E1: 69 1F 00     	adc	#<L77+st_1
+  1857 00:08E4: 48           	pha
+  Thu Jan 13 2022 10:23                                                Page 35
+
+
+  1858 00:08E5: D4 17        	pei	<L77+fname_1+2
+  1859 00:08E7: D4 15        	pei	<L77+fname_1
+  1860 00:08E9: 22 xx xx xx  	jsl	~~stat
+  1861 00:08ED: C9 FF FF     	cmp	#<$ffffffff
+  1862 00:08F0: D0 15        	bne	L10073
+  1863                        ;		return 0;
+  1864                        L20010:
+  1865 00:08F2: A9 00 00     	lda	#$0
+  1866                        L80:
+  1867 00:08F5: A8           	tay
+  1868 00:08F6: A5 28        	lda	<L76+2
+  1869 00:08F8: 85 2E        	sta	<L76+2+6
+  1870 00:08FA: A5 27        	lda	<L76+1
+  1871 00:08FC: 85 2D        	sta	<L76+1+6
+  1872 00:08FE: 2B           	pld
+  1873 00:08FF: 3B           	tsc
+  1874 00:0900: 18           	clc
+  1875 00:0901: 69 2C 00     	adc	#L76+6
+  1876 00:0904: 1B           	tcs
+  1877 00:0905: 98           	tya
+  1878 00:0906: 6B           	rtl
+  1879                        ;	}
+  1880                        ;	
+  1881                        ;	fin = fopen(fname, "rb");
+  1882                        L10073:
+  1883 00:0907: F4 xx xx     	pea	#^L38+6
+  1884 00:090A: F4 xx xx     	pea	#<L38+6
+  1885 00:090D: D4 17        	pei	<L77+fname_1+2
+  1886 00:090F: D4 15        	pei	<L77+fname_1
+  1887 00:0911: 22 xx xx xx  	jsl	~~fopen
+  1888 00:0915: 85 05        	sta	<L77+fin_1
+  1889 00:0917: 86 07        	stx	<L77+fin_1+2
+  1890                        ;	
+  1891                        ;	if (fin == NULL) {
+  1892 00:0919: 05 07        	ora	<L77+fin_1+2
+  1893 00:091B: D0 13        	bne	L10074
+  1894                        ;		printf("can't read file %s\n", fname);
+  1895 00:091D: D4 17        	pei	<L77+fname_1+2
+  1896 00:091F: D4 15        	pei	<L77+fname_1
+  1897 00:0921: F4 xx xx     	pea	#^L38+9
+  1898 00:0924: F4 xx xx     	pea	#<L38+9
+  1899 00:0927: F4 0A 00     	pea	#10
+  1900 00:092A: 22 xx xx xx  	jsl	~~printf
+  1901                        ;		return 0;
+  1902 00:092E: 80 C2        	bra	L20010
+  1903                        ;	}
+  1904                        ;	
+  1905                        ;	//vbuf = malloc(2048);
+  1906                        ;	//setvbuf(fin, vbuf, _IOFBF, 2048);
+  1907                        ;	
+  1908                        ;	buf = malloc(st.st_size);
+  1909                        L10074:
+  1910 00:0930: D4 23        	pei	<L77+st_1+4
+  1911 00:0932: D4 21        	pei	<L77+st_1+2
+  1912 00:0934: 22 xx xx xx  	jsl	~~malloc
+  1913 00:0938: 85 0D        	sta	<L77+buf_1
+  1914 00:093A: 86 0F        	stx	<L77+buf_1+2
+  1915                        ;	printf("loading %s, length: %lu\n", fname, st.st
+  Thu Jan 13 2022 10:23                                                Page 36
+
+
+                    _size);
+  1916 00:093C: D4 23        	pei	<L77+st_1+4
+  1917 00:093E: D4 21        	pei	<L77+st_1+2
+  1918 00:0940: D4 17        	pei	<L77+fname_1+2
+  1919 00:0942: D4 15        	pei	<L77+fname_1
+  1920 00:0944: F4 xx xx     	pea	#^L38+29
+  1921 00:0947: F4 xx xx     	pea	#<L38+29
+  1922 00:094A: F4 0E 00     	pea	#14
+  1923 00:094D: 22 xx xx xx  	jsl	~~printf
+  1924                        ;	
+  1925                        ;	//asm{wdm 1;}
+  1926                        ;	//flen = fread(buf, 1, st.st_size, fin);
+  1927                        ;	fd = fileno(fin);
+  1928 00:0951: D4 07        	pei	<L77+fin_1+2
+  1929 00:0953: D4 05        	pei	<L77+fin_1
+  1930 00:0955: 22 xx xx xx  	jsl	~~fileno
+  1931 00:0959: 85 25        	sta	<L77+fd_1
+  1932                        ;	flen = read(fd, buf, st.st_size);
+  1933 00:095B: D4 23        	pei	<L77+st_1+4
+  1934 00:095D: D4 21        	pei	<L77+st_1+2
+  1935 00:095F: D4 0F        	pei	<L77+buf_1+2
+  1936 00:0961: D4 0D        	pei	<L77+buf_1
+  1937 00:0963: D4 25        	pei	<L77+fd_1
+  1938 00:0965: 22 xx xx xx  	jsl	~~read
+  1939 00:0969: 85 1B        	sta	<L77+flen_1
+  1940 00:096B: 86 1D        	stx	<L77+flen_1+2
+  1941                        ;	//asm{wdm 2;}
+  1942                        ;	
+  1943                        ;	printf("%lu bytes loaded\n", flen);
+  1944 00:096D: D4 1D        	pei	<L77+flen_1+2
+  1945 00:096F: D4 1B        	pei	<L77+flen_1
+  1946 00:0971: F4 xx xx     	pea	#^L38+54
+  1947 00:0974: F4 xx xx     	pea	#<L38+54
+  1948 00:0977: F4 0A 00     	pea	#10
+  1949 00:097A: 22 xx xx xx  	jsl	~~printf
+  1950                        ;	
+  1951                        ;	fclose(fin);
+  1952 00:097E: D4 07        	pei	<L77+fin_1+2
+  1953 00:0980: D4 05        	pei	<L77+fin_1
+  1954 00:0982: 22 xx xx xx  	jsl	~~fclose
+  1955                        ;	
+  1956                        ;	if (flen != st.st_size) return 0;
+  1957 00:0986: A5 1B        	lda	<L77+flen_1
+  1958 00:0988: C5 21        	cmp	<L77+st_1+2
+  1959 00:098A: D0 04        	bne	L82
+  1960 00:098C: A5 1D        	lda	<L77+flen_1+2
+  1961 00:098E: C5 23        	cmp	<L77+st_1+4
+  1962                        L82:
+  1963 00:0990: F0 03        	beq	*+5
+  1964 00:0992: 82 5D FF     	brl	L20010
+  1965                        ;	if (doPNG(buf, flen) < 0) return 0;
+  1966 00:0995: D4 1D        	pei	<L77+flen_1+2
+  1967 00:0997: D4 1B        	pei	<L77+flen_1
+  1968 00:0999: D4 0F        	pei	<L77+buf_1+2
+  1969 00:099B: D4 0D        	pei	<L77+buf_1
+  1970 00:099D: 22 xx xx xx  	jsl	~~doPNG
+  1971 00:09A1: 85 01        	sta	<R0
+  1972 00:09A3: A5 01        	lda	<R0
+  Thu Jan 13 2022 10:23                                                Page 37
+
+
+  1973 00:09A5: 10 03        	bpl	*+5
+  1974 00:09A7: 82 48 FF     	brl	L20010
+  1975                        ;	
+  1976                        ;	
+  1977                        ;	CONTROL = 2;
+  1978 00:09AA: E2 20        	sep	#$20
+  1979                        	longa	off
+  1980 00:09AC: A9 02        	lda	#$2
+  1981 00:09AE: 8F 09 FE FF  	sta	>16776713
+  1982                        ;	hi = SCREENBASEHI;
+  1983 00:09B2: AF 07 FE FF  	lda	>16776711
+  1984 00:09B6: 85 19        	sta	<L77+hi_1
+  1985                        ;	bank = SCREENBASEBANK;
+  1986 00:09B8: AF 08 FE FF  	lda	>16776712
+  1987 00:09BC: 85 1A        	sta	<L77+bank_1
+  1988                        ;	SCREENBASEHI = 0x80;
+  1989 00:09BE: A9 80        	lda	#$80
+  1990 00:09C0: 8F 07 FE FF  	sta	>16776711
+  1991                        ;	SCREENBASEBANK = 0x3F;
+  1992 00:09C4: A9 3F        	lda	#$3f
+  1993 00:09C6: 8F 08 FE FF  	sta	>16776712
+  1994 00:09CA: C2 20        	rep	#$20
+  1995                        	longa	on
+  1996                        ;
+  1997                        ;	bitstream();
+  1998 00:09CC: 22 xx xx xx  	jsl	~~bitstream
+  1999                        ;	
+  2000                        ;	getchar();
+  2001 00:09D0: AD xx xx     	lda	|~~stdin+2
+  2002 00:09D3: 48           	pha
+  2003 00:09D4: AD xx xx     	lda	|~~stdin
+  2004 00:09D7: 48           	pha
+  2005 00:09D8: 22 xx xx xx  	jsl	~~fgetc
+  2006                        ;	
+  2007                        ;	CONTROL = 4;
+  2008 00:09DC: E2 20        	sep	#$20
+  2009                        	longa	off
+  2010 00:09DE: A9 04        	lda	#$4
+  2011 00:09E0: 8F 09 FE FF  	sta	>16776713
+  2012                        ;	SCREENBASEHI = hi;
+  2013 00:09E4: A5 19        	lda	<L77+hi_1
+  2014 00:09E6: 8F 07 FE FF  	sta	>16776711
+  2015                        ;	SCREENBASEBANK = bank;
+  2016 00:09EA: A5 1A        	lda	<L77+bank_1
+  2017 00:09EC: 8F 08 FE FF  	sta	>16776712
+  2018 00:09F0: C2 20        	rep	#$20
+  2019                        	longa	on
+  2020                        ;	
+  2021                        ;	standardPalette();
+  2022 00:09F2: 22 xx xx xx  	jsl	~~standardPalette
+  2023                        ;	printf("%c", CLS);
+  2024 00:09F6: F4 01 00     	pea	#<$1
+  2025 00:09F9: F4 xx xx     	pea	#^L38+72
+  2026 00:09FC: F4 xx xx     	pea	#<L38+72
+  2027 00:09FF: F4 08 00     	pea	#8
+  2028 00:0A02: 22 xx xx xx  	jsl	~~printf
+  2029                        ;}
+  2030 00:0A06: 82 EC FE     	brl	L80
+  Thu Jan 13 2022 10:23                                                Page 38
+
+
+  2031             00000026   L76	equ	38
+  2032             00000005   L77	equ	5
+  2033                        	ends
+  2034                        	efunc
+  2035                        	data
+  2036                        L38:
+  2037 00:00B5: 62 75 2A 2E  	db	$62,$75,$2A,$2E,$2A,$00,$72,$62,$00,$63,
+                    $61,$6E,$27,$74,$20
+       00:00B9: 2A 00 72 62 
+       00:00BD: 00 63 61 6E 
+       00:00C1: 27 74 20 
+  2038 00:00C4: 72 65 61 64  	db	$72,$65,$61,$64,$20,$66,$69,$6C,$65,$20,
+                    $25,$73,$0A,$00,$6C
+       00:00C8: 20 66 69 6C 
+       00:00CC: 65 20 25 73 
+       00:00D0: 0A 00 6C 
+  2039 00:00D3: 6F 61 64 69  	db	$6F,$61,$64,$69,$6E,$67,$20,$25,$73,$2C,
+                    $20,$6C,$65,$6E,$67
+       00:00D7: 6E 67 20 25 
+       00:00DB: 73 2C 20 6C 
+       00:00DF: 65 6E 67 
+  2040 00:00E2: 74 68 3A 20  	db	$74,$68,$3A,$20,$25,$6C,$75,$0A,$00,$25,
+                    $6C,$75,$20,$62,$79
+       00:00E6: 25 6C 75 0A 
+       00:00EA: 00 25 6C 75 
+       00:00EE: 20 62 79 
+  2041 00:00F1: 74 65 73 20  	db	$74,$65,$73,$20,$6C,$6F,$61,$64,$65,$64,
+                    $0A,$00,$25,$63,$00
+       00:00F5: 6C 6F 61 64 
+       00:00F9: 65 64 0A 00 
+       00:00FD: 25 63 00 
+  2042 00:0100:              	ends
+  2043                        ;
+  2044                        	xref	~~inflate
+  2045                        	xref	~~adjustFilename
+  2046                        	xref	~~stat
+  2047                        	xref	~~read
+  2048                        	xref	~~memcpy
+  2049                        	xref	~~memcmp
+  2050                        	xref	~~memset
+  2051                        	xref	~~realloc
+  2052                        	xref	~~free
+  2053                        	xref	~~malloc
+  2054                        	xref	~~calloc
+  2055                        	xref	~~fileno
+  2056                        	xref	~~fclose
+  2057                        	xref	~~fgetc
+  2058                        	xref	~~printf
+  2059                        	xref	~~fopen
+  2060                        	udata
+  2061                        	xdef	~~image
+  2062                        ~~image
+  2063 00:0000:              	ds	280
+  2064 00:0118:              	ends
+  2065                        	xref	~~stdin
+
+
+      Lines assembled: 2065
+  Thu Jan 13 2022 10:23                                                Page 39
+
+
+      Errors: 0

@@ -1,0 +1,440 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include <errno.h>
+    11                        ;#include <unistd.h>
+    12                        ;#include <dirent.h>
+    13                        ;
+    14                        ;#include "freeRTOS.h"
+    15                        ;#include "task.h"
+    16                        ;#include <homebrew.h>
+    17                        ;
+    18                        ;
+    19                        ;static unsigned int parsedir(char *path) {
+    20                        	code
+    21                        	func
+    22                        ~~parsedir:
+    23                        	longa	on
+    24                        	longi	on
+    25 00:0000: 3B           	tsc
+    26 00:0001: 38           	sec
+    27 00:0002: E9 16 00     	sbc	#L2
+    28 00:0005: 1B           	tcs
+    29 00:0006: 0B           	phd
+    30 00:0007: 5B           	tcd
+    31             00000004   path_0	set	4
+    32                        ;	
+    33                        ;	char *p, *p0, *pathcopy;
+    34                        ;	int end;
+    35                        ;	int rc;
+    36                        ;	unsigned int index;
+    37                        ;	
+    38                        ;	pathcopy = p = strdup(path);
+    39             00000000   p_1	set	0
+    40             00000004   p0_1	set	4
+    41             00000008   pathcopy_1	set	8
+    42             0000000C   end_1	set	12
+    43             0000000E   rc_1	set	14
+    44             00000010   index_1	set	16
+    45 00:0008: D4 1C        	pei	<L2+path_0+2
+    46 00:000A: D4 1A        	pei	<L2+path_0
+    47 00:000C: 22 xx xx xx  	jsl	~~strdup
+    48 00:0010: 85 05        	sta	<L3+p_1
+    49 00:0012: 86 07        	stx	<L3+p_1+2
+    50 00:0014: 85 0D        	sta	<L3+pathcopy_1
+    51 00:0016: A5 07        	lda	<L3+p_1+2
+    52 00:0018: 85 0F        	sta	<L3+pathcopy_1+2
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    53                        ;	
+    54                        ;	rc = -1;
+    55 00:001A: A9 FF FF     	lda	#$ffff
+    56 00:001D: 85 13        	sta	<L3+rc_1
+    57                        ;	end = 0;
+    58 00:001F: 64 11        	stz	<L3+end_1
+    59                        ;	index = 0;
+    60 00:0021: 64 15        	stz	<L3+index_1
+    61                        ;	
+    62                        ;	if (*p == '/'){
+    63 00:0023: E2 20        	sep	#$20
+    64                        	longa	off
+    65 00:0025: A7 05        	lda	[<L3+p_1]
+    66 00:0027: C9 2F        	cmp	#<$2f
+    67 00:0029: C2 20        	rep	#$20
+    68                        	longa	on
+    69 00:002B: D0 12        	bne	L10001
+    70                        ;		rc = chdir("/");
+    71 00:002D: F4 xx xx     	pea	#^L1
+    72 00:0030: F4 xx xx     	pea	#<L1
+    73 00:0033: 22 xx xx xx  	jsl	~~chdir
+    74 00:0037: 85 13        	sta	<L3+rc_1
+    75                        ;		p++;
+    76 00:0039: E6 05        	inc	<L3+p_1
+    77 00:003B: D0 02        	bne	L10001
+    78 00:003D: E6 07        	inc	<L3+p_1+2
+    79                        ;	}
+    80                        ;	
+    81                        ;	for (p0 = p; !end; p0++) {
+    82                        L10001:
+    83 00:003F: A5 05        	lda	<L3+p_1
+    84 00:0041: 85 09        	sta	<L3+p0_1
+    85 00:0043: A5 07        	lda	<L3+p_1+2
+    86 00:0045: 85 0B        	sta	<L3+p0_1+2
+    87 00:0047: 80 60        	bra	L10005
+    88                        L10004:
+    89                        ;		if (*p0 == 0) end = 1;
+    90 00:0049: A7 09        	lda	[<L3+p0_1]
+    91 00:004B: 29 FF 00     	and	#$ff
+    92 00:004E: D0 05        	bne	L10006
+    93 00:0050: A9 01 00     	lda	#$1
+    94 00:0053: 85 11        	sta	<L3+end_1
+    95                        ;		
+    96                        ;		if (*p0 == '/' || *p0 == 0) {
+    97                        L10006:
+    98 00:0055: E2 20        	sep	#$20
+    99                        	longa	off
+   100 00:0057: A7 09        	lda	[<L3+p0_1]
+   101 00:0059: C9 2F        	cmp	#<$2f
+   102 00:005B: C2 20        	rep	#$20
+   103                        	longa	on
+   104 00:005D: F0 07        	beq	L7
+   105 00:005F: A7 09        	lda	[<L3+p0_1]
+   106 00:0061: 29 FF 00     	and	#$ff
+   107 00:0064: D0 3D        	bne	L10002
+   108                        L7:
+   109                        ;			*p0 = 0;
+   110 00:0066: E2 20        	sep	#$20
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   111                        	longa	off
+   112 00:0068: A9 00        	lda	#$0
+   113 00:006A: 87 09        	sta	[<L3+p0_1]
+   114                        ;			if (*p == '*') break;
+   115 00:006C: A7 05        	lda	[<L3+p_1]
+   116 00:006E: C9 2A        	cmp	#<$2a
+   117 00:0070: C2 20        	rep	#$20
+   118                        	longa	on
+   119 00:0072: F0 39        	beq	L10003
+   120                        ;			rc = chdir(p);
+   121 00:0074: D4 07        	pei	<L3+p_1+2
+   122 00:0076: D4 05        	pei	<L3+p_1
+   123 00:0078: 22 xx xx xx  	jsl	~~chdir
+   124 00:007C: 85 13        	sta	<L3+rc_1
+   125                        ;			//printf("parsedir rc=%d\n", rc)
+                    ;
+   126                        ;			if (rc == -1) break;
+   127 00:007E: C9 FF FF     	cmp	#<$ffffffff
+   128 00:0081: F0 2A        	beq	L10003
+   129                        ;			p = p0 + 1;
+   130 00:0083: A9 01 00     	lda	#$1
+   131 00:0086: 18           	clc
+   132 00:0087: 65 09        	adc	<L3+p0_1
+   133 00:0089: 85 05        	sta	<L3+p_1
+   134 00:008B: A9 00 00     	lda	#$0
+   135 00:008E: 65 0B        	adc	<L3+p0_1+2
+   136 00:0090: 85 07        	sta	<L3+p_1+2
+   137                        ;			index = (size_t)p - (size_t)path
+                    copy;
+   138 00:0092: 38           	sec
+   139 00:0093: A5 05        	lda	<L3+p_1
+   140 00:0095: E5 0D        	sbc	<L3+pathcopy_1
+   141 00:0097: 85 01        	sta	<R0
+   142 00:0099: A5 07        	lda	<L3+p_1+2
+   143 00:009B: E5 0F        	sbc	<L3+pathcopy_1+2
+   144 00:009D: 85 03        	sta	<R0+2
+   145 00:009F: A5 01        	lda	<R0
+   146 00:00A1: 85 15        	sta	<L3+index_1
+   147                        ;			//printf("parsedir index=%d\n", 
+                    index);
+   148                        ;		}
+   149                        ;	}
+   150                        L10002:
+   151 00:00A3: E6 09        	inc	<L3+p0_1
+   152 00:00A5: D0 02        	bne	L10005
+   153 00:00A7: E6 0B        	inc	<L3+p0_1+2
+   154                        L10005:
+   155 00:00A9: A5 11        	lda	<L3+end_1
+   156 00:00AB: F0 9C        	beq	L10004
+   157                        L10003:
+   158                        ;	
+   159                        ;	//printf("parsedir index=%d\n", index);
+   160                        ;	
+   161                        ;	free(pathcopy);
+   162 00:00AD: D4 0F        	pei	<L3+pathcopy_1+2
+   163 00:00AF: D4 0D        	pei	<L3+pathcopy_1
+   164 00:00B1: 22 xx xx xx  	jsl	~~free
+   165                        ;	
+  Sun Jan  9 2022 20:37                                                Page 4
+
+
+   166                        ;	return index;
+   167 00:00B5: A5 15        	lda	<L3+index_1
+   168 00:00B7: A8           	tay
+   169 00:00B8: A5 18        	lda	<L2+2
+   170 00:00BA: 85 1C        	sta	<L2+2+4
+   171 00:00BC: A5 17        	lda	<L2+1
+   172 00:00BE: 85 1B        	sta	<L2+1+4
+   173 00:00C0: 2B           	pld
+   174 00:00C1: 3B           	tsc
+   175 00:00C2: 18           	clc
+   176 00:00C3: 69 1A 00     	adc	#L2+4
+   177 00:00C6: 1B           	tcs
+   178 00:00C7: 98           	tya
+   179 00:00C8: 6B           	rtl
+   180                        ;}
+   181             00000016   L2	equ	22
+   182             00000005   L3	equ	5
+   183                        	ends
+   184                        	efunc
+   185                        	data
+   186                        L1:
+   187 00:0000: 2F 00        	db	$2F,$00
+   188 00:0002:              	ends
+   189                        ;
+   190                        ;int main(int argc, char **argv) {
+   191                        	code
+   192                        	xdef	~~main
+   193                        	func
+   194                        ~~main:
+   195                        	longa	on
+   196                        	longi	on
+   197 00:00C9: 3B           	tsc
+   198 00:00CA: 38           	sec
+   199 00:00CB: E9 1E 00     	sbc	#L16
+   200 00:00CE: 1B           	tcs
+   201 00:00CF: 0B           	phd
+   202 00:00D0: 5B           	tcd
+   203             00000004   argc_0	set	4
+   204             00000006   argv_0	set	6
+   205                        ;	DIR *dir;
+   206                        ;	struct dirent *dirent;
+   207                        ;	char *s, *s0;
+   208                        ;	char *shellpath;
+   209                        ;	unsigned int len, cnt, c;
+   210                        ;
+   211                        ;	s = calloc(1, 80);
+   212             00000000   dir_1	set	0
+   213             00000004   dirent_1	set	4
+   214             00000008   s_1	set	8
+   215             0000000C   s0_1	set	12
+   216             00000010   shellpath_1	set	16
+   217             00000014   len_1	set	20
+   218             00000016   cnt_1	set	22
+   219             00000018   c_1	set	24
+   220 00:00D1: F4 00 00     	pea	#^$50
+   221 00:00D4: F4 50 00     	pea	#<$50
+   222 00:00D7: F4 00 00     	pea	#^$1
+   223 00:00DA: F4 01 00     	pea	#<$1
+  Sun Jan  9 2022 20:37                                                Page 5
+
+
+   224 00:00DD: 22 xx xx xx  	jsl	~~calloc
+   225 00:00E1: 85 0D        	sta	<L17+s_1
+   226 00:00E3: 86 0F        	stx	<L17+s_1+2
+   227                        ;	
+   228                        ;	if (argc >= 2) {
+   229 00:00E5: 38           	sec
+   230 00:00E6: A5 22        	lda	<L16+argc_0
+   231 00:00E8: E9 02 00     	sbc	#<$2
+   232 00:00EB: 70 03        	bvs	L18
+   233 00:00ED: 49 00 80     	eor	#$8000
+   234                        L18:
+   235 00:00F0: 10 1B        	bpl	L10008
+   236                        ;		strcpy(s, argv[1]);
+   237 00:00F2: A0 06 00     	ldy	#$6
+   238 00:00F5: B7 24        	lda	[<L16+argv_0],Y
+   239 00:00F7: 48           	pha
+   240 00:00F8: 88           	dey
+   241 00:00F9: 88           	dey
+   242 00:00FA: B7 24        	lda	[<L16+argv_0],Y
+   243 00:00FC: 48           	pha
+   244 00:00FD: D4 0F        	pei	<L17+s_1+2
+   245 00:00FF: D4 0D        	pei	<L17+s_1
+   246 00:0101: 22 xx xx xx  	jsl	~~strcpy
+   247                        ;		strupper(s);
+   248 00:0105: D4 0F        	pei	<L17+s_1+2
+   249 00:0107: D4 0D        	pei	<L17+s_1
+   250 00:0109: 22 xx xx xx  	jsl	~~strupper
+   251                        ;	}
+   252                        ;	
+   253                        ;	shellpath = getShellpath();
+   254                        L10008:
+   255 00:010D: 22 xx xx xx  	jsl	~~getShellpath
+   256 00:0111: 85 15        	sta	<L17+shellpath_1
+   257 00:0113: 86 17        	stx	<L17+shellpath_1+2
+   258                        ;	chdir(shellpath);
+   259 00:0115: D4 17        	pei	<L17+shellpath_1+2
+   260 00:0117: D4 15        	pei	<L17+shellpath_1
+   261 00:0119: 22 xx xx xx  	jsl	~~chdir
+   262                        ;
+   263                        ;	len = parsedir(s);
+   264 00:011D: D4 0F        	pei	<L17+s_1+2
+   265 00:011F: D4 0D        	pei	<L17+s_1
+   266 00:0121: 22 xx xx xx  	jsl	~~parsedir
+   267 00:0125: 85 19        	sta	<L17+len_1
+   268                        ;	//printf("dir s=%s len=%d\n", s, len);
+   269                        ;	
+   270                        ;	s0 = s + len;
+   271 00:0127: 85 01        	sta	<R0
+   272 00:0129: 64 03        	stz	<R0+2
+   273 00:012B: A5 0D        	lda	<L17+s_1
+   274 00:012D: 18           	clc
+   275 00:012E: 65 01        	adc	<R0
+   276 00:0130: 85 11        	sta	<L17+s0_1
+   277 00:0132: A5 0F        	lda	<L17+s_1+2
+   278 00:0134: 65 03        	adc	<R0+2
+   279 00:0136: 85 13        	sta	<L17+s0_1+2
+   280                        ;	len = strlen(s0);
+   281 00:0138: 48           	pha
+  Sun Jan  9 2022 20:37                                                Page 6
+
+
+   282 00:0139: D4 11        	pei	<L17+s0_1
+   283 00:013B: 22 xx xx xx  	jsl	~~strlen
+   284 00:013F: 85 19        	sta	<L17+len_1
+   285                        ;	
+   286                        ;	//printf("dir s=%s len=%d\n", s0, len);
+   287                        ;	if (len == 0) {
+   288 00:0141: A5 19        	lda	<L17+len_1
+   289 00:0143: D0 16        	bne	L10009
+   290                        ;		s0 = s;
+   291 00:0145: A5 0D        	lda	<L17+s_1
+   292 00:0147: 85 11        	sta	<L17+s0_1
+   293 00:0149: A5 0F        	lda	<L17+s_1+2
+   294 00:014B: 85 13        	sta	<L17+s0_1+2
+   295                        ;		strcpy(s0, "D:*.*");
+   296 00:014D: F4 xx xx     	pea	#^L15
+   297 00:0150: F4 xx xx     	pea	#<L15
+   298 00:0153: D4 13        	pei	<L17+s0_1+2
+   299 00:0155: D4 11        	pei	<L17+s0_1
+   300 00:0157: 22 xx xx xx  	jsl	~~strcpy
+   301                        ;	}
+   302                        ;	//printf("dir s=%s len=%d\n", s0, strlen(s0));
+   303                        ;	
+   304                        ;	dir = opendir(s0);
+   305                        L10009:
+   306 00:015B: D4 13        	pei	<L17+s0_1+2
+   307 00:015D: D4 11        	pei	<L17+s0_1
+   308 00:015F: 22 xx xx xx  	jsl	~~opendir
+   309 00:0163: 85 05        	sta	<L17+dir_1
+   310 00:0165: 86 07        	stx	<L17+dir_1+2
+   311                        ;	
+   312                        ;	//printf("opendir dir=%p\n", dir);
+   313                        ;	
+   314                        ;	cnt = 0;
+   315 00:0167: 64 1B        	stz	<L17+cnt_1
+   316                        ;	while (dir && (dirent = readdir(dir))) {
+   317                        L10010:
+   318 00:0169: A5 05        	lda	<L17+dir_1
+   319 00:016B: 05 07        	ora	<L17+dir_1+2
+   320 00:016D: F0 50        	beq	L25
+   321 00:016F: D4 07        	pei	<L17+dir_1+2
+   322 00:0171: D4 05        	pei	<L17+dir_1
+   323 00:0173: 22 xx xx xx  	jsl	~~readdir
+   324 00:0177: 85 09        	sta	<L17+dirent_1
+   325 00:0179: 86 0B        	stx	<L17+dirent_1+2
+   326 00:017B: 05 0B        	ora	<L17+dirent_1+2
+   327 00:017D: F0 40        	beq	L25
+   328                        ;		printf("%s", dirent->d_name);
+   329 00:017F: A9 0B 00     	lda	#$b
+   330 00:0182: 18           	clc
+   331 00:0183: 65 09        	adc	<L17+dirent_1
+   332 00:0185: 85 01        	sta	<R0
+   333 00:0187: A9 00 00     	lda	#$0
+   334 00:018A: 65 0B        	adc	<L17+dirent_1+2
+   335 00:018C: 48           	pha
+   336 00:018D: D4 01        	pei	<R0
+   337 00:018F: F4 xx xx     	pea	#^L15+6
+   338 00:0192: F4 xx xx     	pea	#<L15+6
+   339 00:0195: F4 0A 00     	pea	#10
+  Sun Jan  9 2022 20:37                                                Page 7
+
+
+   340 00:0198: 22 xx xx xx  	jsl	~~printf
+   341                        ;		cnt++;
+   342 00:019C: E6 1B        	inc	<L17+cnt_1
+   343                        ;		if (cnt >= 20) {
+   344 00:019E: A5 1B        	lda	<L17+cnt_1
+   345 00:01A0: C9 14 00     	cmp	#<$14
+   346 00:01A3: 90 C4        	bcc	L10010
+   347                        ;			cnt = 0;
+   348 00:01A5: 64 1B        	stz	<L17+cnt_1
+   349                        ;			c = toupper(getchar());
+   350 00:01A7: AD xx xx     	lda	|~~stdin+2
+   351 00:01AA: 48           	pha
+   352 00:01AB: AD xx xx     	lda	|~~stdin
+   353 00:01AE: 48           	pha
+   354 00:01AF: 22 xx xx xx  	jsl	~~fgetc
+   355 00:01B3: 48           	pha
+   356 00:01B4: 22 xx xx xx  	jsl	~~toupper
+   357 00:01B8: 85 1D        	sta	<L17+c_1
+   358                        ;			if (c == 'X') break;
+   359 00:01BA: C9 58 00     	cmp	#<$58
+   360 00:01BD: D0 AA        	bne	L10010
+   361                        L25:
+   362 00:01BF: A8           	tay
+   363 00:01C0: A5 20        	lda	<L16+2
+   364 00:01C2: 85 26        	sta	<L16+2+6
+   365 00:01C4: A5 1F        	lda	<L16+1
+   366 00:01C6: 85 25        	sta	<L16+1+6
+   367 00:01C8: 2B           	pld
+   368 00:01C9: 3B           	tsc
+   369 00:01CA: 18           	clc
+   370 00:01CB: 69 24 00     	adc	#L16+6
+   371 00:01CE: 1B           	tcs
+   372 00:01CF: 98           	tya
+   373 00:01D0: 6B           	rtl
+   374                        ;		}
+   375                        ;	}
+   376                        ;	
+   377                        ;	//getchar();
+   378                        ;}
+   379             0000001E   L16	equ	30
+   380             00000005   L17	equ	5
+   381                        	ends
+   382                        	efunc
+   383                        	data
+   384                        L15:
+   385 00:0002: 44 3A 2A 2E  	db	$44,$3A,$2A,$2E,$2A,$00,$25,$73,$00
+       00:0006: 2A 00 25 73 
+       00:000A: 00 
+   386 00:000B:              	ends
+   387                        ;
+   388                        	xref	~~toupper
+   389                        	xref	~~getShellpath
+   390                        	xref	~~strupper
+   391                        	xref	~~readdir
+   392                        	xref	~~opendir
+   393                        	xref	~~chdir
+   394                        	xref	~~strdup
+   395                        	xref	~~strlen
+  Sun Jan  9 2022 20:37                                                Page 8
+
+
+   396                        	xref	~~strcpy
+   397                        	xref	~~free
+   398                        	xref	~~calloc
+   399                        	xref	~~fgetc
+   400                        	xref	~~printf
+   401                        	xref	~~stdin
+
+
+      Lines assembled: 401
+      Errors: 0

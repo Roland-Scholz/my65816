@@ -1,0 +1,1758 @@
+  Sun Jan  9 2022 20:53                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <errno.h>
+    10                        ;#include <fcntl.h>
+    11                        ;#include <sys/types.h>
+    12                        ;
+    13                        ;#include "homebrew.h"
+    14                        ;
+    15                        ;//DIR dir_fd[8];
+    16                        ;//struct dirent dirent[8];
+    17                        ;
+    18                        ;//int debugf(const char *format, ...);
+    19                        ;
+    20                        ;
+    21                        ;union iocb {
+    22                        ;	struct {
+    23                        ;		unsigned int iocbLo;
+    24                        ;		unsigned int iocbHi;
+    25                        ;	} iocbWord;
+    26                        ;	iocb_t *iocb;
+    27                        ;};
+    28                        ;
+    29                        ;
+    30                        ;typedef union iocb iocb_ut;
+    31                        ;
+    32                        ;
+    33                        ;unsigned char fd2iocb[8];
+    34                        ;
+    35                        ;char getFreeIocb() {
+    36                        	code
+    37                        	xdef	~~getFreeIocb
+    38                        	func
+    39                        ~~getFreeIocb:
+    40                        	longa	on
+    41                        	longi	on
+    42 00:0000: 3B           	tsc
+    43 00:0001: 38           	sec
+    44 00:0002: E9 06 00     	sbc	#L2
+    45 00:0005: 1B           	tcs
+    46 00:0006: 0B           	phd
+    47 00:0007: 5B           	tcd
+    48                        ;	char *p = IOCBSTRT;
+    49                        ;	unsigned int i;
+    50                        ;	
+    51                        ;	for(i = 0; i < 8; i++, p += 16) {
+    52             00000000   p_1	set	0
+  Sun Jan  9 2022 20:53                                                Page 2
+
+
+    53             00000004   i_1	set	4
+    54 00:0008: A9 80 02     	lda	#$280
+    55 00:000B: 85 01        	sta	<L3+p_1
+    56 00:000D: A9 00 00     	lda	#$0
+    57 00:0010: 85 03        	sta	<L3+p_1+2
+    58 00:0012: 64 05        	stz	<L3+i_1
+    59                        L10003:
+    60                        ;		if (*p == 0xff) break;
+    61 00:0014: E2 20        	sep	#$20
+    62                        	longa	off
+    63 00:0016: A7 01        	lda	[<L3+p_1]
+    64 00:0018: C9 FF        	cmp	#<$ff
+    65 00:001A: C2 20        	rep	#$20
+    66                        	longa	on
+    67 00:001C: F0 15        	beq	L10002
+    68                        ;	}
+    69 00:001E: A9 10 00     	lda	#$10
+    70 00:0021: 18           	clc
+    71 00:0022: 65 01        	adc	<L3+p_1
+    72 00:0024: 85 01        	sta	<L3+p_1
+    73 00:0026: 90 02        	bcc	L5
+    74 00:0028: E6 03        	inc	<L3+p_1+2
+    75                        L5:
+    76 00:002A: E6 05        	inc	<L3+i_1
+    77 00:002C: A5 05        	lda	<L3+i_1
+    78 00:002E: C9 08 00     	cmp	#<$8
+    79 00:0031: 90 E1        	bcc	L10003
+    80                        L10002:
+    81                        ;
+    82                        ;	return i;
+    83 00:0033: A5 05        	lda	<L3+i_1
+    84 00:0035: 29 FF 00     	and	#$ff
+    85 00:0038: A8           	tay
+    86 00:0039: 2B           	pld
+    87 00:003A: 3B           	tsc
+    88 00:003B: 18           	clc
+    89 00:003C: 69 06 00     	adc	#L2
+    90 00:003F: 1B           	tcs
+    91 00:0040: 98           	tya
+    92 00:0041: 6B           	rtl
+    93                        ;}
+    94             00000006   L2	equ	6
+    95             00000001   L3	equ	1
+    96                        	ends
+    97                        	efunc
+    98                        ;
+    99                        ;unsigned char callCIO(char channel, char cmd, cha
+                    r *buffer, size_t len, char aux1, char aux2) {
+   100                        	code
+   101                        	xdef	~~callCIO
+   102                        	func
+   103                        ~~callCIO:
+   104                        	longa	on
+   105                        	longi	on
+   106 00:0042: 3B           	tsc
+   107 00:0043: 38           	sec
+   108 00:0044: E9 0D 00     	sbc	#L8
+   109 00:0047: 1B           	tcs
+  Sun Jan  9 2022 20:53                                                Page 3
+
+
+   110 00:0048: 0B           	phd
+   111 00:0049: 5B           	tcd
+   112             00000004   channel_0	set	4
+   113             00000006   cmd_0	set	6
+   114             00000008   buffer_0	set	8
+   115             0000000C   len_0	set	12
+   116             0000000E   aux1_0	set	14
+   117             00000010   aux2_0	set	16
+   118                        ;	iocb_ut iocb;
+   119                        ;	ptrconv_t p;
+   120                        ;	char status;
+   121                        ;	
+   122                        ;	
+   123                        ;	iocb.iocbWord.iocbHi = 0;
+   124             00000000   iocb_1	set	0
+   125             00000004   p_1	set	4
+   126             00000008   status_1	set	8
+   127 00:004A: 64 07        	stz	<L9+iocb_1+2
+   128                        ;	iocb.iocbWord.iocbLo = channel << 4;
+   129 00:004C: A5 11        	lda	<L8+channel_0
+   130 00:004E: 29 FF 00     	and	#$ff
+   131 00:0051: 0A           	asl	A
+   132 00:0052: 0A           	asl	A
+   133 00:0053: 0A           	asl	A
+   134 00:0054: 0A           	asl	A
+   135 00:0055: 85 05        	sta	<L9+iocb_1
+   136                        ;#asm 
+   137                        ;	tax
+   138                        ;#endasm
+   139                        	asmstart
+   140 00:0057: AA           	tax
+   141                        	asmend
+   142                        ;	iocb.iocbWord.iocbLo += (unsigned int)(0x0280);
+   143 00:0058: A9 80 02     	lda	#$280
+   144 00:005B: 18           	clc
+   145 00:005C: 65 05        	adc	<L9+iocb_1
+   146 00:005E: 85 05        	sta	<L9+iocb_1
+   147                        ;
+   148                        ;	if (cmd == IOCB_OPEN) {
+   149 00:0060: E2 20        	sep	#$20
+   150                        	longa	off
+   151 00:0062: A5 13        	lda	<L8+cmd_0
+   152 00:0064: C9 03        	cmp	#<$3
+   153 00:0066: C2 20        	rep	#$20
+   154                        	longa	on
+   155 00:0068: D0 10        	bne	L10004
+   156                        ;		iocb.iocb->aux1 = aux1;
+   157 00:006A: E2 20        	sep	#$20
+   158                        	longa	off
+   159 00:006C: A5 1B        	lda	<L8+aux1_0
+   160 00:006E: A0 0A 00     	ldy	#$a
+   161 00:0071: 97 05        	sta	[<L9+iocb_1],Y
+   162                        ;		iocb.iocb->aux2 = aux2;	
+   163 00:0073: A5 1D        	lda	<L8+aux2_0
+   164 00:0075: C8           	iny
+   165 00:0076: 97 05        	sta	[<L9+iocb_1],Y
+   166 00:0078: C2 20        	rep	#$20
+   167                        	longa	on
+  Sun Jan  9 2022 20:53                                                Page 4
+
+
+   168                        ;	} 
+   169                        ;	//else if (cmd == IOCB_CLOSE && !iocb.iocb->hand
+                    ler) {
+   170                        ;	//	return SUCCES;
+   171                        ;	//}
+   172                        ;	
+   173                        ;	iocb.iocb->command = cmd;
+   174                        L10004:
+   175 00:007A: E2 20        	sep	#$20
+   176                        	longa	off
+   177 00:007C: A5 13        	lda	<L8+cmd_0
+   178 00:007E: A0 02 00     	ldy	#$2
+   179 00:0081: 97 05        	sta	[<L9+iocb_1],Y
+   180 00:0083: C2 20        	rep	#$20
+   181                        	longa	on
+   182                        ;	
+   183                        ;	p.ptr = buffer;
+   184 00:0085: A5 15        	lda	<L8+buffer_0
+   185 00:0087: 85 09        	sta	<L9+p_1
+   186 00:0089: A5 17        	lda	<L8+buffer_0+2
+   187 00:008B: 85 0B        	sta	<L9+p_1+2
+   188                        ;	iocb.iocb->buffer = p.adrBank.ptr16;
+   189 00:008D: A5 09        	lda	<L9+p_1
+   190 00:008F: C8           	iny
+   191 00:0090: C8           	iny
+   192 00:0091: 97 05        	sta	[<L9+iocb_1],Y
+   193                        ;	iocb.iocb->bufferBank = p.adrBank.ptrBank;
+   194 00:0093: E2 20        	sep	#$20
+   195                        	longa	off
+   196 00:0095: A5 0B        	lda	<L9+p_1+2
+   197 00:0097: C8           	iny
+   198 00:0098: C8           	iny
+   199 00:0099: 97 05        	sta	[<L9+iocb_1],Y
+   200 00:009B: C2 20        	rep	#$20
+   201                        	longa	on
+   202                        ;	
+   203                        ;	p.ul = len;
+   204 00:009D: A5 19        	lda	<L8+len_0
+   205 00:009F: 85 09        	sta	<L9+p_1
+   206 00:00A1: 64 0B        	stz	<L9+p_1+2
+   207                        ;	iocb.iocb->buflen = p.adrBank.ptr16;
+   208 00:00A3: A5 09        	lda	<L9+p_1
+   209 00:00A5: C8           	iny
+   210 00:00A6: 97 05        	sta	[<L9+iocb_1],Y
+   211                        ;	iocb.iocb->buflenBank = p.adrBank.ptrBank;
+   212 00:00A8: E2 20        	sep	#$20
+   213                        	longa	off
+   214 00:00AA: A5 0B        	lda	<L9+p_1+2
+   215 00:00AC: C8           	iny
+   216 00:00AD: C8           	iny
+   217 00:00AE: 97 05        	sta	[<L9+iocb_1],Y
+   218 00:00B0: C2 20        	rep	#$20
+   219                        	longa	on
+   220                        ;	
+   221                        ;#asm
+   222                        ;	jsl $C021
+   223                        ;#endasm
+   224                        	asmstart
+  Sun Jan  9 2022 20:53                                                Page 5
+
+
+   225 00:00B2: 22 21 C0 00  	jsl $C021
+   226                        	asmend
+   227                        ;	errno = 0;
+   228 00:00B6: 9C xx xx     	stz	|~~errno
+   229                        ;	status = iocb.iocb->status;
+   230 00:00B9: E2 20        	sep	#$20
+   231                        	longa	off
+   232 00:00BB: A0 03 00     	ldy	#$3
+   233 00:00BE: B7 05        	lda	[<L9+iocb_1],Y
+   234 00:00C0: 85 0D        	sta	<L9+status_1
+   235                        ;	
+   236                        ;	if (status != 1) errno = ENOENT;
+   237 00:00C2: C9 01        	cmp	#<$1
+   238 00:00C4: C2 20        	rep	#$20
+   239                        	longa	on
+   240 00:00C6: F0 06        	beq	L10005
+   241 00:00C8: A9 01 00     	lda	#$1
+   242 00:00CB: 8D xx xx     	sta	|~~errno
+   243                        ;	
+   244                        ;	/*
+   245                        ;	if (cmd == IOCB_GETREC) {
+   246                        ;		printf("IOCB:%d, buffer:%p, cmd:%d, rc:%
+                    d \n", channel, buffer, cmd, iocb.iocb->status);
+   247                        ;	}
+   248                        ;	*/
+   249                        ;		
+   250                        ;	return status;
+   251                        L10005:
+   252 00:00CE: A5 0D        	lda	<L9+status_1
+   253 00:00D0: 29 FF 00     	and	#$ff
+   254 00:00D3: A8           	tay
+   255 00:00D4: A5 0F        	lda	<L8+2
+   256 00:00D6: 85 1D        	sta	<L8+2+14
+   257 00:00D8: A5 0E        	lda	<L8+1
+   258 00:00DA: 85 1C        	sta	<L8+1+14
+   259 00:00DC: 2B           	pld
+   260 00:00DD: 3B           	tsc
+   261 00:00DE: 18           	clc
+   262 00:00DF: 69 1B 00     	adc	#L8+14
+   263 00:00E2: 1B           	tcs
+   264 00:00E3: 98           	tya
+   265 00:00E4: 6B           	rtl
+   266                        ;}
+   267             0000000D   L8	equ	13
+   268             00000005   L9	equ	5
+   269                        	ends
+   270                        	efunc
+   271                        ;
+   272                        ;unsigned char aclose(char channel) {
+   273                        	code
+   274                        	xdef	~~aclose
+   275                        	func
+   276                        ~~aclose:
+   277                        	longa	on
+   278                        	longi	on
+   279 00:00E5: 3B           	tsc
+   280 00:00E6: 38           	sec
+   281 00:00E7: E9 04 00     	sbc	#L13
+  Sun Jan  9 2022 20:53                                                Page 6
+
+
+   282 00:00EA: 1B           	tcs
+   283 00:00EB: 0B           	phd
+   284 00:00EC: 5B           	tcd
+   285             00000004   channel_0	set	4
+   286                        ;	return callCIO(channel, IOCB_CLOSE, NULL, 0ul, 0
+                    , 0);	
+   287 00:00ED: F4 00 00     	pea	#<$0
+   288 00:00F0: F4 00 00     	pea	#<$0
+   289 00:00F3: F4 00 00     	pea	#<$0
+   290 00:00F6: F4 00 00     	pea	#^$0
+   291 00:00F9: F4 00 00     	pea	#<$0
+   292 00:00FC: F4 0C 00     	pea	#<$c
+   293 00:00FF: D4 08        	pei	<L13+channel_0
+   294 00:0101: 22 xx xx xx  	jsl	~~callCIO
+   295 00:0105: E2 20        	sep	#$20
+   296                        	longa	off
+   297 00:0107: 85 01        	sta	<R0
+   298 00:0109: C2 20        	rep	#$20
+   299                        	longa	on
+   300 00:010B: A5 01        	lda	<R0
+   301 00:010D: 29 FF 00     	and	#$ff
+   302 00:0110: A8           	tay
+   303 00:0111: A5 06        	lda	<L13+2
+   304 00:0113: 85 08        	sta	<L13+2+2
+   305 00:0115: A5 05        	lda	<L13+1
+   306 00:0117: 85 07        	sta	<L13+1+2
+   307 00:0119: 2B           	pld
+   308 00:011A: 3B           	tsc
+   309 00:011B: 18           	clc
+   310 00:011C: 69 06 00     	adc	#L13+2
+   311 00:011F: 1B           	tcs
+   312 00:0120: 98           	tya
+   313 00:0121: 6B           	rtl
+   314                        ;}
+   315             00000004   L13	equ	4
+   316             00000005   L14	equ	5
+   317                        	ends
+   318                        	efunc
+   319                        ;
+   320                        ;unsigned char agetrec(char channel, char *buffer)
+                     {
+   321                        	code
+   322                        	xdef	~~agetrec
+   323                        	func
+   324                        ~~agetrec:
+   325                        	longa	on
+   326                        	longi	on
+   327 00:0122: 3B           	tsc
+   328 00:0123: 38           	sec
+   329 00:0124: E9 04 00     	sbc	#L16
+   330 00:0127: 1B           	tcs
+   331 00:0128: 0B           	phd
+   332 00:0129: 5B           	tcd
+   333             00000004   channel_0	set	4
+   334             00000006   buffer_0	set	6
+   335                        ;	return callCIO(channel, IOCB_GETREC, buffer, 256
+                    ul, 0, 0);	
+   336 00:012A: F4 00 00     	pea	#<$0
+  Sun Jan  9 2022 20:53                                                Page 7
+
+
+   337 00:012D: F4 00 00     	pea	#<$0
+   338 00:0130: F4 00 01     	pea	#<$100
+   339 00:0133: D4 0C        	pei	<L16+buffer_0+2
+   340 00:0135: D4 0A        	pei	<L16+buffer_0
+   341 00:0137: F4 05 00     	pea	#<$5
+   342 00:013A: D4 08        	pei	<L16+channel_0
+   343 00:013C: 22 xx xx xx  	jsl	~~callCIO
+   344 00:0140: E2 20        	sep	#$20
+   345                        	longa	off
+   346 00:0142: 85 01        	sta	<R0
+   347 00:0144: C2 20        	rep	#$20
+   348                        	longa	on
+   349 00:0146: A5 01        	lda	<R0
+   350 00:0148: 29 FF 00     	and	#$ff
+   351 00:014B: A8           	tay
+   352 00:014C: A5 06        	lda	<L16+2
+   353 00:014E: 85 0C        	sta	<L16+2+6
+   354 00:0150: A5 05        	lda	<L16+1
+   355 00:0152: 85 0B        	sta	<L16+1+6
+   356 00:0154: 2B           	pld
+   357 00:0155: 3B           	tsc
+   358 00:0156: 18           	clc
+   359 00:0157: 69 0A 00     	adc	#L16+6
+   360 00:015A: 1B           	tcs
+   361 00:015B: 98           	tya
+   362 00:015C: 6B           	rtl
+   363                        ;}
+   364             00000004   L16	equ	4
+   365             00000005   L17	equ	5
+   366                        	ends
+   367                        	efunc
+   368                        ;
+   369                        ;unsigned char aputrec(char channel, char *buffer)
+                     {
+   370                        	code
+   371                        	xdef	~~aputrec
+   372                        	func
+   373                        ~~aputrec:
+   374                        	longa	on
+   375                        	longi	on
+   376 00:015D: 3B           	tsc
+   377 00:015E: 38           	sec
+   378 00:015F: E9 04 00     	sbc	#L19
+   379 00:0162: 1B           	tcs
+   380 00:0163: 0B           	phd
+   381 00:0164: 5B           	tcd
+   382             00000004   channel_0	set	4
+   383             00000006   buffer_0	set	6
+   384                        ;	return callCIO(channel, IOCB_PUTREC, buffer, 256
+                    ul, 0, 0);	
+   385 00:0165: F4 00 00     	pea	#<$0
+   386 00:0168: F4 00 00     	pea	#<$0
+   387 00:016B: F4 00 01     	pea	#<$100
+   388 00:016E: D4 0C        	pei	<L19+buffer_0+2
+   389 00:0170: D4 0A        	pei	<L19+buffer_0
+   390 00:0172: F4 09 00     	pea	#<$9
+   391 00:0175: D4 08        	pei	<L19+channel_0
+   392 00:0177: 22 xx xx xx  	jsl	~~callCIO
+  Sun Jan  9 2022 20:53                                                Page 8
+
+
+   393 00:017B: E2 20        	sep	#$20
+   394                        	longa	off
+   395 00:017D: 85 01        	sta	<R0
+   396 00:017F: C2 20        	rep	#$20
+   397                        	longa	on
+   398 00:0181: A5 01        	lda	<R0
+   399 00:0183: 29 FF 00     	and	#$ff
+   400 00:0186: A8           	tay
+   401 00:0187: A5 06        	lda	<L19+2
+   402 00:0189: 85 0C        	sta	<L19+2+6
+   403 00:018B: A5 05        	lda	<L19+1
+   404 00:018D: 85 0B        	sta	<L19+1+6
+   405 00:018F: 2B           	pld
+   406 00:0190: 3B           	tsc
+   407 00:0191: 18           	clc
+   408 00:0192: 69 0A 00     	adc	#L19+6
+   409 00:0195: 1B           	tcs
+   410 00:0196: 98           	tya
+   411 00:0197: 6B           	rtl
+   412                        ;}
+   413             00000004   L19	equ	4
+   414             00000005   L20	equ	5
+   415                        	ends
+   416                        	efunc
+   417                        ;
+   418                        ;unsigned char agetchr(char channel, char *buffer,
+                     size_t len) {
+   419                        	code
+   420                        	xdef	~~agetchr
+   421                        	func
+   422                        ~~agetchr:
+   423                        	longa	on
+   424                        	longi	on
+   425 00:0198: 3B           	tsc
+   426 00:0199: 38           	sec
+   427 00:019A: E9 04 00     	sbc	#L22
+   428 00:019D: 1B           	tcs
+   429 00:019E: 0B           	phd
+   430 00:019F: 5B           	tcd
+   431             00000004   channel_0	set	4
+   432             00000006   buffer_0	set	6
+   433             0000000A   len_0	set	10
+   434                        ;	return callCIO(channel, IOCB_GETCHR, buffer, len
+                    , 0, 0);	
+   435 00:01A0: F4 00 00     	pea	#<$0
+   436 00:01A3: F4 00 00     	pea	#<$0
+   437 00:01A6: D4 0E        	pei	<L22+len_0
+   438 00:01A8: D4 0C        	pei	<L22+buffer_0+2
+   439 00:01AA: D4 0A        	pei	<L22+buffer_0
+   440 00:01AC: F4 07 00     	pea	#<$7
+   441 00:01AF: D4 08        	pei	<L22+channel_0
+   442 00:01B1: 22 xx xx xx  	jsl	~~callCIO
+   443 00:01B5: E2 20        	sep	#$20
+   444                        	longa	off
+   445 00:01B7: 85 01        	sta	<R0
+   446 00:01B9: C2 20        	rep	#$20
+   447                        	longa	on
+   448 00:01BB: A5 01        	lda	<R0
+  Sun Jan  9 2022 20:53                                                Page 9
+
+
+   449 00:01BD: 29 FF 00     	and	#$ff
+   450 00:01C0: A8           	tay
+   451 00:01C1: A5 06        	lda	<L22+2
+   452 00:01C3: 85 0E        	sta	<L22+2+8
+   453 00:01C5: A5 05        	lda	<L22+1
+   454 00:01C7: 85 0D        	sta	<L22+1+8
+   455 00:01C9: 2B           	pld
+   456 00:01CA: 3B           	tsc
+   457 00:01CB: 18           	clc
+   458 00:01CC: 69 0C 00     	adc	#L22+8
+   459 00:01CF: 1B           	tcs
+   460 00:01D0: 98           	tya
+   461 00:01D1: 6B           	rtl
+   462                        ;}
+   463             00000004   L22	equ	4
+   464             00000005   L23	equ	5
+   465                        	ends
+   466                        	efunc
+   467                        ;
+   468                        ;unsigned char aputchr(char channel, char *buffer,
+                     size_t len) {
+   469                        	code
+   470                        	xdef	~~aputchr
+   471                        	func
+   472                        ~~aputchr:
+   473                        	longa	on
+   474                        	longi	on
+   475 00:01D2: 3B           	tsc
+   476 00:01D3: 38           	sec
+   477 00:01D4: E9 04 00     	sbc	#L25
+   478 00:01D7: 1B           	tcs
+   479 00:01D8: 0B           	phd
+   480 00:01D9: 5B           	tcd
+   481             00000004   channel_0	set	4
+   482             00000006   buffer_0	set	6
+   483             0000000A   len_0	set	10
+   484                        ;	return callCIO(channel, IOCB_PUTCHR, buffer, len
+                    , 0, 0);	
+   485 00:01DA: F4 00 00     	pea	#<$0
+   486 00:01DD: F4 00 00     	pea	#<$0
+   487 00:01E0: D4 0E        	pei	<L25+len_0
+   488 00:01E2: D4 0C        	pei	<L25+buffer_0+2
+   489 00:01E4: D4 0A        	pei	<L25+buffer_0
+   490 00:01E6: F4 0B 00     	pea	#<$b
+   491 00:01E9: D4 08        	pei	<L25+channel_0
+   492 00:01EB: 22 xx xx xx  	jsl	~~callCIO
+   493 00:01EF: E2 20        	sep	#$20
+   494                        	longa	off
+   495 00:01F1: 85 01        	sta	<R0
+   496 00:01F3: C2 20        	rep	#$20
+   497                        	longa	on
+   498 00:01F5: A5 01        	lda	<R0
+   499 00:01F7: 29 FF 00     	and	#$ff
+   500 00:01FA: A8           	tay
+   501 00:01FB: A5 06        	lda	<L25+2
+   502 00:01FD: 85 0E        	sta	<L25+2+8
+   503 00:01FF: A5 05        	lda	<L25+1
+   504 00:0201: 85 0D        	sta	<L25+1+8
+  Sun Jan  9 2022 20:53                                                Page 10
+
+
+   505 00:0203: 2B           	pld
+   506 00:0204: 3B           	tsc
+   507 00:0205: 18           	clc
+   508 00:0206: 69 0C 00     	adc	#L25+8
+   509 00:0209: 1B           	tcs
+   510 00:020A: 98           	tya
+   511 00:020B: 6B           	rtl
+   512                        ;}
+   513             00000004   L25	equ	4
+   514             00000005   L26	equ	5
+   515                        	ends
+   516                        	efunc
+   517                        ;
+   518                        ;unsigned char aopen(unsigned char channel, char *
+                    buffer, char aux1, char aux2) {
+   519                        	code
+   520                        	xdef	~~aopen
+   521                        	func
+   522                        ~~aopen:
+   523                        	longa	on
+   524                        	longi	on
+   525 00:020C: 3B           	tsc
+   526 00:020D: 38           	sec
+   527 00:020E: E9 04 00     	sbc	#L28
+   528 00:0211: 1B           	tcs
+   529 00:0212: 0B           	phd
+   530 00:0213: 5B           	tcd
+   531             00000004   channel_0	set	4
+   532             00000006   buffer_0	set	6
+   533             0000000A   aux1_0	set	10
+   534             0000000C   aux2_0	set	12
+   535                        ;	return callCIO(channel, IOCB_OPEN, buffer, 256ul
+                    , aux1, aux2);	
+   536 00:0214: D4 10        	pei	<L28+aux2_0
+   537 00:0216: D4 0E        	pei	<L28+aux1_0
+   538 00:0218: F4 00 01     	pea	#<$100
+   539 00:021B: D4 0C        	pei	<L28+buffer_0+2
+   540 00:021D: D4 0A        	pei	<L28+buffer_0
+   541 00:021F: F4 03 00     	pea	#<$3
+   542 00:0222: D4 08        	pei	<L28+channel_0
+   543 00:0224: 22 xx xx xx  	jsl	~~callCIO
+   544 00:0228: E2 20        	sep	#$20
+   545                        	longa	off
+   546 00:022A: 85 01        	sta	<R0
+   547 00:022C: C2 20        	rep	#$20
+   548                        	longa	on
+   549 00:022E: A5 01        	lda	<R0
+   550 00:0230: 29 FF 00     	and	#$ff
+   551 00:0233: A8           	tay
+   552 00:0234: A5 06        	lda	<L28+2
+   553 00:0236: 85 10        	sta	<L28+2+10
+   554 00:0238: A5 05        	lda	<L28+1
+   555 00:023A: 85 0F        	sta	<L28+1+10
+   556 00:023C: 2B           	pld
+   557 00:023D: 3B           	tsc
+   558 00:023E: 18           	clc
+   559 00:023F: 69 0E 00     	adc	#L28+10
+   560 00:0242: 1B           	tcs
+  Sun Jan  9 2022 20:53                                                Page 11
+
+
+   561 00:0243: 98           	tya
+   562 00:0244: 6B           	rtl
+   563                        ;}
+   564             00000004   L28	equ	4
+   565             00000005   L29	equ	5
+   566                        	ends
+   567                        	efunc
+   568                        ;
+   569                        ;unsigned char achdir(unsigned char channel, char 
+                    *buffer) {
+   570                        	code
+   571                        	xdef	~~achdir
+   572                        	func
+   573                        ~~achdir:
+   574                        	longa	on
+   575                        	longi	on
+   576 00:0245: 3B           	tsc
+   577 00:0246: 38           	sec
+   578 00:0247: E9 04 00     	sbc	#L31
+   579 00:024A: 1B           	tcs
+   580 00:024B: 0B           	phd
+   581 00:024C: 5B           	tcd
+   582             00000004   channel_0	set	4
+   583             00000006   buffer_0	set	6
+   584                        ;	return callCIO(channel, IOCB_CHDIR_MYDOS, buffer
+                    , 0, 0, 0);	
+   585 00:024D: F4 00 00     	pea	#<$0
+   586 00:0250: F4 00 00     	pea	#<$0
+   587 00:0253: F4 00 00     	pea	#<$0
+   588 00:0256: D4 0C        	pei	<L31+buffer_0+2
+   589 00:0258: D4 0A        	pei	<L31+buffer_0
+   590 00:025A: F4 29 00     	pea	#<$29
+   591 00:025D: D4 08        	pei	<L31+channel_0
+   592 00:025F: 22 xx xx xx  	jsl	~~callCIO
+   593 00:0263: E2 20        	sep	#$20
+   594                        	longa	off
+   595 00:0265: 85 01        	sta	<R0
+   596 00:0267: C2 20        	rep	#$20
+   597                        	longa	on
+   598 00:0269: A5 01        	lda	<R0
+   599 00:026B: 29 FF 00     	and	#$ff
+   600 00:026E: A8           	tay
+   601 00:026F: A5 06        	lda	<L31+2
+   602 00:0271: 85 0C        	sta	<L31+2+6
+   603 00:0273: A5 05        	lda	<L31+1
+   604 00:0275: 85 0B        	sta	<L31+1+6
+   605 00:0277: 2B           	pld
+   606 00:0278: 3B           	tsc
+   607 00:0279: 18           	clc
+   608 00:027A: 69 0A 00     	adc	#L31+6
+   609 00:027D: 1B           	tcs
+   610 00:027E: 98           	tya
+   611 00:027F: 6B           	rtl
+   612                        ;}
+   613             00000004   L31	equ	4
+   614             00000005   L32	equ	5
+   615                        	ends
+   616                        	efunc
+  Sun Jan  9 2022 20:53                                                Page 12
+
+
+   617                        ;
+   618                        ;unsigned char astat(unsigned char channel, struct
+                     stat *buffer) {
+   619                        	code
+   620                        	xdef	~~astat
+   621                        	func
+   622                        ~~astat:
+   623                        	longa	on
+   624                        	longi	on
+   625 00:0280: 3B           	tsc
+   626 00:0281: 38           	sec
+   627 00:0282: E9 04 00     	sbc	#L34
+   628 00:0285: 1B           	tcs
+   629 00:0286: 0B           	phd
+   630 00:0287: 5B           	tcd
+   631             00000004   channel_0	set	4
+   632             00000006   buffer_0	set	6
+   633                        ;	return callCIO(channel, IOCB_STAT, (char *)buffe
+                    r, sizeof(struct stat), 0, 0);	
+   634 00:0288: F4 00 00     	pea	#<$0
+   635 00:028B: F4 00 00     	pea	#<$0
+   636 00:028E: F4 06 00     	pea	#<$6
+   637 00:0291: D4 0C        	pei	<L34+buffer_0+2
+   638 00:0293: D4 0A        	pei	<L34+buffer_0
+   639 00:0295: F4 28 00     	pea	#<$28
+   640 00:0298: D4 08        	pei	<L34+channel_0
+   641 00:029A: 22 xx xx xx  	jsl	~~callCIO
+   642 00:029E: E2 20        	sep	#$20
+   643                        	longa	off
+   644 00:02A0: 85 01        	sta	<R0
+   645 00:02A2: C2 20        	rep	#$20
+   646                        	longa	on
+   647 00:02A4: A5 01        	lda	<R0
+   648 00:02A6: 29 FF 00     	and	#$ff
+   649 00:02A9: A8           	tay
+   650 00:02AA: A5 06        	lda	<L34+2
+   651 00:02AC: 85 0C        	sta	<L34+2+6
+   652 00:02AE: A5 05        	lda	<L34+1
+   653 00:02B0: 85 0B        	sta	<L34+1+6
+   654 00:02B2: 2B           	pld
+   655 00:02B3: 3B           	tsc
+   656 00:02B4: 18           	clc
+   657 00:02B5: 69 0A 00     	adc	#L34+6
+   658 00:02B8: 1B           	tcs
+   659 00:02B9: 98           	tya
+   660 00:02BA: 6B           	rtl
+   661                        ;}
+   662             00000004   L34	equ	4
+   663             00000005   L35	equ	5
+   664                        	ends
+   665                        	efunc
+   666                        ;
+   667                        ;
+   668                        ;int isatty(int i) {
+   669                        	code
+   670                        	xdef	~~isatty
+   671                        	func
+   672                        ~~isatty:
+  Sun Jan  9 2022 20:53                                                Page 13
+
+
+   673                        	longa	on
+   674                        	longi	on
+   675 00:02BB: 3B           	tsc
+   676 00:02BC: 38           	sec
+   677 00:02BD: E9 00 00     	sbc	#L37
+   678 00:02C0: 1B           	tcs
+   679 00:02C1: 0B           	phd
+   680 00:02C2: 5B           	tcd
+   681             00000004   i_0	set	4
+   682                        ;	return 1;
+   683 00:02C3: A9 01 00     	lda	#$1
+   684 00:02C6: A8           	tay
+   685 00:02C7: A5 02        	lda	<L37+2
+   686 00:02C9: 85 04        	sta	<L37+2+2
+   687 00:02CB: A5 01        	lda	<L37+1
+   688 00:02CD: 85 03        	sta	<L37+1+2
+   689 00:02CF: 2B           	pld
+   690 00:02D0: 3B           	tsc
+   691 00:02D1: 18           	clc
+   692 00:02D2: 69 02 00     	adc	#L37+2
+   693 00:02D5: 1B           	tcs
+   694 00:02D6: 98           	tya
+   695 00:02D7: 6B           	rtl
+   696                        ;}
+   697             00000000   L37	equ	0
+   698             00000001   L38	equ	1
+   699                        	ends
+   700                        	efunc
+   701                        ;
+   702                        ;ssize_t returnSize(int fd, int rc) {
+   703                        	code
+   704                        	xdef	~~returnSize
+   705                        	func
+   706                        ~~returnSize:
+   707                        	longa	on
+   708                        	longi	on
+   709 00:02D8: 3B           	tsc
+   710 00:02D9: 38           	sec
+   711 00:02DA: E9 10 00     	sbc	#L40
+   712 00:02DD: 1B           	tcs
+   713 00:02DE: 0B           	phd
+   714 00:02DF: 5B           	tcd
+   715             00000004   fd_0	set	4
+   716             00000006   rc_0	set	6
+   717                        ;	iocb_ut iocb;
+   718                        ;	ptrconv_t p;
+   719                        ;	
+   720                        ;	if (rc != SUCCES && rc != EOFERR)
+   721             00000000   iocb_1	set	0
+   722             00000004   p_1	set	4
+   723                        ;		return -1;
+   724 00:02E0: A5 16        	lda	<L40+rc_0
+   725 00:02E2: C9 01 00     	cmp	#<$1
+   726 00:02E5: F0 1C        	beq	L10006
+   727 00:02E7: A5 16        	lda	<L40+rc_0
+   728 00:02E9: C9 88 00     	cmp	#<$88
+   729 00:02EC: F0 15        	beq	L10006
+   730 00:02EE: A9 FF FF     	lda	#$ffff
+  Sun Jan  9 2022 20:53                                                Page 14
+
+
+   731                        L44:
+   732 00:02F1: A8           	tay
+   733 00:02F2: A5 12        	lda	<L40+2
+   734 00:02F4: 85 16        	sta	<L40+2+4
+   735 00:02F6: A5 11        	lda	<L40+1
+   736 00:02F8: 85 15        	sta	<L40+1+4
+   737 00:02FA: 2B           	pld
+   738 00:02FB: 3B           	tsc
+   739 00:02FC: 18           	clc
+   740 00:02FD: 69 14 00     	adc	#L40+4
+   741 00:0300: 1B           	tcs
+   742 00:0301: 98           	tya
+   743 00:0302: 6B           	rtl
+   744                        ;
+   745                        ;	iocb.iocbWord.iocbHi = 0;
+   746                        L10006:
+   747 00:0303: 64 0B        	stz	<L41+iocb_1+2
+   748                        ;	iocb.iocbWord.iocbLo = (fd2iocb[fd] << 4) + 0x28
+                    0;
+   749 00:0305: A6 14        	ldx	<L40+fd_0
+   750 00:0307: BD xx xx     	lda	|~~fd2iocb,X
+   751 00:030A: 29 FF 00     	and	#$ff
+   752 00:030D: 0A           	asl	A
+   753 00:030E: 0A           	asl	A
+   754 00:030F: 0A           	asl	A
+   755 00:0310: 0A           	asl	A
+   756 00:0311: 18           	clc
+   757 00:0312: 69 80 02     	adc	#$280
+   758 00:0315: 85 09        	sta	<L41+iocb_1
+   759                        ;	p.adrBank.ptr16 = iocb.iocb->buflen;
+   760 00:0317: A0 07 00     	ldy	#$7
+   761 00:031A: B7 09        	lda	[<L41+iocb_1],Y
+   762 00:031C: 85 0D        	sta	<L41+p_1
+   763                        ;	p.adrBank.ptrBank = iocb.iocb->buflenBank;
+   764 00:031E: E2 20        	sep	#$20
+   765                        	longa	off
+   766 00:0320: C8           	iny
+   767 00:0321: C8           	iny
+   768 00:0322: B7 09        	lda	[<L41+iocb_1],Y
+   769 00:0324: 85 0F        	sta	<L41+p_1+2
+   770                        ;	p.adrBank.ptrUnused = 0;
+   771 00:0326: 64 10        	stz	<L41+p_1+3
+   772 00:0328: C2 20        	rep	#$20
+   773                        	longa	on
+   774                        ;
+   775                        ;	return p.ul;	
+   776 00:032A: A5 0D        	lda	<L41+p_1
+   777 00:032C: 80 C3        	bra	L44
+   778                        ;}
+   779             00000010   L40	equ	16
+   780             00000009   L41	equ	9
+   781                        	ends
+   782                        	efunc
+   783                        ;
+   784                        ;size_t write(int fd, void* buf, size_t len) {
+   785                        	code
+   786                        	xdef	~~write
+   787                        	func
+  Sun Jan  9 2022 20:53                                                Page 15
+
+
+   788                        ~~write:
+   789                        	longa	on
+   790                        	longi	on
+   791 00:032E: 3B           	tsc
+   792 00:032F: 38           	sec
+   793 00:0330: E9 03 00     	sbc	#L45
+   794 00:0333: 1B           	tcs
+   795 00:0334: 0B           	phd
+   796 00:0335: 5B           	tcd
+   797             00000004   fd_0	set	4
+   798             00000006   buf_0	set	6
+   799             0000000A   len_0	set	10
+   800                        ;	unsigned char rc;
+   801                        ;	ssize_t size;
+   802                        ;	
+   803                        ;	//debugf("write fd: %04X, len: %04X\n", (long)fd
+                    , (long)len);
+   804                        ;	
+   805                        ;	rc = aputchr(fd2iocb[fd], (char *)buf, len);
+   806             00000000   rc_1	set	0
+   807             00000001   size_1	set	1
+   808 00:0336: D4 0D        	pei	<L45+len_0
+   809 00:0338: D4 0B        	pei	<L45+buf_0+2
+   810 00:033A: D4 09        	pei	<L45+buf_0
+   811 00:033C: A6 07        	ldx	<L45+fd_0
+   812 00:033E: BD xx xx     	lda	|~~fd2iocb,X
+   813 00:0341: 48           	pha
+   814 00:0342: 22 xx xx xx  	jsl	~~aputchr
+   815 00:0346: E2 20        	sep	#$20
+   816                        	longa	off
+   817 00:0348: 85 01        	sta	<L46+rc_1
+   818 00:034A: C2 20        	rep	#$20
+   819                        	longa	on
+   820                        ;	
+   821                        ;	size = returnSize(fd, rc);
+   822 00:034C: A5 01        	lda	<L46+rc_1
+   823 00:034E: 29 FF 00     	and	#$ff
+   824 00:0351: 48           	pha
+   825 00:0352: D4 07        	pei	<L45+fd_0
+   826 00:0354: 22 xx xx xx  	jsl	~~returnSize
+   827 00:0358: 85 02        	sta	<L46+size_1
+   828                        ;		
+   829                        ;	return size;	
+   830 00:035A: A8           	tay
+   831 00:035B: A5 05        	lda	<L45+2
+   832 00:035D: 85 0D        	sta	<L45+2+8
+   833 00:035F: A5 04        	lda	<L45+1
+   834 00:0361: 85 0C        	sta	<L45+1+8
+   835 00:0363: 2B           	pld
+   836 00:0364: 3B           	tsc
+   837 00:0365: 18           	clc
+   838 00:0366: 69 0B 00     	adc	#L45+8
+   839 00:0369: 1B           	tcs
+   840 00:036A: 98           	tya
+   841 00:036B: 6B           	rtl
+   842                        ;}
+   843             00000003   L45	equ	3
+   844             00000001   L46	equ	1
+  Sun Jan  9 2022 20:53                                                Page 16
+
+
+   845                        	ends
+   846                        	efunc
+   847                        ;
+   848                        ;size_t read(int fd, void* buf, size_t len) {	
+   849                        	code
+   850                        	xdef	~~read
+   851                        	func
+   852                        ~~read:
+   853                        	longa	on
+   854                        	longi	on
+   855 00:036C: 3B           	tsc
+   856 00:036D: 38           	sec
+   857 00:036E: E9 03 00     	sbc	#L48
+   858 00:0371: 1B           	tcs
+   859 00:0372: 0B           	phd
+   860 00:0373: 5B           	tcd
+   861             00000004   fd_0	set	4
+   862             00000006   buf_0	set	6
+   863             0000000A   len_0	set	10
+   864                        ;	unsigned char rc;
+   865                        ;	size_t size;
+   866                        ;	
+   867                        ;	//debugf("read fd:%04X, len: %04X @ %08X\n", (lo
+                    ng)fd, (long)len, buf);
+   868                        ;		
+   869                        ;	rc = agetchr(fd2iocb[fd], (char *)buf, len);
+   870             00000000   rc_1	set	0
+   871             00000001   size_1	set	1
+   872 00:0374: D4 0D        	pei	<L48+len_0
+   873 00:0376: D4 0B        	pei	<L48+buf_0+2
+   874 00:0378: D4 09        	pei	<L48+buf_0
+   875 00:037A: A6 07        	ldx	<L48+fd_0
+   876 00:037C: BD xx xx     	lda	|~~fd2iocb,X
+   877 00:037F: 48           	pha
+   878 00:0380: 22 xx xx xx  	jsl	~~agetchr
+   879 00:0384: E2 20        	sep	#$20
+   880                        	longa	off
+   881 00:0386: 85 01        	sta	<L49+rc_1
+   882 00:0388: C2 20        	rep	#$20
+   883                        	longa	on
+   884                        ;		
+   885                        ;	size = returnSize(fd, rc);
+   886 00:038A: A5 01        	lda	<L49+rc_1
+   887 00:038C: 29 FF 00     	and	#$ff
+   888 00:038F: 48           	pha
+   889 00:0390: D4 07        	pei	<L48+fd_0
+   890 00:0392: 22 xx xx xx  	jsl	~~returnSize
+   891 00:0396: 85 02        	sta	<L49+size_1
+   892                        ;		
+   893                        ;	//debugf("read size: %04X, rc: %02X\n", (long)si
+                    ze, (long)rc);
+   894                        ;	
+   895                        ;	return size;	
+   896 00:0398: A8           	tay
+   897 00:0399: A5 05        	lda	<L48+2
+   898 00:039B: 85 0D        	sta	<L48+2+8
+   899 00:039D: A5 04        	lda	<L48+1
+   900 00:039F: 85 0C        	sta	<L48+1+8
+  Sun Jan  9 2022 20:53                                                Page 17
+
+
+   901 00:03A1: 2B           	pld
+   902 00:03A2: 3B           	tsc
+   903 00:03A3: 18           	clc
+   904 00:03A4: 69 0B 00     	adc	#L48+8
+   905 00:03A7: 1B           	tcs
+   906 00:03A8: 98           	tya
+   907 00:03A9: 6B           	rtl
+   908                        ;}
+   909             00000003   L48	equ	3
+   910             00000001   L49	equ	1
+   911                        	ends
+   912                        	efunc
+   913                        ;
+   914                        ;//int ioctl(int fd, long reqs, void *term) {
+   915                        ;//	return 0;
+   916                        ;//}
+   917                        ;
+   918                        ;/*
+   919                        ;int fstat(int fd, struct stat *buf) {
+   920                        ;	int rc;
+   921                        ;	
+   922                        ;	//rc = astat(fd2iocb[fd], buf);
+   923                        ;	
+   924                        ;	//if (rc >= 128) rc = -1;
+   925                        ;	//else rc = 0;
+   926                        ;	rc = 0;
+   927                        ;	return rc;
+   928                        ;}*/
+   929                        ;
+   930                        ;
+   931                        ;int close(int fd) {
+   932                        	code
+   933                        	xdef	~~close
+   934                        	func
+   935                        ~~close:
+   936                        	longa	on
+   937                        	longi	on
+   938 00:03AA: 3B           	tsc
+   939 00:03AB: 38           	sec
+   940 00:03AC: E9 00 00     	sbc	#L51
+   941 00:03AF: 1B           	tcs
+   942 00:03B0: 0B           	phd
+   943 00:03B1: 5B           	tcd
+   944             00000004   fd_0	set	4
+   945                        ;
+   946                        ;	//debugf("close fd:%d\n", (long)fd);
+   947                        ;	
+   948                        ;	aclose(fd2iocb[fd]);
+   949 00:03B2: A6 04        	ldx	<L51+fd_0
+   950 00:03B4: BD xx xx     	lda	|~~fd2iocb,X
+   951 00:03B7: 48           	pha
+   952 00:03B8: 22 xx xx xx  	jsl	~~aclose
+   953                        ;	fd2iocb[fd] = 0xff;
+   954 00:03BC: E2 20        	sep	#$20
+   955                        	longa	off
+   956 00:03BE: A9 FF        	lda	#$ff
+   957 00:03C0: A6 04        	ldx	<L51+fd_0
+   958 00:03C2: 9D xx xx     	sta	|~~fd2iocb,X
+  Sun Jan  9 2022 20:53                                                Page 18
+
+
+   959 00:03C5: C2 20        	rep	#$20
+   960                        	longa	on
+   961                        ;		
+   962                        ;	return 0;
+   963 00:03C7: A9 00 00     	lda	#$0
+   964 00:03CA: A8           	tay
+   965 00:03CB: A5 02        	lda	<L51+2
+   966 00:03CD: 85 04        	sta	<L51+2+2
+   967 00:03CF: A5 01        	lda	<L51+1
+   968 00:03D1: 85 03        	sta	<L51+1+2
+   969 00:03D3: 2B           	pld
+   970 00:03D4: 3B           	tsc
+   971 00:03D5: 18           	clc
+   972 00:03D6: 69 02 00     	adc	#L51+2
+   973 00:03D9: 1B           	tcs
+   974 00:03DA: 98           	tya
+   975 00:03DB: 6B           	rtl
+   976                        ;}
+   977             00000000   L51	equ	0
+   978             00000001   L52	equ	1
+   979                        	ends
+   980                        	efunc
+   981                        ;
+   982                        ;
+   983                        ;int open(const char *path, int flags) {
+   984                        	code
+   985                        	xdef	~~open
+   986                        	func
+   987                        ~~open:
+   988                        	longa	on
+   989                        	longi	on
+   990 00:03DC: 3B           	tsc
+   991 00:03DD: 38           	sec
+   992 00:03DE: E9 05 00     	sbc	#L54
+   993 00:03E1: 1B           	tcs
+   994 00:03E2: 0B           	phd
+   995 00:03E3: 5B           	tcd
+   996             00000004   path_0	set	4
+   997             00000008   flags_0	set	8
+   998                        ;	unsigned int fd;
+   999                        ;	unsigned char iocb, rc, mode;
+  1000                        ;	//char hex[5];
+  1001                        ;	
+  1002                        ;	//aputchr(0, (char *)path, strlen(path));
+  1003                        ;	//sprintf(hex, "%04X", flags);
+  1004                        ;	//aputchr(0, hex, sizeof(hex));
+  1005                        ;	//aputchr(0, "\n", 1ul);
+  1006                        ;	
+  1007                        ;	for(fd = 0; fd < 8; fd++) {
+  1008             00000000   fd_1	set	0
+  1009             00000002   iocb_1	set	2
+  1010             00000003   rc_1	set	3
+  1011             00000004   mode_1	set	4
+  1012 00:03E4: 64 01        	stz	<L55+fd_1
+  1013                        L10009:
+  1014                        ;		if (fd2iocb[fd] >= 8) break;
+  1015 00:03E6: E2 20        	sep	#$20
+  1016                        	longa	off
+  Sun Jan  9 2022 20:53                                                Page 19
+
+
+  1017 00:03E8: A6 01        	ldx	<L55+fd_1
+  1018 00:03EA: BD xx xx     	lda	|~~fd2iocb,X
+  1019 00:03ED: C9 08        	cmp	#<$8
+  1020 00:03EF: C2 20        	rep	#$20
+  1021                        	longa	on
+  1022 00:03F1: B0 09        	bcs	L10008
+  1023                        ;	}
+  1024 00:03F3: E6 01        	inc	<L55+fd_1
+  1025 00:03F5: A5 01        	lda	<L55+fd_1
+  1026 00:03F7: C9 08 00     	cmp	#<$8
+  1027 00:03FA: 90 EA        	bcc	L10009
+  1028                        L10008:
+  1029                        ;	
+  1030                        ;	//debugf("open fd:%d, flags:%04X\n", (long)fd, (
+                    long)flags);
+  1031                        ;	
+  1032                        ;	if (fd >= 8) {
+  1033 00:03FC: A5 01        	lda	<L55+fd_1
+  1034 00:03FE: C9 08 00     	cmp	#<$8
+  1035 00:0401: 90 08        	bcc	L10010
+  1036                        ;		fd = -1; 
+  1037                        L20001:
+  1038 00:0403: A9 FF FF     	lda	#$ffff
+  1039 00:0406: 85 01        	sta	<L55+fd_1
+  1040                        ;		goto open_exit;
+  1041 00:0408: 82 81 00     	brl	L10011
+  1042                        ;	}
+  1043                        ;		
+  1044                        ;	iocb = getFreeIocb();
+  1045                        L10010:
+  1046 00:040B: 22 xx xx xx  	jsl	~~getFreeIocb
+  1047 00:040F: E2 20        	sep	#$20
+  1048                        	longa	off
+  1049 00:0411: 85 03        	sta	<L55+iocb_1
+  1050                        ;	if (iocb >= 8) {
+  1051 00:0413: C9 08        	cmp	#<$8
+  1052 00:0415: C2 20        	rep	#$20
+  1053                        	longa	on
+  1054 00:0417: B0 EA        	bcs	L20001
+  1055                        ;		fd = -1; 
+  1056                        ;		goto open_exit;
+  1057                        ;	}
+  1058                        ;	
+  1059                        ;	//debugf("open iocb:%d \n", (size_t)iocb);
+  1060                        ;	
+  1061                        ;	mode = 0;
+  1062 00:0419: E2 20        	sep	#$20
+  1063                        	longa	off
+  1064 00:041B: 64 05        	stz	<L55+mode_1
+  1065 00:041D: C2 20        	rep	#$20
+  1066                        	longa	on
+  1067                        ;	if ((flags & (O_RDONLY | O_RDWR | O_BINARY | O_T
+                    EXT)) || !flags) mode += 4;
+  1068 00:041F: A5 0D        	lda	<L54+flags_0
+  1069 00:0421: 29 02 90     	and	#<$9002
+  1070 00:0424: D0 04        	bne	L60
+  1071 00:0426: A5 0D        	lda	<L54+flags_0
+  1072 00:0428: D0 0B        	bne	L10013
+  Sun Jan  9 2022 20:53                                                Page 20
+
+
+  1073                        L60:
+  1074 00:042A: E2 20        	sep	#$20
+  1075                        	longa	off
+  1076 00:042C: A9 04        	lda	#$4
+  1077 00:042E: 18           	clc
+  1078 00:042F: 65 05        	adc	<L55+mode_1
+  1079 00:0431: 85 05        	sta	<L55+mode_1
+  1080 00:0433: C2 20        	rep	#$20
+  1081                        	longa	on
+  1082                        ;	if (flags & (O_WRONLY | O_CREAT | O_RDWR | O_BIN
+                    ARY)) mode += 8;
+  1083                        L10013:
+  1084 00:0435: A5 0D        	lda	<L54+flags_0
+  1085 00:0437: 29 03 81     	and	#<$8103
+  1086 00:043A: F0 0B        	beq	L10014
+  1087 00:043C: E2 20        	sep	#$20
+  1088                        	longa	off
+  1089 00:043E: A9 08        	lda	#$8
+  1090 00:0440: 18           	clc
+  1091 00:0441: 65 05        	adc	<L55+mode_1
+  1092 00:0443: 85 05        	sta	<L55+mode_1
+  1093 00:0445: C2 20        	rep	#$20
+  1094                        	longa	on
+  1095                        ;	if (flags & O_APPEND) mode += 1;
+  1096                        L10014:
+  1097 00:0447: A5 0D        	lda	<L54+flags_0
+  1098 00:0449: 29 00 08     	and	#<$800
+  1099 00:044C: F0 06        	beq	L10015
+  1100 00:044E: E2 20        	sep	#$20
+  1101                        	longa	off
+  1102 00:0450: E6 05        	inc	<L55+mode_1
+  1103 00:0452: C2 20        	rep	#$20
+  1104                        	longa	on
+  1105                        ;	
+  1106                        ;	//sprintf(hex, "%04X", mode);
+  1107                        ;	//aputchr(0, hex, sizeof(hex));
+  1108                        ;	//aputchr(0, "\n", 1ul);
+  1109                        ;
+  1110                        ;	//debugf("open, before aopen\n");
+  1111                        ;	//dump((char *)0x500, 256, 0);
+  1112                        ;	//debugf("open\n");
+  1113                        ;	
+  1114                        ;	rc = aopen(iocb, (char *)path, mode, 0);
+  1115                        L10015:
+  1116 00:0454: F4 00 00     	pea	#<$0
+  1117 00:0457: D4 05        	pei	<L55+mode_1
+  1118 00:0459: D4 0B        	pei	<L54+path_0+2
+  1119 00:045B: D4 09        	pei	<L54+path_0
+  1120 00:045D: D4 03        	pei	<L55+iocb_1
+  1121 00:045F: 22 xx xx xx  	jsl	~~aopen
+  1122 00:0463: E2 20        	sep	#$20
+  1123                        	longa	off
+  1124 00:0465: 85 04        	sta	<L55+rc_1
+  1125                        ;
+  1126                        ;	//debugf("open fd:%d, iocb:%d, rc:%d \n", (unsig
+                    ned long)fd, (unsigned long)iocb, (unsigned long)rc);
+  1127                        ;	//dump((char *)0x500, 256, 0);
+  1128                        ;	//debugf("\n");
+  Sun Jan  9 2022 20:53                                                Page 21
+
+
+  1129                        ;	
+  1130                        ;	if (rc >= 128) {
+  1131 00:0467: C9 80        	cmp	#<$80
+  1132 00:0469: C2 20        	rep	#$20
+  1133                        	longa	on
+  1134 00:046B: 90 14        	bcc	L10016
+  1135                        ;		aclose(iocb);
+  1136 00:046D: D4 03        	pei	<L55+iocb_1
+  1137 00:046F: 22 xx xx xx  	jsl	~~aclose
+  1138                        ;		fd2iocb[fd] = 0xff;
+  1139 00:0473: E2 20        	sep	#$20
+  1140                        	longa	off
+  1141 00:0475: A9 FF        	lda	#$ff
+  1142 00:0477: A6 01        	ldx	<L55+fd_1
+  1143 00:0479: 9D xx xx     	sta	|~~fd2iocb,X
+  1144 00:047C: C2 20        	rep	#$20
+  1145                        	longa	on
+  1146                        ;		fd = -1;
+  1147                        ;		goto open_exit;
+  1148 00:047E: 82 82 FF     	brl	L20001
+  1149                        ;	}	
+  1150                        ;	
+  1151                        ;	fd2iocb[fd] = iocb;
+  1152                        L10016:
+  1153 00:0481: E2 20        	sep	#$20
+  1154                        	longa	off
+  1155 00:0483: A5 03        	lda	<L55+iocb_1
+  1156 00:0485: A6 01        	ldx	<L55+fd_1
+  1157 00:0487: 9D xx xx     	sta	|~~fd2iocb,X
+  1158 00:048A: C2 20        	rep	#$20
+  1159                        	longa	on
+  1160                        ;	
+  1161                        ;open_exit:
+  1162                        L10011:
+  1163                        ;	
+  1164                        ;	return fd;
+  1165 00:048C: A5 01        	lda	<L55+fd_1
+  1166 00:048E: A8           	tay
+  1167 00:048F: A5 07        	lda	<L54+2
+  1168 00:0491: 85 0D        	sta	<L54+2+6
+  1169 00:0493: A5 06        	lda	<L54+1
+  1170 00:0495: 85 0C        	sta	<L54+1+6
+  1171 00:0497: 2B           	pld
+  1172 00:0498: 3B           	tsc
+  1173 00:0499: 18           	clc
+  1174 00:049A: 69 0B 00     	adc	#L54+6
+  1175 00:049D: 1B           	tcs
+  1176 00:049E: 98           	tya
+  1177 00:049F: 6B           	rtl
+  1178                        ;}
+  1179             00000005   L54	equ	5
+  1180             00000001   L55	equ	1
+  1181                        	ends
+  1182                        	efunc
+  1183                        ;
+  1184                        ;
+  1185                        ;int stat(const char *filename, struct stat *buf) 
+                    {
+  Sun Jan  9 2022 20:53                                                Page 22
+
+
+  1186                        	code
+  1187                        	xdef	~~stat
+  1188                        	func
+  1189                        ~~stat:
+  1190                        	longa	on
+  1191                        	longi	on
+  1192 00:04A0: 3B           	tsc
+  1193 00:04A1: 38           	sec
+  1194 00:04A2: E9 08 00     	sbc	#L67
+  1195 00:04A5: 1B           	tcs
+  1196 00:04A6: 0B           	phd
+  1197 00:04A7: 5B           	tcd
+  1198             00000004   filename_0	set	4
+  1199             00000008   buf_0	set	8
+  1200                        ;	int fd, rc;
+  1201                        ;	
+  1202                        ;	buf->st_size = 0;
+  1203             00000000   fd_1	set	0
+  1204             00000002   rc_1	set	2
+  1205 00:04A8: A9 00 00     	lda	#$0
+  1206 00:04AB: A0 02 00     	ldy	#$2
+  1207 00:04AE: 97 10        	sta	[<L67+buf_0],Y
+  1208 00:04B0: C8           	iny
+  1209 00:04B1: C8           	iny
+  1210 00:04B2: 97 10        	sta	[<L67+buf_0],Y
+  1211                        ;	
+  1212                        ;	fd = open(filename, O_RDONLY);
+  1213 00:04B4: F4 00 00     	pea	#<$0
+  1214 00:04B7: D4 0E        	pei	<L67+filename_0+2
+  1215 00:04B9: D4 0C        	pei	<L67+filename_0
+  1216 00:04BB: 22 xx xx xx  	jsl	~~open
+  1217 00:04BF: 85 05        	sta	<L68+fd_1
+  1218                        ;	
+  1219                        ;	if (fd == -1) {
+  1220 00:04C1: C9 FF FF     	cmp	#<$ffffffff
+  1221 00:04C4: F0 26        	beq	L20004
+  1222                        ;		rc = -1;
+  1223                        ;		goto stat_exit;
+  1224                        ;	}
+  1225                        ;
+  1226                        ;	//debugf("stat before aopen\n");
+  1227                        ;	//dump((char *)0x500, 256, 0);
+  1228                        ;	
+  1229                        ;	rc = astat(fd2iocb[fd], buf);
+  1230 00:04C6: D4 12        	pei	<L67+buf_0+2
+  1231 00:04C8: D4 10        	pei	<L67+buf_0
+  1232 00:04CA: A6 05        	ldx	<L68+fd_1
+  1233 00:04CC: BD xx xx     	lda	|~~fd2iocb,X
+  1234 00:04CF: 48           	pha
+  1235 00:04D0: 22 xx xx xx  	jsl	~~astat
+  1236 00:04D4: E2 20        	sep	#$20
+  1237                        	longa	off
+  1238 00:04D6: 85 01        	sta	<R0
+  1239 00:04D8: C2 20        	rep	#$20
+  1240                        	longa	on
+  1241 00:04DA: A5 01        	lda	<R0
+  1242 00:04DC: 29 FF 00     	and	#$ff
+  1243 00:04DF: 85 07        	sta	<L68+rc_1
+  Sun Jan  9 2022 20:53                                                Page 23
+
+
+  1244                        ;	
+  1245                        ;	//debugf("stat iocb:%d \n", (size_t)fd2iocb[fd])
+                    ;
+  1246                        ;	//debugf("stat fd: %d, rc: %d\n", (long)fd, (lon
+                    g)rc);
+  1247                        ;
+  1248                        ;	if (rc >= 128) rc = -1;
+  1249 00:04E1: 38           	sec
+  1250 00:04E2: E9 80 00     	sbc	#<$80
+  1251 00:04E5: 70 03        	bvs	L70
+  1252 00:04E7: 49 00 80     	eor	#$8000
+  1253                        L70:
+  1254 00:04EA: 10 05        	bpl	L10018
+  1255                        L20004:
+  1256 00:04EC: A9 FF FF     	lda	#$ffff
+  1257 00:04EF: 85 07        	sta	<L68+rc_1
+  1258                        ;	
+  1259                        ;stat_exit:
+  1260                        L10018:
+  1261                        ;	//debugf("stat before close\n");
+  1262                        ;	//dump((char *)0x500, 256, 0);
+  1263                        ;	
+  1264                        ;	if (!(rc == -1)) 
+  1265                        ;		close(fd);
+  1266 00:04F1: A5 07        	lda	<L68+rc_1
+  1267 00:04F3: C9 FF FF     	cmp	#<$ffffffff
+  1268 00:04F6: F0 06        	beq	L10020
+  1269 00:04F8: D4 05        	pei	<L68+fd_1
+  1270 00:04FA: 22 xx xx xx  	jsl	~~close
+  1271                        ;	
+  1272                        ;	//debugf("stat fd: %d, rc: %d\n", (long)fd, (lon
+                    g)rc);
+  1273                        ;	//dump((char *)0x500, 256, 0);
+  1274                        ;	
+  1275                        ;	return rc;
+  1276                        L10020:
+  1277 00:04FE: A5 07        	lda	<L68+rc_1
+  1278 00:0500: A8           	tay
+  1279 00:0501: A5 0A        	lda	<L67+2
+  1280 00:0503: 85 12        	sta	<L67+2+8
+  1281 00:0505: A5 09        	lda	<L67+1
+  1282 00:0507: 85 11        	sta	<L67+1+8
+  1283 00:0509: 2B           	pld
+  1284 00:050A: 3B           	tsc
+  1285 00:050B: 18           	clc
+  1286 00:050C: 69 10 00     	adc	#L67+8
+  1287 00:050F: 1B           	tcs
+  1288 00:0510: 98           	tya
+  1289 00:0511: 6B           	rtl
+  1290                        ;}
+  1291             00000008   L67	equ	8
+  1292             00000005   L68	equ	5
+  1293                        	ends
+  1294                        	efunc
+  1295                        ;
+  1296                        ;long lseek(int fd, long offset, int whence) {
+  1297                        	code
+  1298                        	xdef	~~lseek
+  Sun Jan  9 2022 20:53                                                Page 24
+
+
+  1299                        	func
+  1300                        ~~lseek:
+  1301                        	longa	on
+  1302                        	longi	on
+  1303 00:0512: 3B           	tsc
+  1304 00:0513: 38           	sec
+  1305 00:0514: E9 00 00     	sbc	#L74
+  1306 00:0517: 1B           	tcs
+  1307 00:0518: 0B           	phd
+  1308 00:0519: 5B           	tcd
+  1309             00000004   fd_0	set	4
+  1310             00000006   offset_0	set	6
+  1311             0000000A   whence_0	set	10
+  1312                        ;	//debugf("lseek fd:%d, offset:%d, whence:%d off_
+                    t:%d\n", (long)fd, offset, (long)whence, (long)sizeof(off_t)
+                    );
+  1313                        ;
+  1314                        ;	//printf("lseek: fd:%d, offset: %lu, whence %d\n
+                    ", fd, offset, whence);
+  1315                        ;	return 0;
+  1316 00:051A: A9 00 00     	lda	#$0
+  1317 00:051D: AA           	tax
+  1318 00:051E: A8           	tay
+  1319 00:051F: A5 02        	lda	<L74+2
+  1320 00:0521: 85 0A        	sta	<L74+2+8
+  1321 00:0523: A5 01        	lda	<L74+1
+  1322 00:0525: 85 09        	sta	<L74+1+8
+  1323 00:0527: 2B           	pld
+  1324 00:0528: 3B           	tsc
+  1325 00:0529: 18           	clc
+  1326 00:052A: 69 08 00     	adc	#L74+8
+  1327 00:052D: 1B           	tcs
+  1328 00:052E: 98           	tya
+  1329 00:052F: 6B           	rtl
+  1330                        ;}
+  1331             00000000   L74	equ	0
+  1332             00000001   L75	equ	1
+  1333                        	ends
+  1334                        	efunc
+  1335                        ;
+  1336                        ;int unlink(const char *pathname) {
+  1337                        	code
+  1338                        	xdef	~~unlink
+  1339                        	func
+  1340                        ~~unlink:
+  1341                        	longa	on
+  1342                        	longi	on
+  1343 00:0530: 3B           	tsc
+  1344 00:0531: 38           	sec
+  1345 00:0532: E9 00 00     	sbc	#L77
+  1346 00:0535: 1B           	tcs
+  1347 00:0536: 0B           	phd
+  1348 00:0537: 5B           	tcd
+  1349             00000004   pathname_0	set	4
+  1350                        ;}
+  1351 00:0538: A8           	tay
+  1352 00:0539: A5 02        	lda	<L77+2
+  1353 00:053B: 85 06        	sta	<L77+2+4
+  Sun Jan  9 2022 20:53                                                Page 25
+
+
+  1354 00:053D: A5 01        	lda	<L77+1
+  1355 00:053F: 85 05        	sta	<L77+1+4
+  1356 00:0541: 2B           	pld
+  1357 00:0542: 3B           	tsc
+  1358 00:0543: 18           	clc
+  1359 00:0544: 69 04 00     	adc	#L77+4
+  1360 00:0547: 1B           	tcs
+  1361 00:0548: 98           	tya
+  1362 00:0549: 6B           	rtl
+  1363             00000000   L77	equ	0
+  1364             00000001   L78	equ	1
+  1365                        	ends
+  1366                        	efunc
+  1367                        ;
+  1368                        ;int ftruncate(int fd, off_t length) {
+  1369                        	code
+  1370                        	xdef	~~ftruncate
+  1371                        	func
+  1372                        ~~ftruncate:
+  1373                        	longa	on
+  1374                        	longi	on
+  1375 00:054A: 3B           	tsc
+  1376 00:054B: 38           	sec
+  1377 00:054C: E9 00 00     	sbc	#L80
+  1378 00:054F: 1B           	tcs
+  1379 00:0550: 0B           	phd
+  1380 00:0551: 5B           	tcd
+  1381             00000004   fd_0	set	4
+  1382             00000006   length_0	set	6
+  1383                        ;}
+  1384 00:0552: A8           	tay
+  1385 00:0553: A5 02        	lda	<L80+2
+  1386 00:0555: 85 08        	sta	<L80+2+6
+  1387 00:0557: A5 01        	lda	<L80+1
+  1388 00:0559: 85 07        	sta	<L80+1+6
+  1389 00:055B: 2B           	pld
+  1390 00:055C: 3B           	tsc
+  1391 00:055D: 18           	clc
+  1392 00:055E: 69 06 00     	adc	#L80+6
+  1393 00:0561: 1B           	tcs
+  1394 00:0562: 98           	tya
+  1395 00:0563: 6B           	rtl
+  1396             00000000   L80	equ	0
+  1397             00000001   L81	equ	1
+  1398                        	ends
+  1399                        	efunc
+  1400                        ;
+  1401                        ;static void prependDevname(char *s) {
+  1402                        	code
+  1403                        	func
+  1404                        ~~prependDevname:
+  1405                        	longa	on
+  1406                        	longi	on
+  1407 00:0564: 3B           	tsc
+  1408 00:0565: 38           	sec
+  1409 00:0566: E9 04 00     	sbc	#L83
+  1410 00:0569: 1B           	tcs
+  1411 00:056A: 0B           	phd
+  Sun Jan  9 2022 20:53                                                Page 26
+
+
+  1412 00:056B: 5B           	tcd
+  1413             00000004   s_0	set	4
+  1414                        ;	
+  1415                        ;	if (!(s[0] == 'D' && s[1] == ':')) {
+  1416 00:056C: E2 20        	sep	#$20
+  1417                        	longa	off
+  1418 00:056E: A7 08        	lda	[<L83+s_0]
+  1419 00:0570: C9 44        	cmp	#<$44
+  1420 00:0572: C2 20        	rep	#$20
+  1421                        	longa	on
+  1422 00:0574: D0 0D        	bne	L85
+  1423 00:0576: E2 20        	sep	#$20
+  1424                        	longa	off
+  1425 00:0578: A0 01 00     	ldy	#$1
+  1426 00:057B: B7 08        	lda	[<L83+s_0],Y
+  1427 00:057D: C9 3A        	cmp	#<$3a
+  1428 00:057F: C2 20        	rep	#$20
+  1429                        	longa	on
+  1430 00:0581: F0 31        	beq	L88
+  1431                        L85:
+  1432                        ;		memmove(s+2, s, strlen(s)+1);
+  1433 00:0583: D4 0A        	pei	<L83+s_0+2
+  1434 00:0585: D4 08        	pei	<L83+s_0
+  1435 00:0587: 22 xx xx xx  	jsl	~~strlen
+  1436 00:058B: 1A           	ina
+  1437 00:058C: 48           	pha
+  1438 00:058D: D4 0A        	pei	<L83+s_0+2
+  1439 00:058F: D4 08        	pei	<L83+s_0
+  1440 00:0591: A9 02 00     	lda	#$2
+  1441 00:0594: 18           	clc
+  1442 00:0595: 65 08        	adc	<L83+s_0
+  1443 00:0597: 85 01        	sta	<R0
+  1444 00:0599: A9 00 00     	lda	#$0
+  1445 00:059C: 65 0A        	adc	<L83+s_0+2
+  1446 00:059E: 48           	pha
+  1447 00:059F: D4 01        	pei	<R0
+  1448 00:05A1: 22 xx xx xx  	jsl	~~memmove
+  1449                        ;		s[0] = 'D';
+  1450 00:05A5: E2 20        	sep	#$20
+  1451                        	longa	off
+  1452 00:05A7: A9 44        	lda	#$44
+  1453 00:05A9: 87 08        	sta	[<L83+s_0]
+  1454                        ;		s[1] = ':';
+  1455 00:05AB: A9 3A        	lda	#$3a
+  1456 00:05AD: A0 01 00     	ldy	#$1
+  1457 00:05B0: 97 08        	sta	[<L83+s_0],Y
+  1458 00:05B2: C2 20        	rep	#$20
+  1459                        	longa	on
+  1460                        ;	}
+  1461                        ;}
+  1462                        L88:
+  1463 00:05B4: A5 06        	lda	<L83+2
+  1464 00:05B6: 85 0A        	sta	<L83+2+4
+  1465 00:05B8: A5 05        	lda	<L83+1
+  1466 00:05BA: 85 09        	sta	<L83+1+4
+  1467 00:05BC: 2B           	pld
+  1468 00:05BD: 3B           	tsc
+  1469 00:05BE: 18           	clc
+  Sun Jan  9 2022 20:53                                                Page 27
+
+
+  1470 00:05BF: 69 08 00     	adc	#L83+4
+  1471 00:05C2: 1B           	tcs
+  1472 00:05C3: 6B           	rtl
+  1473             00000004   L83	equ	4
+  1474             00000005   L84	equ	5
+  1475                        	ends
+  1476                        	efunc
+  1477                        ;
+  1478                        ;/*
+  1479                        ;static int chOneDir(const char *s) {
+  1480                        ;	unsigned int i;
+  1481                        ;	unsigned int len;
+  1482                        ;	unsigned char iocb;
+  1483                        ;	char s0[16];
+  1484                        ;	int rc;
+  1485                        ;
+  1486                        ;	len = strlen(s);
+  1487                        ;	//int_rc = 0;
+  1488                        ;	
+  1489                        ;	if (len > 0) {
+  1490                        ;		strcpy(s0, s);
+  1491                        ;		strupper(s0);
+  1492                        ;	
+  1493                        ;		s0[len] = '\n';
+  1494                        ;		s0[len+1] = 0;
+  1495                        ;
+  1496                        ;		prependDevname(s0);
+  1497                        ;		iocb = getFreeIocb();
+  1498                        ;		if (iocb < 8) {
+  1499                        ;			rc = achdir(iocb, s0);
+  1500                        ;		}
+  1501                        ;
+  1502                        ;		if (iocb >= 8 || rc >= 128) {
+  1503                        ;			rc = -1;
+  1504                        ;		}
+  1505                        ;	}
+  1506                        ;	
+  1507                        ;	return rc;
+  1508                        ;}
+  1509                        ;
+  1510                        ;int chdir(const char *path) {
+  1511                        ;	
+  1512                        ;	char *p, *p0, *pSave;
+  1513                        ;	int end = 0;
+  1514                        ;	int rc;
+  1515                        ;		
+  1516                        ;	p = pSave = strdup((char *)path);
+  1517                        ;	
+  1518                        ;	rc = -1;
+  1519                        ;	
+  1520                        ;	if (*p == '/'){
+  1521                        ;		rc = chOneDir("/");
+  1522                        ;		p++;
+  1523                        ;	}
+  1524                        ;	
+  1525                        ;	for(p0 = p; !end; p0++) {
+  1526                        ;		if (*p0 == 0) end = 1;
+  1527                        ;		
+  Sun Jan  9 2022 20:53                                                Page 28
+
+
+  1528                        ;		if (*p0 == '/' || *p0 == 0) {
+  1529                        ;			*p0 = 0;
+  1530                        ;			rc = chOneDir(p);
+  1531                        ;			if (rc == -1) break;
+  1532                        ;			p = p0 + 1;
+  1533                        ;		}
+  1534                        ;	}		
+  1535                        ;	
+  1536                        ;	free(pSave);
+  1537                        ;	
+  1538                        ;	return rc;
+  1539                        ;}
+  1540                        ;
+  1541                        ;DIR *opendir(const char *path) {
+  1542                        ;	unsigned int fd;
+  1543                        ;	unsigned char iocb, rc;
+  1544                        ;	DIR *dfd;
+  1545                        ;	unsigned char *p;
+  1546                        ;
+  1547                        ;	dfd == NULL;
+  1548                        ;	
+  1549                        ;	for(fd = 0; fd < 8; fd++) {
+  1550                        ;		if (fd2iocb[fd] >= 8) break;
+  1551                        ;	}
+  1552                        ;	
+  1553                        ;	//debugf("opendir fd:%d \n", (size_t)fd);
+  1554                        ;	
+  1555                        ;	if (fd >= 8) goto opendir_exit;
+  1556                        ;	
+  1557                        ;	iocb = getFreeIocb();
+  1558                        ;	if (iocb >= 8) goto opendir_exit;
+  1559                        ;
+  1560                        ;	//debugf("opendir iocb:%d \n", (size_t)iocb);
+  1561                        ;
+  1562                        ;	//p = calloc(1, strlen(path) + 10);
+  1563                        ;	p = malloc(strlen(path) + 10);
+  1564                        ;	*p = 0;
+  1565                        ;	
+  1566                        ;	if (path[0] != 'D' || path[1] != ':') {
+  1567                        ;		strcpy(p, "D:");
+  1568                        ;	}
+  1569                        ;	
+  1570                        ;	strcat(p, path);
+  1571                        ;	//strupper(p);
+  1572                        ;
+  1573                        ;	rc = aopen(iocb, p, 6, 0);
+  1574                        ;	free(p);
+  1575                        ;
+  1576                        ;	//debugf("opendir rc:%d \n", (size_t)rc);
+  1577                        ;	
+  1578                        ;	if (rc >= 128) {
+  1579                        ;		close(fd);
+  1580                        ;		return NULL;
+  1581                        ;	}	
+  1582                        ;	
+  1583                        ;	fd2iocb[fd] = iocb;
+  1584                        ;
+  1585                        ;	dir_fd[fd] = fd;
+  Sun Jan  9 2022 20:53                                                Page 29
+
+
+  1586                        ;	dfd = &dir_fd[fd];
+  1587                        ;
+  1588                        ;opendir_exit:
+  1589                        ;	return dfd;
+  1590                        ;}
+  1591                        ;
+  1592                        ;int closedir (DIR *__dirp) {
+  1593                        ;	close(__dirp->fd);
+  1594                        ;}
+  1595                        ;
+  1596                        ;struct dirent *readdir (DIR *__dirp) {
+  1597                        ;	struct dirent *d;
+  1598                        ;	unsigned char rc;
+  1599                        ;			
+  1600                        ;	d = &dirent[__dirp->fd];
+  1601                        ;	memset(d->d_name, 0, sizeof(d->d_name));
+  1602                        ;	//strcpy(d->d_name, "TEST");
+  1603                        ;	//*(d->d_name) = 0;
+  1604                        ;	
+  1605                        ;	//printf("readdir calling...\n", rc);
+  1606                        ;	
+  1607                        ;	rc = agetrec(fd2iocb[__dirp->fd], d->d_name);
+  1608                        ;	
+  1609                        ;	//printf("readdir rc: %d\n", rc);
+  1610                        ;		
+  1611                        ;	if (rc >= 128) {
+  1612                        ;		close(__dirp->fd);
+  1613                        ;		return NULL;
+  1614                        ;	}
+  1615                        ;	
+  1616                        ;	d->d_reclen = strlen(d->d_name);
+  1617                        ;			
+  1618                        ;	return d;
+  1619                        ;}*/
+  1620                        ;
+  1621                        	xref	~~strlen
+  1622                        	xref	~~memmove
+  1623                        	udata
+  1624                        	xdef	~~fd2iocb
+  1625                        ~~fd2iocb
+  1626 00:0000:              	ds	8
+  1627 00:0008:              	ends
+  1628                        	xref	~~errno
+
+
+      Lines assembled: 1628
+      Errors: 0

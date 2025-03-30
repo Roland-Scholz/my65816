@@ -1,0 +1,193 @@
+  Wed Jan 19 2022 14:41                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include "FreeRTOS.h"
+    11                        ;#include "task.h"
+    12                        ;#include <homebrew.h>
+    13                        ;
+    14                        ;#define DISASS24	$E052
+    15                        ;#define	DISSADRLO	*((unsigned int *) 0x2)
+    16                        ;#define	DISSADRBANK	*((char *) 0x4)
+    17                        ;
+    18                        ;
+    19                        ;int main(int argc, char **argv) {
+    20                        	code
+    21                        	xdef	~~main
+    22                        	func
+    23                        ~~main:
+    24                        	longa	on
+    25                        	longi	on
+    26 00:0000: 3B           	tsc
+    27 00:0001: 38           	sec
+    28 00:0002: E9 0D 00     	sbc	#L2
+    29 00:0005: 1B           	tcs
+    30 00:0006: 0B           	phd
+    31 00:0007: 5B           	tcd
+    32             00000004   argc_0	set	4
+    33             00000006   argv_0	set	6
+    34                        ;	
+    35                        ;	char *p, c;
+    36                        ;	int x, y;
+    37                        ;
+    38                        ;	for (;;) {
+    39             00000000   p_1	set	0
+    40             00000004   c_1	set	4
+    41             00000005   x_1	set	5
+    42             00000007   y_1	set	7
+    43                        L10003:
+    44                        ;		printf("disass address>");
+    45 00:0008: F4 xx xx     	pea	#^L1
+    46 00:000B: F4 xx xx     	pea	#<L1
+    47 00:000E: F4 06 00     	pea	#6
+    48 00:0011: 22 xx xx xx  	jsl	~~printf
+    49                        ;		
+    50                        ;		if (argc >= 2) {
+    51 00:0015: 38           	sec
+    52 00:0016: A5 11        	lda	<L2+argc_0
+  Wed Jan 19 2022 14:41                                                Page 2
+
+
+    53 00:0018: E9 02 00     	sbc	#<$2
+    54 00:001B: 70 03        	bvs	L4
+    55 00:001D: 49 00 80     	eor	#$8000
+    56                        L4:
+    57 00:0020: 10 36        	bpl	L10004
+    58                        ;			p = (char *)str2hex(argv[1]);
+    59 00:0022: A0 06 00     	ldy	#$6
+    60 00:0025: B7 13        	lda	[<L2+argv_0],Y
+    61 00:0027: 48           	pha
+    62 00:0028: 88           	dey
+    63 00:0029: 88           	dey
+    64 00:002A: B7 13        	lda	[<L2+argv_0],Y
+    65 00:002C: 48           	pha
+    66 00:002D: 22 xx xx xx  	jsl	~~str2hex
+    67 00:0031: 86 03        	stx	<R0+2
+    68 00:0033: 85 05        	sta	<L3+p_1
+    69 00:0035: A5 03        	lda	<R0+2
+    70 00:0037: 85 07        	sta	<L3+p_1+2
+    71                        ;			printf("%s",argv[1]);
+    72 00:0039: A0 06 00     	ldy	#$6
+    73 00:003C: B7 13        	lda	[<L2+argv_0],Y
+    74 00:003E: 48           	pha
+    75 00:003F: 88           	dey
+    76 00:0040: 88           	dey
+    77 00:0041: B7 13        	lda	[<L2+argv_0],Y
+    78 00:0043: 48           	pha
+    79 00:0044: F4 xx xx     	pea	#^L1+16
+    80 00:0047: F4 xx xx     	pea	#<L1+16
+    81 00:004A: F4 0A 00     	pea	#10
+    82 00:004D: 22 xx xx xx  	jsl	~~printf
+    83                        ;			argc = 1;
+    84 00:0051: A9 01 00     	lda	#$1
+    85 00:0054: 85 11        	sta	<L2+argc_0
+    86                        ;		} else {	
+    87 00:0056: 80 0C        	bra	L10005
+    88                        L10004:
+    89                        ;			p = (char *)getHex8();
+    90 00:0058: 22 xx xx xx  	jsl	~~getHex8
+    91 00:005C: 86 03        	stx	<R0+2
+    92 00:005E: 85 05        	sta	<L3+p_1
+    93 00:0060: A5 03        	lda	<R0+2
+    94 00:0062: 85 07        	sta	<L3+p_1+2
+    95                        ;		}
+    96                        L10005:
+    97                        ;		
+    98                        ;		printf("\n");	
+    99 00:0064: F4 xx xx     	pea	#^L1+19
+   100 00:0067: F4 xx xx     	pea	#<L1+19
+   101 00:006A: F4 06 00     	pea	#6
+   102 00:006D: 22 xx xx xx  	jsl	~~printf
+   103                        ;		
+   104                        ;		DISSADRLO = (unsigned int)((size_t)p);
+   105 00:0071: A5 05        	lda	<L3+p_1
+   106 00:0073: 8F 02 00 00  	sta	>2
+   107                        ;		DISSADRBANK = (size_t)p >> 16;
+   108 00:0077: D4 07        	pei	<L3+p_1+2
+   109 00:0079: D4 05        	pei	<L3+p_1
+   110 00:007B: A9 10 00     	lda	#$10
+  Wed Jan 19 2022 14:41                                                Page 3
+
+
+   111                        	xref	~~~llsr
+   112 00:007E: 22 xx xx xx  	jsl	~~~llsr
+   113 00:0082: 85 01        	sta	<R0
+   114 00:0084: 86 03        	stx	<R0+2
+   115 00:0086: E2 20        	sep	#$20
+   116                        	longa	off
+   117 00:0088: A5 01        	lda	<R0
+   118 00:008A: 8F 04 00 00  	sta	>4
+   119 00:008E: C2 20        	rep	#$20
+   120                        	longa	on
+   121                        ;		
+   122                        ;		asm{jsl $e052;}
+   123                        	asmstart
+   124 00:0090: 22 52 E0 00  	jsl $e052
+   125                        	asmend
+   126                        ;
+   127                        ;		if (getchar() == 'x') {
+   128 00:0094: AD xx xx     	lda	|~~stdin+2
+   129 00:0097: 48           	pha
+   130 00:0098: AD xx xx     	lda	|~~stdin
+   131 00:009B: 48           	pha
+   132 00:009C: 22 xx xx xx  	jsl	~~fgetc
+   133 00:00A0: C9 78 00     	cmp	#<$78
+   134 00:00A3: F0 03        	beq	*+5
+   135 00:00A5: 82 60 FF     	brl	L10003
+   136                        ;			break;
+   137                        ;		}
+   138                        ;	}
+   139                        ;}
+   140 00:00A8: A8           	tay
+   141 00:00A9: A5 0F        	lda	<L2+2
+   142 00:00AB: 85 15        	sta	<L2+2+6
+   143 00:00AD: A5 0E        	lda	<L2+1
+   144 00:00AF: 85 14        	sta	<L2+1+6
+   145 00:00B1: 2B           	pld
+   146 00:00B2: 3B           	tsc
+   147 00:00B3: 18           	clc
+   148 00:00B4: 69 13 00     	adc	#L2+6
+   149 00:00B7: 1B           	tcs
+   150 00:00B8: 98           	tya
+   151 00:00B9: 6B           	rtl
+   152             0000000D   L2	equ	13
+   153             00000005   L3	equ	5
+   154                        	ends
+   155                        	efunc
+   156                        	data
+   157                        L1:
+   158 00:0000: 64 69 73 61  	db	$64,$69,$73,$61,$73,$73,$20,$61,$64,$64,
+                    $72,$65,$73,$73,$3E
+       00:0004: 73 73 20 61 
+       00:0008: 64 64 72 65 
+       00:000C: 73 73 3E 
+   159 00:000F: 00 25 73 00  	db	$00,$25,$73,$00,$0A,$00
+       00:0013: 0A 00 
+   160 00:0015:              	ends
+   161                        ;
+   162                        	xref	~~str2hex
+   163                        	xref	~~getHex8
+  Wed Jan 19 2022 14:41                                                Page 4
+
+
+   164                        	xref	~~fgetc
+   165                        	xref	~~printf
+   166                        	xref	~~stdin
+
+
+      Lines assembled: 166
+      Errors: 0

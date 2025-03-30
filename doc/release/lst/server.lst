@@ -1,0 +1,606 @@
+  Sat Dec 11 2021 21:16                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;
+    11                        ;#include <homebrew.h>
+    12                        ;
+    13                        ;#define BUFSIZE	512
+    14                        ;
+    15                        ;#ifdef RTOS
+    16                        ;#include "FreeRTOS.h"
+    17                        ;#include "task.h"
+    18                        ;#include "semphr.h"
+    19                        ;#endif
+    20                        ;
+    21                        ;void *heap_start = ( void * )0x8000;
+    22                        	data
+    23                        	xdef	~~heap_start
+    24                        ~~heap_start:
+    25 00:0000: 00 80 00 00  	dl	$8000
+    26 00:0004:              	ends
+    27                        ;void *heap_end = (void * )0xafff;
+    28                        	data
+    29                        	xdef	~~heap_end
+    30                        ~~heap_end:
+    31 00:0004: FF AF 00 00  	dl	$AFFF
+    32 00:0008:              	ends
+    33                        ;
+    34                        ;static char buffer[BUFSIZE];
+    35                        ;static char fname[16];
+    36                        ;
+    37                        ;extern unsigned char fd2iocb[8];
+    38                        ;
+    39                        ;static char inbyte() {
+    40                        	code
+    41                        	func
+    42                        ~~inbyte:
+    43                        	longa	on
+    44                        	longi	on
+    45                        ;	while (!(LSR0 & 0x01));
+    46                        L10001:
+    47 00:0000: E2 20        	sep	#$20
+    48                        	longa	off
+    49 00:0002: AF E5 FF FF  	lda	>16777189
+    50 00:0006: 29 01        	and	#<$1
+    51 00:0008: C2 20        	rep	#$20
+    52                        	longa	on
+  Sat Dec 11 2021 21:16                                                Page 2
+
+
+    53 00:000A: F0 F4        	beq	L10001
+    54                        ;	return RBR0;
+    55 00:000C: AF E0 FF FF  	lda	>16777184
+    56 00:0010: 29 FF 00     	and	#$ff
+    57 00:0013: 6B           	rtl
+    58                        ;}
+    59             00000000   L2	equ	0
+    60             00000001   L3	equ	1
+    61                        	ends
+    62                        	efunc
+    63                        ;
+    64                        ;static void outbyte(int c) {
+    65                        	code
+    66                        	func
+    67                        ~~outbyte:
+    68                        	longa	on
+    69                        	longi	on
+    70 00:0014: 3B           	tsc
+    71 00:0015: 38           	sec
+    72 00:0016: E9 00 00     	sbc	#L6
+    73 00:0019: 1B           	tcs
+    74 00:001A: 0B           	phd
+    75 00:001B: 5B           	tcd
+    76             00000004   c_0	set	4
+    77                        ;	while (!(LSR0 & 0x40));
+    78                        L10003:
+    79 00:001C: E2 20        	sep	#$20
+    80                        	longa	off
+    81 00:001E: AF E5 FF FF  	lda	>16777189
+    82 00:0022: 29 40        	and	#<$40
+    83 00:0024: C2 20        	rep	#$20
+    84                        	longa	on
+    85 00:0026: F0 F4        	beq	L10003
+    86                        ;	THR0 = c;
+    87 00:0028: E2 20        	sep	#$20
+    88                        	longa	off
+    89 00:002A: A5 04        	lda	<L6+c_0
+    90 00:002C: 8F E0 FF FF  	sta	>16777184
+    91 00:0030: C2 20        	rep	#$20
+    92                        	longa	on
+    93                        ;}
+    94 00:0032: A5 02        	lda	<L6+2
+    95 00:0034: 85 04        	sta	<L6+2+2
+    96 00:0036: A5 01        	lda	<L6+1
+    97 00:0038: 85 03        	sta	<L6+1+2
+    98 00:003A: 2B           	pld
+    99 00:003B: 3B           	tsc
+   100 00:003C: 18           	clc
+   101 00:003D: 69 02 00     	adc	#L6+2
+   102 00:0040: 1B           	tcs
+   103 00:0041: 6B           	rtl
+   104             00000000   L6	equ	0
+   105             00000001   L7	equ	1
+   106                        	ends
+   107                        	efunc
+   108                        ;
+   109                        ;int receiveFile() {
+   110                        	code
+  Sat Dec 11 2021 21:16                                                Page 3
+
+
+   111                        	xdef	~~receiveFile
+   112                        	func
+   113                        ~~receiveFile:
+   114                        	longa	on
+   115                        	longi	on
+   116 00:0042: 3B           	tsc
+   117 00:0043: 38           	sec
+   118 00:0044: E9 10 00     	sbc	#L10
+   119 00:0047: 1B           	tcs
+   120 00:0048: 0B           	phd
+   121 00:0049: 5B           	tcd
+   122                        ;	
+   123                        ;	unsigned int i, bytes;
+   124                        ;	char c[4];
+   125                        ;	FILE *f;
+   126                        ;	
+   127                        ;	//printf("receiving file...\n");
+   128                        ;	outbyte('A');
+   129             00000000   i_1	set	0
+   130             00000002   bytes_1	set	2
+   131             00000004   c_1	set	4
+   132             00000008   f_1	set	8
+   133 00:004A: F4 41 00     	pea	#<$41
+   134 00:004D: 22 xx xx xx  	jsl	~~outbyte
+   135                        ;	
+   136                        ;	i = 2;
+   137 00:0051: A9 02 00     	lda	#$2
+   138 00:0054: 85 05        	sta	<L11+i_1
+   139                        ;	fname[0] = 'D';
+   140 00:0056: E2 20        	sep	#$20
+   141                        	longa	off
+   142 00:0058: A9 44        	lda	#$44
+   143 00:005A: 8D xx xx     	sta	|~~fname
+   144                        ;	fname[1] = ':';
+   145 00:005D: A9 3A        	lda	#$3a
+   146 00:005F: 8D xx xx     	sta	|~~fname+1
+   147 00:0062: C2 20        	rep	#$20
+   148                        	longa	on
+   149                        ;	
+   150                        ;	while (i < 16) {
+   151                        L10005:
+   152 00:0064: A5 05        	lda	<L11+i_1
+   153 00:0066: C9 10 00     	cmp	#<$10
+   154 00:0069: B0 29        	bcs	L10006
+   155                        ;
+   156                        ;		fname[i] = inbyte();
+   157 00:006B: 22 xx xx xx  	jsl	~~inbyte
+   158 00:006F: E2 20        	sep	#$20
+   159                        	longa	off
+   160 00:0071: A6 05        	ldx	<L11+i_1
+   161 00:0073: 9D xx xx     	sta	|~~fname,X
+   162 00:0076: C2 20        	rep	#$20
+   163                        	longa	on
+   164                        ;		
+   165                        ;		if (fname[i] == 0) break;
+   166 00:0078: BD xx xx     	lda	|~~fname,X
+   167 00:007B: 29 FF 00     	and	#$ff
+   168 00:007E: F0 14        	beq	L10006
+  Sat Dec 11 2021 21:16                                                Page 4
+
+
+   169                        ;		if (fname[i] == 0x0A) {
+   170 00:0080: E2 20        	sep	#$20
+   171                        	longa	off
+   172 00:0082: BD xx xx     	lda	|~~fname,X
+   173 00:0085: C9 0A        	cmp	#<$a
+   174 00:0087: C2 20        	rep	#$20
+   175                        	longa	on
+   176 00:0089: D0 63        	bne	L10007
+   177                        ;			fname[i] = 0;
+   178 00:008B: E2 20        	sep	#$20
+   179                        	longa	off
+   180 00:008D: A9 00        	lda	#$0
+   181 00:008F: 9D xx xx     	sta	|~~fname,X
+   182 00:0092: C2 20        	rep	#$20
+   183                        	longa	on
+   184                        ;			break;
+   185                        L10006:
+   186                        ;	
+   187                        ;	printf("receiving file: '%s'\n", fname);
+   188 00:0094: A9 xx xx     	lda	#<~~fname
+   189 00:0097: 85 01        	sta	<R0
+   190                        	xref	_BEG_DATA
+   191 00:0099: A9 xx xx     	lda	#_BEG_DATA>>16
+   192 00:009C: 48           	pha
+   193 00:009D: D4 01        	pei	<R0
+   194 00:009F: F4 xx xx     	pea	#^L1
+   195 00:00A2: F4 xx xx     	pea	#<L1
+   196 00:00A5: F4 0A 00     	pea	#10
+   197 00:00A8: 22 xx xx xx  	jsl	~~printf
+   198                        ;	
+   199                        ;	f = fopen(fname, "wb");
+   200 00:00AC: F4 xx xx     	pea	#^L1+22
+   201 00:00AF: F4 xx xx     	pea	#<L1+22
+   202 00:00B2: A9 xx xx     	lda	#<~~fname
+   203 00:00B5: 85 01        	sta	<R0
+   204                        	xref	_BEG_DATA
+   205 00:00B7: A9 xx xx     	lda	#_BEG_DATA>>16
+   206 00:00BA: 48           	pha
+   207 00:00BB: D4 01        	pei	<R0
+   208 00:00BD: 22 xx xx xx  	jsl	~~fopen
+   209 00:00C1: 85 0D        	sta	<L11+f_1
+   210 00:00C3: 86 0F        	stx	<L11+f_1+2
+   211                        ;	if (f == NULL) {
+   212 00:00C5: 05 0F        	ora	<L11+f_1+2
+   213 00:00C7: F0 2A        	beq	L15
+   214                        ;		bytes = 1;
+   215 00:00C9: A9 01 00     	lda	#$1
+   216 00:00CC: 85 07        	sta	<L11+bytes_1
+   217                        ;		while (bytes != 0) {
+   218                        L10010:
+   219 00:00CE: A5 07        	lda	<L11+bytes_1
+   220 00:00D0: D0 3B        	bne	L16
+   221                        ;		fclose(f);
+   222 00:00D2: D4 0F        	pei	<L11+f_1+2
+   223 00:00D4: D4 0D        	pei	<L11+f_1
+   224 00:00D6: 22 xx xx xx  	jsl	~~fclose
+   225                        ;		outbyte('C');
+   226 00:00DA: F4 43 00     	pea	#<$43
+  Sat Dec 11 2021 21:16                                                Page 5
+
+
+   227 00:00DD: 22 xx xx xx  	jsl	~~outbyte
+   228                        ;	}
+   229                        L10009:
+   230                        ;	
+   231                        ;	return 1;
+   232 00:00E1: A9 01 00     	lda	#$1
+   233 00:00E4: A8           	tay
+   234 00:00E5: 2B           	pld
+   235 00:00E6: 3B           	tsc
+   236 00:00E7: 18           	clc
+   237 00:00E8: 69 10 00     	adc	#L10
+   238 00:00EB: 1B           	tcs
+   239 00:00EC: 98           	tya
+   240 00:00ED: 6B           	rtl
+   241                        ;		}
+   242                        ;		i++;
+   243                        L10007:
+   244 00:00EE: E6 05        	inc	<L11+i_1
+   245                        ;	}
+   246 00:00F0: 82 71 FF     	brl	L10005
+   247                        L15:
+   248                        ;		outbyte('E');
+   249 00:00F3: F4 45 00     	pea	#<$45
+   250 00:00F6: 22 xx xx xx  	jsl	~~outbyte
+   251                        ;		printf("error: %d\n", errno);
+   252 00:00FA: AD xx xx     	lda	|~~errno
+   253 00:00FD: 48           	pha
+   254 00:00FE: F4 xx xx     	pea	#^L1+25
+   255 00:0101: F4 xx xx     	pea	#<L1+25
+   256 00:0104: F4 08 00     	pea	#8
+   257 00:0107: 22 xx xx xx  	jsl	~~printf
+   258                        ;	} else {
+   259 00:010B: 80 D4        	bra	L10009
+   260                        L16:
+   261                        ;			
+   262                        ;			//for (i = 0; i < 100; i++);
+   263                        ;			
+   264                        ;			outbyte('A');
+   265 00:010D: F4 41 00     	pea	#<$41
+   266 00:0110: 22 xx xx xx  	jsl	~~outbyte
+   267                        ;			
+   268                        ;			for (i = 0; i < 3; i++) {
+   269 00:0114: 64 05        	stz	<L11+i_1
+   270                        L10014:
+   271                        ;				c[i] = inbyte();
+   272 00:0116: 22 xx xx xx  	jsl	~~inbyte
+   273 00:011A: E2 20        	sep	#$20
+   274                        	longa	off
+   275 00:011C: A6 05        	ldx	<L11+i_1
+   276 00:011E: 95 09        	sta	<L11+c_1,X
+   277 00:0120: C2 20        	rep	#$20
+   278                        	longa	on
+   279                        ;			}
+   280 00:0122: E6 05        	inc	<L11+i_1
+   281 00:0124: A5 05        	lda	<L11+i_1
+   282 00:0126: C9 03 00     	cmp	#<$3
+   283 00:0129: 90 EB        	bcc	L10014
+   284                        ;
+  Sat Dec 11 2021 21:16                                                Page 6
+
+
+   285                        ;			c[3] = 0;
+   286 00:012B: E2 20        	sep	#$20
+   287                        	longa	off
+   288 00:012D: 64 0C        	stz	<L11+c_1+3
+   289 00:012F: C2 20        	rep	#$20
+   290                        	longa	on
+   291                        ;			
+   292                        ;			bytes = atoi(c);
+   293 00:0131: F4 00 00     	pea	#0
+   294 00:0134: 18           	clc
+   295 00:0135: 7B           	tdc
+   296 00:0136: 69 09 00     	adc	#<L11+c_1
+   297 00:0139: 48           	pha
+   298 00:013A: 22 xx xx xx  	jsl	~~atoi
+   299 00:013E: 85 07        	sta	<L11+bytes_1
+   300                        ;			//printf("receiving bytes: %s %d
+                    \n", c, bytes);
+   301                        ;			outbyte('A');
+   302 00:0140: F4 41 00     	pea	#<$41
+   303 00:0143: 22 xx xx xx  	jsl	~~outbyte
+   304                        ;			
+   305                        ;			for (i = 0; i < bytes; i++) {
+   306 00:0147: 64 05        	stz	<L11+i_1
+   307 00:0149: 80 0F        	bra	L10018
+   308                        L10017:
+   309                        ;				buffer[i] = inbyte();
+   310 00:014B: 22 xx xx xx  	jsl	~~inbyte
+   311 00:014F: E2 20        	sep	#$20
+   312                        	longa	off
+   313 00:0151: A6 05        	ldx	<L11+i_1
+   314 00:0153: 9D xx xx     	sta	|~~buffer,X
+   315 00:0156: C2 20        	rep	#$20
+   316                        	longa	on
+   317                        ;			}
+   318 00:0158: E6 05        	inc	<L11+i_1
+   319                        L10018:
+   320 00:015A: A5 05        	lda	<L11+i_1
+   321 00:015C: C5 07        	cmp	<L11+bytes_1
+   322 00:015E: 90 EB        	bcc	L10017
+   323                        ;			//printf("received \n");
+   324                        ;			
+   325                        ;			if (bytes) {
+   326 00:0160: A5 07        	lda	<L11+bytes_1
+   327 00:0162: D0 03        	bne	*+5
+   328 00:0164: 82 67 FF     	brl	L10010
+   329                        ;				fwrite(buffer, 1, bytes,
+                     f);
+   330 00:0167: D4 0F        	pei	<L11+f_1+2
+   331 00:0169: D4 0D        	pei	<L11+f_1
+   332 00:016B: D4 07        	pei	<L11+bytes_1
+   333 00:016D: F4 01 00     	pea	#<$1
+   334 00:0170: A9 xx xx     	lda	#<~~buffer
+   335 00:0173: 85 01        	sta	<R0
+   336                        	xref	_BEG_DATA
+   337 00:0175: A9 xx xx     	lda	#_BEG_DATA>>16
+   338 00:0178: 48           	pha
+   339 00:0179: D4 01        	pei	<R0
+   340 00:017B: 22 xx xx xx  	jsl	~~fwrite
+  Sat Dec 11 2021 21:16                                                Page 7
+
+
+   341                        ;			}
+   342                        ;			//printf("written \n");
+   343                        ;		}
+   344 00:017F: 82 4C FF     	brl	L10010
+   345                        ;}
+   346             00000010   L10	equ	16
+   347             00000005   L11	equ	5
+   348                        	ends
+   349                        	efunc
+   350                        	data
+   351                        L1:
+   352 00:0008: 72 65 63 65  	db	$72,$65,$63,$65,$69,$76,$69,$6E,$67,$20,
+                    $66,$69,$6C,$65,$3A
+       00:000C: 69 76 69 6E 
+       00:0010: 67 20 66 69 
+       00:0014: 6C 65 3A 
+   353 00:0017: 20 27 25 73  	db	$20,$27,$25,$73,$27,$0A,$00,$77,$62,$00,
+                    $65,$72,$72,$6F,$72
+       00:001B: 27 0A 00 77 
+       00:001F: 62 00 65 72 
+       00:0023: 72 6F 72 
+   354 00:0026: 3A 20 25 64  	db	$3A,$20,$25,$64,$0A,$00
+       00:002A: 0A 00 
+   355 00:002C:              	ends
+   356                        ;
+   357                        ;int sendFile() {
+   358                        	code
+   359                        	xdef	~~sendFile
+   360                        	func
+   361                        ~~sendFile:
+   362                        	longa	on
+   363                        	longi	on
+   364                        ;}
+   365 00:0182: 6B           	rtl
+   366             00000000   L22	equ	0
+   367             00000001   L23	equ	1
+   368                        	ends
+   369                        	efunc
+   370                        ;
+   371                        ;void server() {
+   372                        	code
+   373                        	xdef	~~server
+   374                        	func
+   375                        ~~server:
+   376                        	longa	on
+   377                        	longi	on
+   378 00:0183: 3B           	tsc
+   379 00:0184: 38           	sec
+   380 00:0185: E9 01 00     	sbc	#L25
+   381 00:0188: 1B           	tcs
+   382 00:0189: 0B           	phd
+   383 00:018A: 5B           	tcd
+   384                        ;	char c;
+   385                        ;		
+   386                        ;	c = 0;
+   387             00000000   c_1	set	0
+   388 00:018B: E2 20        	sep	#$20
+   389                        	longa	off
+  Sat Dec 11 2021 21:16                                                Page 8
+
+
+   390 00:018D: 64 01        	stz	<L26+c_1
+   391 00:018F: C2 20        	rep	#$20
+   392                        	longa	on
+   393                        ;	
+   394                        ;	while (c != 'X') {
+   395 00:0191: 80 47        	bra	L10020
+   396                        L20000:
+   397                        ;		printf("R - receive file\n");
+   398 00:0193: F4 xx xx     	pea	#^L21
+   399 00:0196: F4 xx xx     	pea	#<L21
+   400 00:0199: F4 06 00     	pea	#6
+   401 00:019C: 22 xx xx xx  	jsl	~~printf
+   402                        ;		printf("S - send file\n");
+   403 00:01A0: F4 xx xx     	pea	#^L21+18
+   404 00:01A3: F4 xx xx     	pea	#<L21+18
+   405 00:01A6: F4 06 00     	pea	#6
+   406 00:01A9: 22 xx xx xx  	jsl	~~printf
+   407                        ;		printf("X - exit\n");
+   408 00:01AD: F4 xx xx     	pea	#^L21+33
+   409 00:01B0: F4 xx xx     	pea	#<L21+33
+   410 00:01B3: F4 06 00     	pea	#6
+   411 00:01B6: 22 xx xx xx  	jsl	~~printf
+   412                        ;		
+   413                        ;		c = inbyte();
+   414 00:01BA: 22 xx xx xx  	jsl	~~inbyte
+   415 00:01BE: E2 20        	sep	#$20
+   416                        	longa	off
+   417 00:01C0: 85 01        	sta	<L26+c_1
+   418                        ;		if (c == 'R') {
+   419 00:01C2: C9 52        	cmp	#<$52
+   420 00:01C4: C2 20        	rep	#$20
+   421                        	longa	on
+   422 00:01C6: D0 04        	bne	L10022
+   423                        ;			receiveFile();
+   424 00:01C8: 22 xx xx xx  	jsl	~~receiveFile
+   425                        ;		}
+   426                        ;		if (c == 'S') {
+   427                        L10022:
+   428 00:01CC: E2 20        	sep	#$20
+   429                        	longa	off
+   430 00:01CE: A5 01        	lda	<L26+c_1
+   431 00:01D0: C9 53        	cmp	#<$53
+   432 00:01D2: C2 20        	rep	#$20
+   433                        	longa	on
+   434 00:01D4: D0 04        	bne	L10020
+   435                        ;			sendFile();
+   436 00:01D6: 22 xx xx xx  	jsl	~~sendFile
+   437                        ;		}
+   438                        ;	}
+   439                        L10020:
+   440 00:01DA: E2 20        	sep	#$20
+   441                        	longa	off
+   442 00:01DC: A5 01        	lda	<L26+c_1
+   443 00:01DE: C9 58        	cmp	#<$58
+   444 00:01E0: C2 20        	rep	#$20
+   445                        	longa	on
+   446 00:01E2: D0 AF        	bne	L20000
+   447                        ;	
+  Sat Dec 11 2021 21:16                                                Page 9
+
+
+   448                        ;}
+   449 00:01E4: 2B           	pld
+   450 00:01E5: 3B           	tsc
+   451 00:01E6: 18           	clc
+   452 00:01E7: 69 01 00     	adc	#L25
+   453 00:01EA: 1B           	tcs
+   454 00:01EB: 6B           	rtl
+   455             00000001   L25	equ	1
+   456             00000001   L26	equ	1
+   457                        	ends
+   458                        	efunc
+   459                        	data
+   460                        L21:
+   461 00:002C: 52 20 2D 20  	db	$52,$20,$2D,$20,$72,$65,$63,$65,$69,$76,
+                    $65,$20,$66,$69,$6C
+       00:0030: 72 65 63 65 
+       00:0034: 69 76 65 20 
+       00:0038: 66 69 6C 
+   462 00:003B: 65 0A 00 53  	db	$65,$0A,$00,$53,$20,$2D,$20,$73,$65,$6E,
+                    $64,$20,$66,$69,$6C
+       00:003F: 20 2D 20 73 
+       00:0043: 65 6E 64 20 
+       00:0047: 66 69 6C 
+   463 00:004A: 65 0A 00 58  	db	$65,$0A,$00,$58,$20,$2D,$20,$65,$78,$69,
+                    $74,$0A,$00
+       00:004E: 20 2D 20 65 
+       00:0052: 78 69 74 0A 
+       00:0056: 00 
+   464 00:0057:              	ends
+   465                        ;
+   466                        ;int main(int argc, char **argv) {
+   467                        	code
+   468                        	xdef	~~main
+   469                        	func
+   470                        ~~main:
+   471                        	longa	on
+   472                        	longi	on
+   473 00:01EC: 3B           	tsc
+   474 00:01ED: 38           	sec
+   475 00:01EE: E9 02 00     	sbc	#L32
+   476 00:01F1: 1B           	tcs
+   477 00:01F2: 0B           	phd
+   478 00:01F3: 5B           	tcd
+   479             00000004   argc_0	set	4
+   480             00000006   argv_0	set	6
+   481                        ;	
+   482                        ;	int rc;
+   483                        ;	
+   484                        ;    fd2iocb[0] = 0;
+   485             00000000   rc_1	set	0
+   486 00:01F4: E2 20        	sep	#$20
+   487                        	longa	off
+   488 00:01F6: 9C xx xx     	stz	|~~fd2iocb
+   489                        ;    fd2iocb[1] = 0;
+   490 00:01F9: 9C xx xx     	stz	|~~fd2iocb+1
+   491                        ;    fd2iocb[2] = 0;
+   492 00:01FC: 9C xx xx     	stz	|~~fd2iocb+2
+   493                        ;    fd2iocb[3] = 0xff;
+  Sat Dec 11 2021 21:16                                                Page 10
+
+
+   494 00:01FF: A9 FF        	lda	#$ff
+   495 00:0201: 8D xx xx     	sta	|~~fd2iocb+3
+   496                        ;    fd2iocb[4] = 0xff;
+   497 00:0204: 8D xx xx     	sta	|~~fd2iocb+4
+   498                        ;    fd2iocb[5] = 0xff;
+   499 00:0207: 8D xx xx     	sta	|~~fd2iocb+5
+   500                        ;    fd2iocb[6] = 0xff;
+   501 00:020A: 8D xx xx     	sta	|~~fd2iocb+6
+   502                        ;    fd2iocb[7] = 0xff;
+   503 00:020D: 8D xx xx     	sta	|~~fd2iocb+7
+   504 00:0210: C2 20        	rep	#$20
+   505                        	longa	on
+   506                        ;	
+   507                        ;	server();
+   508 00:0212: 22 xx xx xx  	jsl	~~server
+   509                        ;	return 0;
+   510 00:0216: A9 00 00     	lda	#$0
+   511 00:0219: A8           	tay
+   512 00:021A: A5 04        	lda	<L32+2
+   513 00:021C: 85 0A        	sta	<L32+2+6
+   514 00:021E: A5 03        	lda	<L32+1
+   515 00:0220: 85 09        	sta	<L32+1+6
+   516 00:0222: 2B           	pld
+   517 00:0223: 3B           	tsc
+   518 00:0224: 18           	clc
+   519 00:0225: 69 08 00     	adc	#L32+6
+   520 00:0228: 1B           	tcs
+   521 00:0229: 98           	tya
+   522 00:022A: 6B           	rtl
+   523                        ;}
+   524             00000002   L32	equ	2
+   525             00000001   L33	equ	1
+   526                        	ends
+   527                        	efunc
+   528                        ;
+   529                        	xref	~~atoi
+   530                        	xref	~~printf
+   531                        	xref	~~fwrite
+   532                        	xref	~~fopen
+   533                        	xref	~~fclose
+   534                        	xref	~~fd2iocb
+   535                        	udata
+   536                        ~~fname
+   537 00:0000:              	ds	16
+   538 00:0010:              	ends
+   539                        	udata
+   540                        ~~buffer
+   541 00:0010:              	ds	512
+   542 00:0210:              	ends
+   543                        	xref	~~errno
+
+
+      Lines assembled: 543
+      Errors: 0

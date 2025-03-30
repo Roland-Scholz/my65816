@@ -1,0 +1,206 @@
+  Fri Mar 18 2022 12:50                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include <errno.h>
+    11                        ;#include <unistd.h>
+    12                        ;#include <dirent.h>
+    13                        ;
+    14                        ;#include "freeRTOS.h"
+    15                        ;#include "task.h"
+    16                        ;#include <homebrew.h>
+    17                        ;
+    18                        ;
+    19                        ;static unsigned int i, sec, min, hour;
+    20                        ;static char s[10];
+    21                        ;
+    22                        ;int main(int argc, char **argv) {
+    23                        	code
+    24                        	xdef	~~main
+    25                        	func
+    26                        ~~main:
+    27                        	longa	on
+    28                        	longi	on
+    29 00:0000: 3B           	tsc
+    30 00:0001: 38           	sec
+    31 00:0002: E9 0C 00     	sbc	#L2
+    32 00:0005: 1B           	tcs
+    33 00:0006: 0B           	phd
+    34 00:0007: 5B           	tcd
+    35             00000004   argc_0	set	4
+    36             00000006   argv_0	set	6
+    37                        ;
+    38                        ;	const TickType_t xDelay = 200;
+    39                        ;	char *screen = (char *)0x7FF800+72;
+    40                        ;	unsigned int i;
+    41                        ;	
+    42                        ;	sec = min = hour = 0;
+    43             00000000   xDelay_1	set	0
+    44             00000002   screen_1	set	2
+    45             00000006   i_1	set	6
+    46 00:0008: A9 C8 00     	lda	#$c8
+    47 00:000B: 85 05        	sta	<L3+xDelay_1
+    48 00:000D: A9 48 F8     	lda	#$f848
+    49 00:0010: 85 07        	sta	<L3+screen_1
+    50 00:0012: A9 7F 00     	lda	#$7f
+    51 00:0015: 85 09        	sta	<L3+screen_1+2
+    52 00:0017: 9C xx xx     	stz	|~~hour
+  Fri Mar 18 2022 12:50                                                Page 2
+
+
+    53 00:001A: 9C xx xx     	stz	|~~min
+    54 00:001D: 9C xx xx     	stz	|~~sec
+    55                        ;	
+    56                        ;	hour = atoi(argv[1]);
+    57 00:0020: A0 06 00     	ldy	#$6
+    58 00:0023: B7 12        	lda	[<L2+argv_0],Y
+    59 00:0025: 48           	pha
+    60 00:0026: 88           	dey
+    61 00:0027: 88           	dey
+    62 00:0028: B7 12        	lda	[<L2+argv_0],Y
+    63 00:002A: 48           	pha
+    64 00:002B: 22 xx xx xx  	jsl	~~atoi
+    65 00:002F: 8D xx xx     	sta	|~~hour
+    66                        ;	min = atoi(argv[2]);
+    67 00:0032: A0 0A 00     	ldy	#$a
+    68 00:0035: B7 12        	lda	[<L2+argv_0],Y
+    69 00:0037: 48           	pha
+    70 00:0038: 88           	dey
+    71 00:0039: 88           	dey
+    72 00:003A: B7 12        	lda	[<L2+argv_0],Y
+    73 00:003C: 48           	pha
+    74 00:003D: 22 xx xx xx  	jsl	~~atoi
+    75 00:0041: 8D xx xx     	sta	|~~min
+    76                        ;	
+    77                        ;	for(;;) {
+    78                        L10003:
+    79                        ;		sec++;
+    80 00:0044: EE xx xx     	inc	|~~sec
+    81                        ;		if (sec == 60) {
+    82 00:0047: AD xx xx     	lda	|~~sec
+    83 00:004A: C9 3C 00     	cmp	#<$3c
+    84 00:004D: D0 1F        	bne	L10004
+    85                        ;			sec = 0;
+    86 00:004F: 9C xx xx     	stz	|~~sec
+    87                        ;			min++;
+    88 00:0052: EE xx xx     	inc	|~~min
+    89                        ;			if (min == 60) {
+    90 00:0055: AD xx xx     	lda	|~~min
+    91 00:0058: C9 3C 00     	cmp	#<$3c
+    92 00:005B: D0 11        	bne	L10004
+    93                        ;				min = 0;
+    94 00:005D: 9C xx xx     	stz	|~~min
+    95                        ;				hour++;
+    96 00:0060: EE xx xx     	inc	|~~hour
+    97                        ;				if (hour == 24) hour = 0
+                    ;
+    98 00:0063: AD xx xx     	lda	|~~hour
+    99 00:0066: C9 18 00     	cmp	#<$18
+   100 00:0069: D0 03        	bne	L10004
+   101 00:006B: 9C xx xx     	stz	|~~hour
+   102                        ;			}
+   103                        ;		}
+   104                        ;		
+   105                        ;		sprintf(s, "%02d:%02d:%02d", hour, min, 
+                    sec);
+   106                        L10004:
+   107 00:006E: AD xx xx     	lda	|~~sec
+   108 00:0071: 48           	pha
+  Fri Mar 18 2022 12:50                                                Page 3
+
+
+   109 00:0072: AD xx xx     	lda	|~~min
+   110 00:0075: 48           	pha
+   111 00:0076: AD xx xx     	lda	|~~hour
+   112 00:0079: 48           	pha
+   113 00:007A: F4 xx xx     	pea	#^L1
+   114 00:007D: F4 xx xx     	pea	#<L1
+   115 00:0080: A9 xx xx     	lda	#<~~s
+   116 00:0083: 85 01        	sta	<R0
+   117                        	xref	_BEG_DATA
+   118 00:0085: A9 xx xx     	lda	#_BEG_DATA>>16
+   119 00:0088: 48           	pha
+   120 00:0089: D4 01        	pei	<R0
+   121 00:008B: F4 10 00     	pea	#16
+   122 00:008E: 22 xx xx xx  	jsl	~~sprintf
+   123                        ;		//memcpy(screen, s, 8);
+   124                        ;		for (i = 0; i < 8; i++) {
+   125 00:0092: 64 0B        	stz	<L3+i_1
+   126                        L10009:
+   127                        ;			screen[i] = s[i];
+   128 00:0094: E2 20        	sep	#$20
+   129                        	longa	off
+   130 00:0096: A6 0B        	ldx	<L3+i_1
+   131 00:0098: BD xx xx     	lda	|~~s,X
+   132 00:009B: A4 0B        	ldy	<L3+i_1
+   133 00:009D: 97 07        	sta	[<L3+screen_1],Y
+   134 00:009F: C2 20        	rep	#$20
+   135                        	longa	on
+   136                        ;		}
+   137 00:00A1: E6 0B        	inc	<L3+i_1
+   138 00:00A3: A5 0B        	lda	<L3+i_1
+   139 00:00A5: C9 08 00     	cmp	#<$8
+   140 00:00A8: 90 EA        	bcc	L10009
+   141                        ;		vTaskDelay(xDelay);
+   142 00:00AA: F4 C8 00     	pea	#<$c8
+   143 00:00AD: 22 xx xx xx  	jsl	~~vTaskDelay
+   144                        ;	}
+   145 00:00B1: 80 91        	bra	L10003
+   146                        ;}
+   147             0000000C   L2	equ	12
+   148             00000005   L3	equ	5
+   149                        	ends
+   150                        	efunc
+   151                        	data
+   152                        L1:
+   153 00:0000: 25 30 32 64  	db	$25,$30,$32,$64,$3A,$25,$30,$32,$64,$3A,
+                    $25,$30,$32,$64,$00
+       00:0004: 3A 25 30 32 
+       00:0008: 64 3A 25 30 
+       00:000C: 32 64 00 
+   154 00:000F:              	ends
+   155                        ;
+   156                        	xref	~~vTaskDelay
+   157                        	xref	~~atoi
+   158                        	xref	~~sprintf
+   159                        	udata
+   160                        ~~s
+   161 00:0000:              	ds	10
+   162 00:000A:              	ends
+  Fri Mar 18 2022 12:50                                                Page 4
+
+
+   163                        	udata
+   164                        ~~hour
+   165 00:000A:              	ds	2
+   166 00:000C:              	ends
+   167                        	udata
+   168                        ~~min
+   169 00:000C:              	ds	2
+   170 00:000E:              	ends
+   171                        	udata
+   172                        ~~sec
+   173 00:000E:              	ds	2
+   174 00:0010:              	ends
+   175                        	udata
+   176                        ~~i
+   177 00:0010:              	ds	2
+   178 00:0012:              	ends
+
+
+      Lines assembled: 178
+      Errors: 0

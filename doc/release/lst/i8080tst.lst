@@ -1,0 +1,975 @@
+  Sun Jan  9 2022 20:46                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;// This file uses the 8080 emulator to run the te
+                    st suite (roms in cpu_tests
+     7                        ;// directory). It uses a simple array as memory.
+     8                        ;
+     9                        ;void *heap_start = ( void * )0x10000;
+    10                        	data
+    11                        	xdef	~~heap_start
+    12                        ~~heap_start:
+    13 00:0000: 00 00 01 00  	dl	$10000
+    14 00:0004:              	ends
+    15                        ;void *heap_end = (void * )0xfffff;
+    16                        	data
+    17                        	xdef	~~heap_end
+    18                        ~~heap_end:
+    19 00:0004: FF FF 0F 00  	dl	$FFFFF
+    20 00:0008:              	ends
+    21                        ;extern unsigned char fd2iocb[8];
+    22                        ;
+    23                        ;
+    24                        ;//#include <stdio.h>
+    25                        ;#include <stdlib.h>
+    26                        ;//#include <string.h>
+    27                        ;//#include <time.h>
+    28                        ;
+    29                        ;#include "i8080.h"
+    30                        ;#include "homebrew.h"
+    31                        ;
+    32                        ;// memory callbacks
+    33                        ;#define MEMORY_SIZE 0xFFFF
+    34                        ;static uint8_t* memory = NULL;
+    35                        	data
+    36                        ~~memory:
+    37 00:0008: 00 00 00 00  	dl	$0
+    38 00:000C:              	ends
+    39                        ;static bool test_finished = 0;
+    40                        	data
+    41                        ~~test_finished:
+    42 00:000C: 00 00        	dw	$0
+    43 00:000E:              	ends
+    44                        ;
+    45                        ;static uint8_t rb(void* userdata, uint16_t addr) 
+                    {
+    46                        	code
+    47                        	func
+    48                        ~~rb:
+    49                        	longa	on
+    50                        	longi	on
+  Sun Jan  9 2022 20:46                                                Page 2
+
+
+    51 00:0000: 3B           	tsc
+    52 00:0001: 38           	sec
+    53 00:0002: E9 04 00     	sbc	#L2
+    54 00:0005: 1B           	tcs
+    55 00:0006: 0B           	phd
+    56 00:0007: 5B           	tcd
+    57             00000004   userdata_0	set	4
+    58             00000008   addr_0	set	8
+    59                        ;  return memory[addr];
+    60 00:0008: AD xx xx     	lda	|~~memory
+    61 00:000B: 85 01        	sta	<R0
+    62 00:000D: AD xx xx     	lda	|~~memory+2
+    63 00:0010: 85 03        	sta	<R0+2
+    64 00:0012: A4 0C        	ldy	<L2+addr_0
+    65 00:0014: B7 01        	lda	[<R0],Y
+    66 00:0016: 29 FF 00     	and	#$ff
+    67 00:0019: A8           	tay
+    68 00:001A: A5 06        	lda	<L2+2
+    69 00:001C: 85 0C        	sta	<L2+2+6
+    70 00:001E: A5 05        	lda	<L2+1
+    71 00:0020: 85 0B        	sta	<L2+1+6
+    72 00:0022: 2B           	pld
+    73 00:0023: 3B           	tsc
+    74 00:0024: 18           	clc
+    75 00:0025: 69 0A 00     	adc	#L2+6
+    76 00:0028: 1B           	tcs
+    77 00:0029: 98           	tya
+    78 00:002A: 6B           	rtl
+    79                        ;}
+    80             00000004   L2	equ	4
+    81             00000005   L3	equ	5
+    82                        	ends
+    83                        	efunc
+    84                        ;
+    85                        ;static void wb(void* userdata, uint16_t addr, uin
+                    t8_t val) {
+    86                        	code
+    87                        	func
+    88                        ~~wb:
+    89                        	longa	on
+    90                        	longi	on
+    91 00:002B: 3B           	tsc
+    92 00:002C: 38           	sec
+    93 00:002D: E9 04 00     	sbc	#L5
+    94 00:0030: 1B           	tcs
+    95 00:0031: 0B           	phd
+    96 00:0032: 5B           	tcd
+    97             00000004   userdata_0	set	4
+    98             00000008   addr_0	set	8
+    99             0000000A   val_0	set	10
+   100                        ;  memory[addr] = val;
+   101 00:0033: AD xx xx     	lda	|~~memory
+   102 00:0036: 85 01        	sta	<R0
+   103 00:0038: AD xx xx     	lda	|~~memory+2
+   104 00:003B: 85 03        	sta	<R0+2
+   105 00:003D: E2 20        	sep	#$20
+   106                        	longa	off
+   107 00:003F: A5 0E        	lda	<L5+val_0
+  Sun Jan  9 2022 20:46                                                Page 3
+
+
+   108 00:0041: A4 0C        	ldy	<L5+addr_0
+   109 00:0043: 97 01        	sta	[<R0],Y
+   110 00:0045: C2 20        	rep	#$20
+   111                        	longa	on
+   112                        ;}
+   113 00:0047: A5 06        	lda	<L5+2
+   114 00:0049: 85 0E        	sta	<L5+2+8
+   115 00:004B: A5 05        	lda	<L5+1
+   116 00:004D: 85 0D        	sta	<L5+1+8
+   117 00:004F: 2B           	pld
+   118 00:0050: 3B           	tsc
+   119 00:0051: 18           	clc
+   120 00:0052: 69 0C 00     	adc	#L5+8
+   121 00:0055: 1B           	tcs
+   122 00:0056: 6B           	rtl
+   123             00000004   L5	equ	4
+   124             00000005   L6	equ	5
+   125                        	ends
+   126                        	efunc
+   127                        ;
+   128                        ;static uint8_t port_in(void* userdata, uint8_t po
+                    rt) {
+   129                        	code
+   130                        	func
+   131                        ~~port_in:
+   132                        	longa	on
+   133                        	longi	on
+   134 00:0057: 3B           	tsc
+   135 00:0058: 38           	sec
+   136 00:0059: E9 00 00     	sbc	#L8
+   137 00:005C: 1B           	tcs
+   138 00:005D: 0B           	phd
+   139 00:005E: 5B           	tcd
+   140             00000004   userdata_0	set	4
+   141             00000008   port_0	set	8
+   142                        ;  return 0x00;
+   143 00:005F: A9 00 00     	lda	#$0
+   144 00:0062: A8           	tay
+   145 00:0063: A5 02        	lda	<L8+2
+   146 00:0065: 85 08        	sta	<L8+2+6
+   147 00:0067: A5 01        	lda	<L8+1
+   148 00:0069: 85 07        	sta	<L8+1+6
+   149 00:006B: 2B           	pld
+   150 00:006C: 3B           	tsc
+   151 00:006D: 18           	clc
+   152 00:006E: 69 06 00     	adc	#L8+6
+   153 00:0071: 1B           	tcs
+   154 00:0072: 98           	tya
+   155 00:0073: 6B           	rtl
+   156                        ;}
+   157             00000000   L8	equ	0
+   158             00000001   L9	equ	1
+   159                        	ends
+   160                        	efunc
+   161                        ;
+   162                        ;static void cpm_port_out(void* userdata, uint8_t 
+                    port, uint8_t value) {
+   163                        	code
+  Sun Jan  9 2022 20:46                                                Page 4
+
+
+   164                        	func
+   165                        ~~cpm_port_out:
+   166                        	longa	on
+   167                        	longi	on
+   168 00:0074: 3B           	tsc
+   169 00:0075: 38           	sec
+   170 00:0076: E9 09 00     	sbc	#L11
+   171 00:0079: 1B           	tcs
+   172 00:007A: 0B           	phd
+   173 00:007B: 5B           	tcd
+   174             00000004   userdata_0	set	4
+   175             00000008   port_0	set	8
+   176             0000000A   value_0	set	10
+   177                        ;  i8080* const c = (i8080*) userdata;
+   178                        ;  uint8_t operation;
+   179                        ;   
+   180                        ;   
+   181                        ;  switch (port) {
+   182             00000000   c_1	set	0
+   183             00000004   operation_1	set	4
+   184 00:007C: A5 0D        	lda	<L11+userdata_0
+   185 00:007E: 85 05        	sta	<L12+c_1
+   186 00:0080: A5 0F        	lda	<L11+userdata_0+2
+   187 00:0082: 85 07        	sta	<L12+c_1+2
+   188 00:0084: A5 11        	lda	<L11+port_0
+   189 00:0086: 29 FF 00     	and	#$ff
+   190                        	xref	~~~swt
+   191 00:0089: 22 xx xx xx  	jsl	~~~swt
+   192 00:008D: 02 00        	dw	2
+   193 00:008F: 00 00        	dw	0
+   194 00:0091: xx xx        	dw	L10003-1
+   195 00:0093: 01 00        	dw	1
+   196 00:0095: xx xx        	dw	L10004-1
+   197 00:0097: xx xx        	dw	L13-1
+   198                        ;  case 0:
+   199                        L10003:
+   200                        ;	c->a = 0;
+   201 00:0099: E2 20        	sep	#$20
+   202                        	longa	off
+   203 00:009B: A9 00        	lda	#$0
+   204 00:009D: A0 1C 00     	ldy	#$1c
+   205 00:00A0: 97 05        	sta	[<L12+c_1],Y
+   206 00:00A2: C2 20        	rep	#$20
+   207                        	longa	on
+   208                        ;	break;
+   209                        L13:
+   210 00:00A4: A5 0B        	lda	<L11+2
+   211 00:00A6: 85 13        	sta	<L11+2+8
+   212 00:00A8: A5 0A        	lda	<L11+1
+   213 00:00AA: 85 12        	sta	<L11+1+8
+   214 00:00AC: 2B           	pld
+   215 00:00AD: 3B           	tsc
+   216 00:00AE: 18           	clc
+   217 00:00AF: 69 11 00     	adc	#L11+8
+   218 00:00B2: 1B           	tcs
+   219 00:00B3: 6B           	rtl
+   220                        ;  case 1:
+   221                        L10004:
+  Sun Jan  9 2022 20:46                                                Page 5
+
+
+   222                        ;	printf("%c", value);
+   223 00:00B4: A5 13        	lda	<L11+value_0
+   224 00:00B6: 29 FF 00     	and	#$ff
+   225 00:00B9: 48           	pha
+   226 00:00BA: F4 xx xx     	pea	#^L1
+   227 00:00BD: F4 xx xx     	pea	#<L1
+   228 00:00C0: F4 08 00     	pea	#8
+   229 00:00C3: 22 xx xx xx  	jsl	~~printf
+   230                        ;	fflush(stdout);
+   231 00:00C7: A9 xx xx     	lda	#<~~_iob+20
+   232 00:00CA: 85 01        	sta	<R0
+   233                        	xref	_BEG_DATA
+   234 00:00CC: A9 xx xx     	lda	#_BEG_DATA>>16
+   235 00:00CF: 48           	pha
+   236 00:00D0: D4 01        	pei	<R0
+   237 00:00D2: 22 xx xx xx  	jsl	~~fflush
+   238                        ;	break;
+   239 00:00D6: 80 CC        	bra	L13
+   240                        ;  default:
+   241                        ;	break;
+   242                        ;  }
+   243                        ;  
+   244                        ;  /*
+   245                        ;  if (port == 0) {
+   246                        ;    test_finished = 1;
+   247                        ;  } else if (port == 1) {
+   248                        ;    uint8_t operation = c->c;
+   249                        ;
+   250                        ;    if (operation == 2) { // print a character st
+                    ored in E
+   251                        ;      printf("%c", c->e);
+   252                        ;    } else if (operation == 9) { // print from me
+                    mory at (DE) until '$' char
+   253                        ;      uint16_t addr = (c->d << 8) | c->e;
+   254                        ;      do {
+   255                        ;        printf("%c", rb(c, addr++));
+   256                        ;      } while (rb(c, addr) != '$');
+   257                        ;    }
+   258                        ;  }*/
+   259                        ;}
+   260             00000009   L11	equ	9
+   261             00000005   L12	equ	5
+   262                        	ends
+   263                        	efunc
+   264                        	data
+   265                        L1:
+   266 00:000E: 25 63 00     	db	$25,$63,$00
+   267 00:0011:              	ends
+   268                        ;
+   269                        ;static void port_out(void* userdata, uint8_t port
+                    , uint8_t value) {
+   270                        	code
+   271                        	func
+   272                        ~~port_out:
+   273                        	longa	on
+   274                        	longi	on
+   275 00:00D8: 3B           	tsc
+   276 00:00D9: 38           	sec
+  Sun Jan  9 2022 20:46                                                Page 6
+
+
+   277 00:00DA: E9 0F 00     	sbc	#L15
+   278 00:00DD: 1B           	tcs
+   279 00:00DE: 0B           	phd
+   280 00:00DF: 5B           	tcd
+   281             00000004   userdata_0	set	4
+   282             00000008   port_0	set	8
+   283             0000000A   value_0	set	10
+   284                        ;  i8080* const c = (i8080*) userdata;
+   285                        ;
+   286                        ;  if (port == 0) {
+   287             00000000   c_1	set	0
+   288 00:00E0: A5 13        	lda	<L15+userdata_0
+   289 00:00E2: 85 09        	sta	<L16+c_1
+   290 00:00E4: A5 15        	lda	<L15+userdata_0+2
+   291 00:00E6: 85 0B        	sta	<L16+c_1+2
+   292 00:00E8: A5 17        	lda	<L15+port_0
+   293 00:00EA: 29 FF 00     	and	#$ff
+   294 00:00ED: D0 25        	bne	L10006
+   295                        ;    test_finished = 1;
+   296 00:00EF: A9 01 00     	lda	#$1
+   297 00:00F2: 8D xx xx     	sta	|~~test_finished
+   298                        ;  } else if (port == 1) {
+   299                        L10007:
+   300 00:00F5: A9 xx xx     	lda	#<~~_iob+20
+   301 00:00F8: 85 01        	sta	<R0
+   302                        	xref	_BEG_DATA
+   303 00:00FA: A9 xx xx     	lda	#_BEG_DATA>>16
+   304 00:00FD: 48           	pha
+   305 00:00FE: D4 01        	pei	<R0
+   306 00:0100: 22 xx xx xx  	jsl	~~fflush
+   307                        ;}
+   308 00:0104: A5 11        	lda	<L15+2
+   309 00:0106: 85 19        	sta	<L15+2+8
+   310 00:0108: A5 10        	lda	<L15+1
+   311 00:010A: 85 18        	sta	<L15+1+8
+   312 00:010C: 2B           	pld
+   313 00:010D: 3B           	tsc
+   314 00:010E: 18           	clc
+   315 00:010F: 69 17 00     	adc	#L15+8
+   316 00:0112: 1B           	tcs
+   317 00:0113: 6B           	rtl
+   318                        L10006:
+   319 00:0114: E2 20        	sep	#$20
+   320                        	longa	off
+   321 00:0116: A5 17        	lda	<L15+port_0
+   322 00:0118: C9 01        	cmp	#<$1
+   323 00:011A: C2 20        	rep	#$20
+   324                        	longa	on
+   325 00:011C: D0 D7        	bne	L10007
+   326                        ;    uint8_t operation = c->c;
+   327                        ;
+   328                        ;    if (operation == 2) { // print a character st
+                    ored in E
+   329             00000004   operation_2	set	4
+   330 00:011E: E2 20        	sep	#$20
+   331                        	longa	off
+   332 00:0120: A0 1E 00     	ldy	#$1e
+   333 00:0123: B7 09        	lda	[<L16+c_1],Y
+  Sun Jan  9 2022 20:46                                                Page 7
+
+
+   334 00:0125: 85 0D        	sta	<L16+operation_2
+   335 00:0127: C9 02        	cmp	#<$2
+   336 00:0129: C2 20        	rep	#$20
+   337                        	longa	on
+   338 00:012B: D0 17        	bne	L10009
+   339                        ;      printf("%c", c->e);
+   340 00:012D: C8           	iny
+   341 00:012E: C8           	iny
+   342 00:012F: B7 09        	lda	[<L16+c_1],Y
+   343 00:0131: 29 FF 00     	and	#$ff
+   344 00:0134: 48           	pha
+   345 00:0135: F4 xx xx     	pea	#^L14
+   346 00:0138: F4 xx xx     	pea	#<L14
+   347 00:013B: F4 08 00     	pea	#8
+   348 00:013E: 22 xx xx xx  	jsl	~~printf
+   349                        ;    } else if (operation == 9) { // print from me
+                    mory at (DE) until '$' char
+   350 00:0142: 80 B1        	bra	L10007
+   351                        L10009:
+   352 00:0144: E2 20        	sep	#$20
+   353                        	longa	off
+   354 00:0146: A5 0D        	lda	<L16+operation_2
+   355 00:0148: C9 09        	cmp	#<$9
+   356 00:014A: C2 20        	rep	#$20
+   357                        	longa	on
+   358 00:014C: D0 A7        	bne	L10007
+   359                        ;      uint16_t addr = (c->d << 8) | c->e;
+   360                        ;      do {
+   361             00000005   addr_3	set	5
+   362 00:014E: A0 1F 00     	ldy	#$1f
+   363 00:0151: B7 09        	lda	[<L16+c_1],Y
+   364 00:0153: 29 FF 00     	and	#$ff
+   365 00:0156: EB           	xba
+   366 00:0157: 29 00 FF     	and	#$ff00
+   367 00:015A: 85 01        	sta	<R0
+   368 00:015C: C8           	iny
+   369 00:015D: B7 09        	lda	[<L16+c_1],Y
+   370 00:015F: 29 FF 00     	and	#$ff
+   371 00:0162: 05 01        	ora	<R0
+   372 00:0164: 85 0E        	sta	<L16+addr_3
+   373                        L10014:
+   374                        ;        printf("%c", rb(c, addr++));
+   375 00:0166: A5 0E        	lda	<L16+addr_3
+   376 00:0168: 85 01        	sta	<R0
+   377 00:016A: E6 0E        	inc	<L16+addr_3
+   378 00:016C: D4 01        	pei	<R0
+   379 00:016E: D4 0B        	pei	<L16+c_1+2
+   380 00:0170: D4 09        	pei	<L16+c_1
+   381 00:0172: 22 xx xx xx  	jsl	~~rb
+   382 00:0176: E2 20        	sep	#$20
+   383                        	longa	off
+   384 00:0178: 85 05        	sta	<R1
+   385 00:017A: C2 20        	rep	#$20
+   386                        	longa	on
+   387 00:017C: A5 05        	lda	<R1
+   388 00:017E: 29 FF 00     	and	#$ff
+   389 00:0181: 48           	pha
+   390 00:0182: F4 xx xx     	pea	#^L14+3
+  Sun Jan  9 2022 20:46                                                Page 8
+
+
+   391 00:0185: F4 xx xx     	pea	#<L14+3
+   392 00:0188: F4 08 00     	pea	#8
+   393 00:018B: 22 xx xx xx  	jsl	~~printf
+   394                        ;      } while (rb(c, addr) != '$');
+   395 00:018F: D4 0E        	pei	<L16+addr_3
+   396 00:0191: D4 0B        	pei	<L16+c_1+2
+   397 00:0193: D4 09        	pei	<L16+c_1
+   398 00:0195: 22 xx xx xx  	jsl	~~rb
+   399 00:0199: E2 20        	sep	#$20
+   400                        	longa	off
+   401 00:019B: C9 24        	cmp	#<$24
+   402 00:019D: C2 20        	rep	#$20
+   403                        	longa	on
+   404 00:019F: D0 C5        	bne	L10014
+   405 00:01A1: 82 51 FF     	brl	L10007
+   406                        ;    }
+   407                        ;  }
+   408                        ;  fflush(stdout);
+   409             0000000F   L15	equ	15
+   410             00000009   L16	equ	9
+   411                        	ends
+   412                        	efunc
+   413                        	data
+   414                        L14:
+   415 00:0011: 25 63 00 25  	db	$25,$63,$00,$25,$63,$00
+       00:0015: 63 00 
+   416 00:0017:              	ends
+   417                        ;
+   418                        ;int load_file(const char* filename, uint16_t addr
+                    ) {
+   419                        	code
+   420                        	xdef	~~load_file
+   421                        	func
+   422                        ~~load_file:
+   423                        	longa	on
+   424                        	longi	on
+   425 00:01A4: 3B           	tsc
+   426 00:01A5: 38           	sec
+   427 00:01A6: E9 10 00     	sbc	#L24
+   428 00:01A9: 1B           	tcs
+   429 00:01AA: 0B           	phd
+   430 00:01AB: 5B           	tcd
+   431             00000004   filename_0	set	4
+   432             00000008   addr_0	set	8
+   433                        ;  size_t result;
+   434                        ;  FILE* f;
+   435                        ;  size_t file_size;
+   436                        ;  
+   437                        ;  f = fopen(filename, "rb");
+   438             00000000   result_1	set	0
+   439             00000002   f_1	set	2
+   440             00000006   file_size_1	set	6
+   441 00:01AC: F4 xx xx     	pea	#^L23
+   442 00:01AF: F4 xx xx     	pea	#<L23
+   443 00:01B2: D4 16        	pei	<L24+filename_0+2
+   444 00:01B4: D4 14        	pei	<L24+filename_0
+   445 00:01B6: 22 xx xx xx  	jsl	~~fopen
+   446 00:01BA: 85 0B        	sta	<L25+f_1
+  Sun Jan  9 2022 20:46                                                Page 9
+
+
+   447 00:01BC: 86 0D        	stx	<L25+f_1+2
+   448                        ;  if (f == NULL) {
+   449 00:01BE: 05 0D        	ora	<L25+f_1+2
+   450 00:01C0: D0 31        	bne	L10015
+   451                        ;    fprintf(stderr, "error: can't open file '%s'.
+                    \n", filename);
+   452 00:01C2: D4 16        	pei	<L24+filename_0+2
+   453 00:01C4: D4 14        	pei	<L24+filename_0
+   454 00:01C6: F4 xx xx     	pea	#^L23+3
+   455 00:01C9: F4 xx xx     	pea	#<L23+3
+   456 00:01CC: A9 xx xx     	lda	#<~~_iob+40
+   457 00:01CF: 85 01        	sta	<R0
+   458                        	xref	_BEG_DATA
+   459 00:01D1: A9 xx xx     	lda	#_BEG_DATA>>16
+   460 00:01D4: 48           	pha
+   461 00:01D5: D4 01        	pei	<R0
+   462 00:01D7: F4 0E 00     	pea	#14
+   463 00:01DA: 22 xx xx xx  	jsl	~~fprintf
+   464                        ;    return 1;
+   465 00:01DE: A9 01 00     	lda	#$1
+   466                        L27:
+   467 00:01E1: A8           	tay
+   468 00:01E2: A5 12        	lda	<L24+2
+   469 00:01E4: 85 18        	sta	<L24+2+6
+   470 00:01E6: A5 11        	lda	<L24+1
+   471 00:01E8: 85 17        	sta	<L24+1+6
+   472 00:01EA: 2B           	pld
+   473 00:01EB: 3B           	tsc
+   474 00:01EC: 18           	clc
+   475 00:01ED: 69 16 00     	adc	#L24+6
+   476 00:01F0: 1B           	tcs
+   477 00:01F1: 98           	tya
+   478 00:01F2: 6B           	rtl
+   479                        ;  }
+   480                        ;
+   481                        ;  // file size check:
+   482                        ;  /*
+   483                        ;  fseek(f, 0, SEEK_END);
+   484                        ;  file_size = ftell(f);
+   485                        ;  rewind(f);
+   486                        ;
+   487                        ;  if (file_size + addr >= MEMORY_SIZE) {
+   488                        ;    fprintf(stderr, "error: file %s can't fit in 
+                    memory.\n", filename);
+   489                        ;    return 1;
+   490                        ;  }
+   491                        ;*/
+   492                        ;
+   493                        ;  // copying the bytes in memory:
+   494                        ;  result = fread(&memory[addr], sizeof(uint8_t), 
+                    0xffff/*file_size*/, f);
+   495                        L10015:
+   496 00:01F3: D4 0D        	pei	<L25+f_1+2
+   497 00:01F5: D4 0B        	pei	<L25+f_1
+   498 00:01F7: F4 FF FF     	pea	#<$ffff
+   499 00:01FA: F4 01 00     	pea	#<$1
+   500 00:01FD: A5 18        	lda	<L24+addr_0
+   501 00:01FF: 85 01        	sta	<R0
+  Sun Jan  9 2022 20:46                                                Page 10
+
+
+   502 00:0201: 64 03        	stz	<R0+2
+   503 00:0203: AD xx xx     	lda	|~~memory
+   504 00:0206: 18           	clc
+   505 00:0207: 65 01        	adc	<R0
+   506 00:0209: 85 05        	sta	<R1
+   507 00:020B: AD xx xx     	lda	|~~memory+2
+   508 00:020E: 65 03        	adc	<R0+2
+   509 00:0210: 48           	pha
+   510 00:0211: D4 05        	pei	<R1
+   511 00:0213: 22 xx xx xx  	jsl	~~fread
+   512 00:0217: 85 09        	sta	<L25+result_1
+   513                        ;  /*
+   514                        ;  if (result != file_size) {
+   515                        ;    fprintf(stderr, "error: while reading file '%
+                    s'\n", filename);
+   516                        ;    return 1;
+   517                        ;  }
+   518                        ;*/
+   519                        ;  printf("loaded %d bytes at %p\n", result, &memo
+                    ry[addr]); 
+   520 00:0219: A5 18        	lda	<L24+addr_0
+   521 00:021B: 85 01        	sta	<R0
+   522 00:021D: 64 03        	stz	<R0+2
+   523 00:021F: AD xx xx     	lda	|~~memory
+   524 00:0222: 18           	clc
+   525 00:0223: 65 01        	adc	<R0
+   526 00:0225: 85 05        	sta	<R1
+   527 00:0227: AD xx xx     	lda	|~~memory+2
+   528 00:022A: 65 03        	adc	<R0+2
+   529 00:022C: 48           	pha
+   530 00:022D: D4 05        	pei	<R1
+   531 00:022F: D4 09        	pei	<L25+result_1
+   532 00:0231: F4 xx xx     	pea	#^L23+33
+   533 00:0234: F4 xx xx     	pea	#<L23+33
+   534 00:0237: F4 0C 00     	pea	#12
+   535 00:023A: 22 xx xx xx  	jsl	~~printf
+   536                        ;  fclose(f);
+   537 00:023E: D4 0D        	pei	<L25+f_1+2
+   538 00:0240: D4 0B        	pei	<L25+f_1
+   539 00:0242: 22 xx xx xx  	jsl	~~fclose
+   540                        ;  return 0;
+   541 00:0246: A9 00 00     	lda	#$0
+   542 00:0249: 80 96        	bra	L27
+   543                        ;}
+   544             00000010   L24	equ	16
+   545             00000009   L25	equ	9
+   546                        	ends
+   547                        	efunc
+   548                        	data
+   549                        L23:
+   550 00:0017: 72 62 00 65  	db	$72,$62,$00,$65,$72,$72,$6F,$72,$3A,$20,
+                    $63,$61,$6E,$27,$74
+       00:001B: 72 72 6F 72 
+       00:001F: 3A 20 63 61 
+       00:0023: 6E 27 74 
+   551 00:0026: 20 6F 70 65  	db	$20,$6F,$70,$65,$6E,$20,$66,$69,$6C,$65,
+                    $20,$27,$25,$73,$27
+       00:002A: 6E 20 66 69 
+  Sun Jan  9 2022 20:46                                                Page 11
+
+
+       00:002E: 6C 65 20 27 
+       00:0032: 25 73 27 
+   552 00:0035: 2E 0A 00 6C  	db	$2E,$0A,$00,$6C,$6F,$61,$64,$65,$64,$20,
+                    $25,$64,$20,$62,$79
+       00:0039: 6F 61 64 65 
+       00:003D: 64 20 25 64 
+       00:0041: 20 62 79 
+   553 00:0044: 74 65 73 20  	db	$74,$65,$73,$20,$61,$74,$20,$25,$70,$0A,
+                    $00
+       00:0048: 61 74 20 25 
+       00:004C: 70 0A 00 
+   554 00:004F:              	ends
+   555                        ;
+   556                        ;void run_test(i8080* const c, const char* filenam
+                    e /*, unsigned long cyc_expected */) {
+   557                        	code
+   558                        	xdef	~~run_test
+   559                        	func
+   560                        ~~run_test:
+   561                        	longa	on
+   562                        	longi	on
+   563 00:024B: 3B           	tsc
+   564 00:024C: 38           	sec
+   565 00:024D: E9 08 00     	sbc	#L29
+   566 00:0250: 1B           	tcs
+   567 00:0251: 0B           	phd
+   568 00:0252: 5B           	tcd
+   569             00000004   c_0	set	4
+   570             00000008   filename_0	set	8
+   571                        ;	  
+   572                        ;  long nb_instructions;		
+   573                        ;  long diff;
+   574                        ;  
+   575                        ;  //printf("r_t 1\n");
+   576                        ;  
+   577                        ;  i8080_init(c);
+   578             00000000   nb_instructions_1	set	0
+   579             00000004   diff_1	set	4
+   580 00:0253: D4 0E        	pei	<L29+c_0+2
+   581 00:0255: D4 0C        	pei	<L29+c_0
+   582 00:0257: 22 xx xx xx  	jsl	~~i8080_init
+   583                        ;  c->userdata = c;
+   584 00:025B: A5 0C        	lda	<L29+c_0
+   585 00:025D: A0 10 00     	ldy	#$10
+   586 00:0260: 97 0C        	sta	[<L29+c_0],Y
+   587 00:0262: A5 0E        	lda	<L29+c_0+2
+   588 00:0264: C8           	iny
+   589 00:0265: C8           	iny
+   590 00:0266: 97 0C        	sta	[<L29+c_0],Y
+   591                        ;  c->read_byte = rb;
+   592 00:0268: A9 xx xx     	lda	#<~~rb
+   593 00:026B: 87 0C        	sta	[<L29+c_0]
+   594 00:026D: A9 xx xx     	lda	#^~~rb
+   595 00:0270: A0 02 00     	ldy	#$2
+   596 00:0273: 97 0C        	sta	[<L29+c_0],Y
+   597                        ;  c->write_byte = wb;
+   598 00:0275: A9 xx xx     	lda	#<~~wb
+   599 00:0278: C8           	iny
+  Sun Jan  9 2022 20:46                                                Page 12
+
+
+   600 00:0279: C8           	iny
+   601 00:027A: 97 0C        	sta	[<L29+c_0],Y
+   602 00:027C: A9 xx xx     	lda	#^~~wb
+   603 00:027F: C8           	iny
+   604 00:0280: C8           	iny
+   605 00:0281: 97 0C        	sta	[<L29+c_0],Y
+   606                        ;  c->port_in = port_in;
+   607 00:0283: A9 xx xx     	lda	#<~~port_in
+   608 00:0286: C8           	iny
+   609 00:0287: C8           	iny
+   610 00:0288: 97 0C        	sta	[<L29+c_0],Y
+   611 00:028A: A9 xx xx     	lda	#^~~port_in
+   612 00:028D: C8           	iny
+   613 00:028E: C8           	iny
+   614 00:028F: 97 0C        	sta	[<L29+c_0],Y
+   615                        ;  c->port_out = cpm_port_out;
+   616 00:0291: A9 xx xx     	lda	#<~~cpm_port_out
+   617 00:0294: C8           	iny
+   618 00:0295: C8           	iny
+   619 00:0296: 97 0C        	sta	[<L29+c_0],Y
+   620 00:0298: A9 xx xx     	lda	#^~~cpm_port_out
+   621 00:029B: C8           	iny
+   622 00:029C: C8           	iny
+   623 00:029D: 97 0C        	sta	[<L29+c_0],Y
+   624                        ;  memset(memory, 0, MEMORY_SIZE);
+   625 00:029F: F4 FF FF     	pea	#<$ffff
+   626 00:02A2: F4 00 00     	pea	#<$0
+   627 00:02A5: AD xx xx     	lda	|~~memory+2
+   628 00:02A8: 48           	pha
+   629 00:02A9: AD xx xx     	lda	|~~memory
+   630 00:02AC: 48           	pha
+   631 00:02AD: 22 xx xx xx  	jsl	~~memset
+   632                        ;
+   633                        ;  //printf("r_t 2\n");
+   634                        ;  //if (load_file(filename, 0x100) != 0) {
+   635                        ;  if (load_file(filename, 0x000) != 0) {
+   636 00:02B1: F4 00 00     	pea	#<$0
+   637 00:02B4: D4 12        	pei	<L29+filename_0+2
+   638 00:02B6: D4 10        	pei	<L29+filename_0
+   639 00:02B8: 22 xx xx xx  	jsl	~~load_file
+   640 00:02BC: AA           	tax
+   641 00:02BD: F0 10        	beq	L10016
+   642                        ;    return;
+   643                        L32:
+   644 00:02BF: A5 0A        	lda	<L29+2
+   645 00:02C1: 85 12        	sta	<L29+2+8
+   646 00:02C3: A5 09        	lda	<L29+1
+   647 00:02C5: 85 11        	sta	<L29+1+8
+   648 00:02C7: 2B           	pld
+   649 00:02C8: 3B           	tsc
+   650 00:02C9: 18           	clc
+   651 00:02CA: 69 10 00     	adc	#L29+8
+   652 00:02CD: 1B           	tcs
+   653 00:02CE: 6B           	rtl
+   654                        ;  }
+   655                        ;  printf("*** TEST: %s\n", filename);
+   656                        L10016:
+   657 00:02CF: D4 12        	pei	<L29+filename_0+2
+  Sun Jan  9 2022 20:46                                                Page 13
+
+
+   658 00:02D1: D4 10        	pei	<L29+filename_0
+   659 00:02D3: F4 xx xx     	pea	#^L28
+   660 00:02D6: F4 xx xx     	pea	#<L28
+   661 00:02D9: F4 0A 00     	pea	#10
+   662 00:02DC: 22 xx xx xx  	jsl	~~printf
+   663                        ;
+   664                        ;  c->pc = 0x000;
+   665 00:02E0: A9 00 00     	lda	#$0
+   666 00:02E3: A0 18 00     	ldy	#$18
+   667 00:02E6: 97 0C        	sta	[<L29+c_0],Y
+   668                        ;
+   669                        ;  // inject "out 0,a" at 0x0000 (signal to stop t
+                    he test)
+   670                        ;  //memory[0x0000] = 0xD3;
+   671                        ;  //memory[0x0001] = 0x00;
+   672                        ;
+   673                        ;  // inject "out 1,a" at 0x0005 (signal to output
+                     some characters)
+   674                        ;  //memory[0x0005] = 0xD3;
+   675                        ;  //memory[0x0006] = 0x01;
+   676                        ;  //memory[0x0007] = 0xC9;
+   677                        ;
+   678                        ;  nb_instructions = 0;
+   679 00:02E8: 64 01        	stz	<L30+nb_instructions_1
+   680 00:02EA: 64 03        	stz	<L30+nb_instructions_1+2
+   681                        ;
+   682                        ;  test_finished = 0;
+   683 00:02EC: 9C xx xx     	stz	|~~test_finished
+   684                        ;  while (!test_finished) {
+   685 00:02EF: 80 19        	bra	L10017
+   686                        L20001:
+   687                        ;    nb_instructions += 1;
+   688 00:02F1: E6 01        	inc	<L30+nb_instructions_1
+   689 00:02F3: D0 02        	bne	L34
+   690 00:02F5: E6 03        	inc	<L30+nb_instructions_1+2
+   691                        L34:
+   692                        ;
+   693                        ;    // uncomment following line to have a debug o
+                    utput of machine state
+   694                        ;    // warning: will output multiple GB of data f
+                    or the whole test suite
+   695                        ;    i8080_debug_output(c, true);
+   696 00:02F7: F4 01 00     	pea	#<$1
+   697 00:02FA: D4 0E        	pei	<L29+c_0+2
+   698 00:02FC: D4 0C        	pei	<L29+c_0
+   699 00:02FE: 22 xx xx xx  	jsl	~~i8080_debug_output
+   700                        ;
+   701                        ;    i8080_step(c);
+   702 00:0302: D4 0E        	pei	<L29+c_0+2
+   703 00:0304: D4 0C        	pei	<L29+c_0
+   704 00:0306: 22 xx xx xx  	jsl	~~i8080_step
+   705                        ;  }
+   706                        L10017:
+   707 00:030A: AD xx xx     	lda	|~~test_finished
+   708 00:030D: F0 E2        	beq	L20001
+   709                        ;
+   710                        ;/*
+   711                        ;  long long diff = cyc_expected - c->cyc;
+  Sun Jan  9 2022 20:46                                                Page 14
+
+
+   712                        ;  diff = cyc_expected - c->cyc;
+   713                        ;  printf("\n*** %lu instructions executed on %lu 
+                    cycles"
+   714                        ;         " (expected=%lu, diff=%lld)\n\n",
+   715                        ;      nb_instructions, c->cyc, cyc_expected, diff
+                    );
+   716                        ;*/
+   717                        ;  printf("*** Test finished ***\n");
+   718 00:030F: F4 xx xx     	pea	#^L28+14
+   719 00:0312: F4 xx xx     	pea	#<L28+14
+   720 00:0315: F4 06 00     	pea	#6
+   721 00:0318: 22 xx xx xx  	jsl	~~printf
+   722                        ;}
+   723 00:031C: 80 A1        	bra	L32
+   724             00000008   L29	equ	8
+   725             00000001   L30	equ	1
+   726                        	ends
+   727                        	efunc
+   728                        	data
+   729                        L28:
+   730 00:004F: 2A 2A 2A 20  	db	$2A,$2A,$2A,$20,$54,$45,$53,$54,$3A,$20,
+                    $25,$73,$0A,$00,$2A
+       00:0053: 54 45 53 54 
+       00:0057: 3A 20 25 73 
+       00:005B: 0A 00 2A 
+   731 00:005E: 2A 2A 20 54  	db	$2A,$2A,$20,$54,$65,$73,$74,$20,$66,$69,
+                    $6E,$69,$73,$68,$65
+       00:0062: 65 73 74 20 
+       00:0066: 66 69 6E 69 
+       00:006A: 73 68 65 
+   732 00:006D: 64 20 2A 2A  	db	$64,$20,$2A,$2A,$2A,$0A,$00
+       00:0071: 2A 0A 00 
+   733 00:0074:              	ends
+   734                        ;
+   735                        ;int main(int argc, char**argv) {
+   736                        	code
+   737                        	xdef	~~main
+   738                        	func
+   739                        ~~main:
+   740                        	longa	on
+   741                        	longi	on
+   742 00:031E: 3B           	tsc
+   743 00:031F: 38           	sec
+   744 00:0320: E9 2B 00     	sbc	#L36
+   745 00:0323: 1B           	tcs
+   746 00:0324: 0B           	phd
+   747 00:0325: 5B           	tcd
+   748             00000004   argc_0	set	4
+   749             00000006   argv_0	set	6
+   750                        ;  i8080 cpu;
+   751                        ;  
+   752                        ;  fd2iocb[0] = 0;
+   753             00000000   cpu_1	set	0
+   754 00:0326: E2 20        	sep	#$20
+   755                        	longa	off
+   756 00:0328: 9C xx xx     	stz	|~~fd2iocb
+   757                        ;  fd2iocb[1] = 0;
+   758 00:032B: 9C xx xx     	stz	|~~fd2iocb+1
+  Sun Jan  9 2022 20:46                                                Page 15
+
+
+   759                        ;  fd2iocb[2] = 0;
+   760 00:032E: 9C xx xx     	stz	|~~fd2iocb+2
+   761                        ;  fd2iocb[3] = 0xff;
+   762 00:0331: A9 FF        	lda	#$ff
+   763 00:0333: 8D xx xx     	sta	|~~fd2iocb+3
+   764                        ;  fd2iocb[4] = 0xff;
+   765 00:0336: 8D xx xx     	sta	|~~fd2iocb+4
+   766                        ;  fd2iocb[5] = 0xff;
+   767 00:0339: 8D xx xx     	sta	|~~fd2iocb+5
+   768                        ;  fd2iocb[6] = 0xff;
+   769 00:033C: 8D xx xx     	sta	|~~fd2iocb+6
+   770                        ;  fd2iocb[7] = 0xff; 
+   771 00:033F: 8D xx xx     	sta	|~~fd2iocb+7
+   772 00:0342: C2 20        	rep	#$20
+   773                        	longa	on
+   774                        ;  setvbuf(stdin, NULL, _IONBF, 1);
+   775 00:0344: F4 01 00     	pea	#<$1
+   776 00:0347: F4 80 00     	pea	#<$80
+   777 00:034A: F4 00 00     	pea	#^$0
+   778 00:034D: F4 00 00     	pea	#<$0
+   779 00:0350: A9 xx xx     	lda	#<~~_iob
+   780 00:0353: 85 01        	sta	<R0
+   781                        	xref	_BEG_DATA
+   782 00:0355: A9 xx xx     	lda	#_BEG_DATA>>16
+   783 00:0358: 48           	pha
+   784 00:0359: D4 01        	pei	<R0
+   785 00:035B: 22 xx xx xx  	jsl	~~setvbuf
+   786                        ;
+   787                        ;  memory = malloc(MEMORY_SIZE);
+   788 00:035F: F4 FF FF     	pea	#<$ffff
+   789 00:0362: 22 xx xx xx  	jsl	~~malloc
+   790 00:0366: 8D xx xx     	sta	|~~memory
+   791 00:0369: 8E xx xx     	stx	|~~memory+2
+   792                        ;  if (memory == NULL) {
+   793 00:036C: 0D xx xx     	ora	|~~memory+2
+   794 00:036F: D0 15        	bne	L10019
+   795                        ;    return 1;
+   796 00:0371: A9 01 00     	lda	#$1
+   797                        L39:
+   798 00:0374: A8           	tay
+   799 00:0375: A5 2D        	lda	<L36+2
+   800 00:0377: 85 33        	sta	<L36+2+6
+   801 00:0379: A5 2C        	lda	<L36+1
+   802 00:037B: 85 32        	sta	<L36+1+6
+   803 00:037D: 2B           	pld
+   804 00:037E: 3B           	tsc
+   805 00:037F: 18           	clc
+   806 00:0380: 69 31 00     	adc	#L36+6
+   807 00:0383: 1B           	tcs
+   808 00:0384: 98           	tya
+   809 00:0385: 6B           	rtl
+   810                        ;  }
+   811                        ;
+   812                        ;  
+   813                        ;  run_test(&cpu, "D:CPM22.SYS");
+   814                        L10019:
+   815 00:0386: F4 xx xx     	pea	#^L35
+   816 00:0389: F4 xx xx     	pea	#<L35
+  Sun Jan  9 2022 20:46                                                Page 16
+
+
+   817 00:038C: F4 00 00     	pea	#0
+   818 00:038F: 18           	clc
+   819 00:0390: 7B           	tdc
+   820 00:0391: 69 05 00     	adc	#<L37+cpu_1
+   821 00:0394: 48           	pha
+   822 00:0395: 22 xx xx xx  	jsl	~~run_test
+   823                        ;  //run_test(&cpu, "D:CPUTEST.COM", 4924LU);
+   824                        ;  /*
+   825                        ;  run_test(&cpu, "cpu_tests/CPUTEST.COM", 2556533
+                    83LU);
+   826                        ;  run_test(&cpu, "cpu_tests/8080PRE.COM", 7817LU)
+                    ;
+   827                        ;  run_test(&cpu, "cpu_tests/8080EXM.COM", 2380338
+                    1171LU);
+   828                        ;  */
+   829                        ;  free(memory);
+   830 00:0399: AD xx xx     	lda	|~~memory+2
+   831 00:039C: 48           	pha
+   832 00:039D: AD xx xx     	lda	|~~memory
+   833 00:03A0: 48           	pha
+   834 00:03A1: 22 xx xx xx  	jsl	~~free
+   835                        ;
+   836                        ;  return 0;
+   837 00:03A5: A9 00 00     	lda	#$0
+   838 00:03A8: 80 CA        	bra	L39
+   839                        ;}
+   840             0000002B   L36	equ	43
+   841             00000005   L37	equ	5
+   842                        	ends
+   843                        	efunc
+   844                        	data
+   845                        L35:
+   846 00:0074: 44 3A 43 50  	db	$44,$3A,$43,$50,$4D,$32,$32,$2E,$53,$59,
+                    $53,$00
+       00:0078: 4D 32 32 2E 
+       00:007C: 53 59 53 00 
+   847 00:0080:              	ends
+   848                        ;
+   849                        	xref	~~memset
+   850                        	xref	~~i8080_debug_output
+   851                        	xref	~~i8080_step
+   852                        	xref	~~i8080_init
+   853                        	xref	~~setvbuf
+   854                        	xref	~~printf
+   855                        	xref	~~fread
+   856                        	xref	~~fprintf
+   857                        	xref	~~fopen
+   858                        	xref	~~fflush
+   859                        	xref	~~fclose
+   860                        	xref	~~malloc
+   861                        	xref	~~free
+   862                        	xref	~~_iob
+   863                        	xref	~~fd2iocb
+
+
+      Lines assembled: 863
+      Errors: 0

@@ -1,0 +1,810 @@
+  Wed Feb  9 2022  8:09                                                                                                    Page 1
+
+
+                                               ***************************************
+                                               **      WDC 65C816 Macro Assembler   **
+                                               **                                   **
+                                               **     Version 3.49.1- Feb  6 2006    **
+                                               ***************************************
+
+     1                        	module	inflate
+     2                        	
+     3                        	xdef	~~inflate
+     4                        	func
+     5                        	.include homebrewWDC.inc
+     6                        
+     7                        	PAGE0
+     8                        
+     9                        ; Local variables
+    10                        
+    11             00000001   local_vars			equ	1
+    12                        
+    13             00000001   bit_buffer	                equ	local_vars+0	; 2 byte
+    14             00000003   last_block			equ	local_vars+2	; 2 byte
+    15             00000005   tree_ptr			equ	local_vars+4	; 2 byte
+    16             00000007   base				equ	local_vars+6	; 2 byte
+    17             00000009   offset				equ	local_vars+8	; 2 byte
+    18             0000000B   last				equ	local_vars+10	; 2 byte
+    19             0000000D   length_ptr			equ	local_vars+12	; 2 byte
+    20             0000000F   sourcePointer			equ	local_vars+14	; 4 byte
+    21             00000013   rc				equ	local_vars+18	; 2 bytes
+    22                        
+    23             00000014   LOCAL_BYTES			equ	20
+    24                        
+    25                        
+    26             00000018   LINKAGE				equ	LOCAL_BYTES+4;
+    27                        
+    28                        ; Pointer to compressed data
+    29             00000018   inputPointer                    equ	LINKAGE    ; 4 bytes
+    30                        ; Pointer to uncompressed data
+    31             0000001C   outputPointer                   equ	LINKAGE+4  ; 4 bytes
+    32                        ; Pointer to (long) outputLength
+    33             00000020   outputLength			equ	LINKAGE+8  ; 4 bytes
+    34                        ;
+    35             0000000C   LINKAGE_BYTES			equ	12
+    36                        
+    37             0000000F   MAXBITS				equ	15
+    38                        
+    39                        		CODE
+    40                        
+    41                        
+    42                        ; Uncompress DEFLATE stream starting from the address stored in inputPointer
+    43                        ; to the memory starting from the address stored in outputPointer
+    44                        ;	org	inflate
+    45                        
+    46                        ~~inflate:
+    47                        		xref	~~printhex
+    48                        		xref	~~printchar
+    49                        		
+    50                        		longa	on
+    51                        		longi	on
+    52                        		
+  Wed Feb  9 2022  8:09                                                                                                    Page 2
+
+
+    53                        ;		sei
+    54                        	
+    55 00:0000: 3B           		tsc			;stack-pointer to accu
+    56 00:0001: 38           		sec			;-9
+    57 00:0002: E9 14 00     		sbc	#LOCAL_BYTES
+    58 00:0005: 1B           		tcs			;accu to sp
+    59 00:0006: 0B           		phd			;save direct
+    60 00:0007: 5B           		tcd			;accu to direct
+    61                        					;stack: 1 + 9(local_vars) + 3(jsl) +8(in/out-pointer)
+    62                        		
+    63                        ;		ldx	#MAXBITS*2
+    64                        ;inflate_3
+    65                        ;		stz	bitcounts,x
+    66                        ;		dex
+    67                        ;		dex
+    68                        ;		bpl	inflate_3
+    69                        		
+    70 00:0008: A0 02 00     		ldy	#2
+    71 00:000B: 64 13        		stz	rc		;clear rc
+    72 00:000D: 64 03        		stz	last_block
+    73                        
+    74 00:000F: A5 20        		lda	outputLength	;outputLength == NULL?
+    75 00:0011: 05 20        		ora	outputLength
+    76 00:0013: F0 08        		beq	inflate_1	;yes, skip length computing
+    77                        		
+    78 00:0015: A5 1C        		lda	outputPointer	;otherwise copy original pointer
+    79 00:0017: 87 20        		sta	[outputLength]
+    80 00:0019: A5 1E        		lda	outputPointer+2
+    81 00:001B: 97 20        		sta	[outputLength],y
+    82                        		
+    83                        inflate_1
+    84 00:001D: 88           		dey			;y = 1
+    85                        ;		lda	#1
+    86 00:001E: 84 01        		sty	bit_buffer	;signal empty buffer
+    87                        block_loop
+    88 00:0020: A9 06 00     		lda	#3*2
+    89 00:0023: 20 xx xx     		jsr	getBitX
+    90 00:0026: 4A           		lsr
+    91 00:0027: 26 03        		rol	last_block	;if 1, this is last block
+    92 00:0029: C9 02 00     		cmp	#2
+    93 00:002C: F0 04        		beq	call_dynamic
+    94 00:002E: C6 13        		dec	rc		;rc = -1
+    95 00:0030: 80 07        		bra	exit
+    96                        
+    97                        call_dynamic	
+    98 00:0032: 20 xx xx     		jsr	dynamic_codes
+    99                        		
+   100 00:0035: A5 03        		lda	last_block
+   101 00:0037: F0 E7        		beq	block_loop
+   102                        		
+   103                        exit:		
+   104                        ;		ldx	#MAXBITS*2
+   105                        ;inflate_4
+   106                        ;		txa
+   107                        ;		lsr
+   108                        ;		jsr	pword
+   109                        ;		lda	bitcounts,x
+   110                        ;		jsr	pword
+  Wed Feb  9 2022  8:09                                                                                                    Page 3
+
+
+   111                        ;		jsr	newline
+   112                        ;		dex
+   113                        ;		dex
+   114                        ;		bpl	inflate_4
+   115                        
+   116 00:0039: A5 20        		lda	outputLength
+   117 00:003B: 05 20        		ora	outputLength
+   118 00:003D: F0 10        		beq	inflate_2
+   119                        		
+   120 00:003F: A0 02 00     		ldy	#2
+   121 00:0042: 38           		sec
+   122 00:0043: A5 1C        		lda	outputPointer
+   123 00:0045: E7 20        		sbc	[outputLength]
+   124 00:0047: 87 20        		sta	[outputLength]
+   125 00:0049: A5 1E        		lda	outputPointer+2
+   126 00:004B: F7 20        		sbc	[outputLength],y
+   127 00:004D: 97 20        		sta	[outputLength],y
+   128                        
+   129                        inflate_2
+   130 00:004F: A4 13        		ldy	rc
+   131                        		
+   132 00:0051: A5 14        		lda	<LOCAL_BYTES
+   133 00:0053: 85 20        		sta	<LOCAL_BYTES+LINKAGE_BYTES
+   134 00:0055: A5 16        		lda	<LOCAL_BYTES+2
+   135 00:0057: 85 22        		sta	<LOCAL_BYTES+2+LINKAGE_BYTES
+   136                        		
+   137 00:0059: 2B           		pld
+   138 00:005A: 3B           		tsc
+   139 00:005B: 18           		clc
+   140 00:005C: 69 20 00     		adc	#LOCAL_BYTES+LINKAGE_BYTES
+   141 00:005F: 1B           		tcs
+   142 00:0060: 98           		tya
+   143 00:0061: 6B           		rtl
+   144                        
+   145                        ;/*
+   146                        ; * Process a stored block.
+   147                        ; *
+   148                        ; * Format notes:
+   149                        ; *
+   150                        ; * - After the two-bit stored block type (00), the stored block length and
+   151                        ; *   stored bytes are byte-aligned for fast copying.  Therefore any leftover
+   152                        ; *   bits in the byte that has the last bit of the type, as many as seven, are
+   153                        ; *   discarded.  The value of the discarded bits are not defined and should not
+   154                        ; *   be checked against any expectation.
+   155                        ; *
+   156                        ; * - The second inverted copy of the stored block length does not have to be
+   157                        ; *   checked, but it's probably a good idea to do so anyway.
+   158                        ; *
+   159                        ; * - A stored block can have zero length.  This is sometimes used to byte-align
+   160                        ; *   subsets of the compressed data for random access or partial recovery.
+   161                        ; */
+   162                        ;stored
+   163                        ;		lda	#'S'
+   164                        ;		jsr	pout		
+   165                        ;		rts
+   166                        		
+   167                        ;fixed_codes
+   168                        ;		lda	#'F'
+  Wed Feb  9 2022  8:09                                                                                                    Page 4
+
+
+   169                        ;		jsr	pout
+   170                        ;		rts
+   171                        
+   172                        ;	nlen = bits(s, 5) + 257;
+   173                        ;	ndist = bits(s, 5) + 1;
+   174                        ;	ncode = bits(s, 4) + 4;
+   175                        ;
+   176                        ;
+   177                        dynamic_codes
+   178 00:0062: A0 06 00     		ldy	#6
+   179                        dynamic_codes_header
+   180 00:0065: B9 xx xx     		lda	header_bits-2,y
+   181 00:0068: 20 xx xx     		jsr	getBitX
+   182 00:006B: 79 xx xx     		adc	header_bases-2,y	;getBitX always C=0
+   183 00:006E: 0A           		asl				;*2
+   184 00:006F: 99 xx xx     		sta	ncode-2,y 
+   185 00:0072: 88           		dey
+   186 00:0073: 88           		dey
+   187 00:0074: D0 EF        		bne	dynamic_codes_header
+   188                        
+   189                        ;/* read code length code lengths (really), missing lengths are zero */
+   190                        ;		ldy	#0
+   191                        read_temp_length
+   192 00:0076: A9 06 00     		lda	#3*2
+   193 00:0079: 20 xx xx     		jsr	getBitX
+   194                        dynamic_codes_1
+   195 00:007C: BE xx xx     		ldx	order,y
+   196 00:007F: 9D xx xx     		sta	symbol_length,x
+   197 00:0082: C8           		iny
+   198 00:0083: C8           		iny
+   199 00:0084: CC xx xx     		cpy	ncode
+   200 00:0087: 90 ED        		bcc	read_temp_length		
+   201 00:0089: C0 26 00     		cpy	#2*19
+   202 00:008C: B0 05        		bcs	dynamic_codes_0
+   203 00:008E: A9 00 00     		lda	#0
+   204 00:0091: 80 E9        		bra	dynamic_codes_1
+   205                        dynamic_codes_0
+   206                        		;jsr	plength
+   207                        		
+   208 00:0093: A9 xx xx     		lda	#symbol_length
+   209 00:0096: 85 0D        		sta	length_ptr
+   210 00:0098: A9 xx xx     		lda	#symbol_counts
+   211 00:009B: 85 05        		sta	tree_ptr
+   212 00:009D: A9 26 00     		lda	#19*2
+   213 00:00A0: 8D xx xx     		sta	ncode
+   214 00:00A3: 20 xx xx     		jsr	construct		;construct huffman-tree
+   215                        
+   216 00:00A6: A9 xx xx     		lda	#symbol_counts
+   217 00:00A9: 85 05        		sta	tree_ptr
+   218 00:00AB: 18           		clc				;decode length
+   219 00:00AC: AD xx xx     		lda	nlen
+   220 00:00AF: 6D xx xx     		adc	ndist
+   221 00:00B2: 8D xx xx     		sta	ncode
+   222 00:00B5: A0 00 00     		ldy	#0
+   223                        decode_tree_lengths
+   224 00:00B8: 20 xx xx     		jsr	decode
+   225                        		;jsr	phex
+   226 00:00BB: C9 10 00     		cmp	#16
+  Wed Feb  9 2022  8:09                                                                                                    Page 5
+
+
+   227 00:00BE: B0 0E        		bcs	decode_tree_control
+   228                        ;	length in 0..15	=> symbol
+   229 00:00C0: 85 0B        		sta	last			;last length!
+   230 00:00C2: 99 xx xx     		sta	symbol_length,y
+   231                        
+   232 00:00C5: C8           		iny
+   233 00:00C6: C8           		iny
+   234 00:00C7: CC xx xx     		cpy	ncode
+   235 00:00CA: 90 EC        		bcc	decode_tree_lengths
+   236 00:00CC: 80 24        		bra	decode_tree_control_3
+   237                        ;	16: repeat last length 3..6 times => getBits(2) + 3
+   238                        ;	17: repeat zero 3..10 times	  => getBits(3) + 3
+   239                        ;	18: repeat zero 11..138 times	  => getBits(7) + 11
+   240                        decode_tree_control
+   241 00:00CE: E9 10 00     		sbc	#16			;carry=1
+   242 00:00D1: F0 02        		beq	decode_tree_control_1
+   243 00:00D3: 64 0B        		stz	last			;last length = 0
+   244                        decode_tree_control_1
+   245 00:00D5: 0A           		asl
+   246 00:00D6: AA           		tax
+   247 00:00D7: DA           		phx
+   248 00:00D8: BD xx xx     		lda	temp_bits,x
+   249 00:00DB: 20 xx xx     		jsr	getBitX
+   250 00:00DE: FA           		plx
+   251 00:00DF: 7D xx xx     		adc	temp_base,x
+   252 00:00E2: AA           		tax
+   253 00:00E3: A5 0B        		lda	last
+   254                        decode_tree_control_2		
+   255 00:00E5: 99 xx xx     		sta	symbol_length,y
+   256 00:00E8: C8           		iny
+   257 00:00E9: C8           		iny
+   258 00:00EA: CA           		dex
+   259 00:00EB: D0 F8        		bne	decode_tree_control_2
+   260 00:00ED: CC xx xx     		cpy	ncode
+   261 00:00F0: 90 C6        		bcc	decode_tree_lengths
+   262                        decode_tree_control_3
+   263                        		;jsr	newline
+   264                        		;jsr	plength
+   265                        
+   266 00:00F2: AD xx xx     		lda	nlen			;construct symbol-tree
+   267 00:00F5: 8D xx xx     		sta	ncode
+   268 00:00F8: 20 xx xx     		jsr	construct
+   269                        		;jsr	ptree
+   270                        		
+   271 00:00FB: AD xx xx     		lda	ndist
+   272 00:00FE: 8D xx xx     		sta	ncode
+   273 00:0101: 18           		clc
+   274 00:0102: A9 xx xx     		lda	#symbol_length		;compute pointer
+   275 00:0105: 6D xx xx     		adc	nlen			;to distance length
+   276 00:0108: 85 0D        		sta	length_ptr
+   277 00:010A: A9 xx xx     		lda	#dist_counts
+   278 00:010D: 85 05        		sta	tree_ptr
+   279 00:010F: 20 xx xx     		jsr	construct		
+   280                        		;jsr	ptree
+   281                        		
+   282 00:0112: A9 xx xx     		lda	#symbol_counts
+   283 00:0115: 85 05        		sta	tree_ptr
+   284                        
+  Wed Feb  9 2022  8:09                                                                                                    Page 6
+
+
+   285                        decode_loop
+   286 00:0117: 20 xx xx     		jsr	decode
+   287                        		;jsr	pword
+   288 00:011A: C9 00 01     		cmp	#256
+   289 00:011D: B0 0E        		bcs	decode_lendist
+   290 00:011F: E2 20        		sep	#M
+   291 00:0121: 87 1C        		sta	[outputPointer]
+   292 00:0123: C2 20        		rep	#M
+   293 00:0125: E6 1C        		inc	outputPointer
+   294 00:0127: D0 EE        		bne	decode_loop
+   295 00:0129: E6 1E        		inc	outputPointer+2
+   296 00:012B: 80 EA        		bra	decode_loop
+   297                        
+   298                        decode_lendist
+   299 00:012D: F0 5C        		beq	decode_loop_ex		;256 => exit
+   300                        		
+   301 00:012F: A2 xx xx     		ldx	#dist_counts		;switch to distance-tree
+   302 00:0132: 86 05        		stx	tree_ptr
+   303                        
+   304 00:0134: E9 01 01     		sbc	#257			;carry is set!
+   305 00:0137: 0A           		asl
+   306 00:0138: A8           		tay
+   307 00:0139: B9 xx xx     		lda	len_bits,y
+   308 00:013C: F0 03        		beq	decode_lendist_0
+   309 00:013E: 20 xx xx     		jsr	getBitX
+   310                        decode_lendist_0
+   311 00:0141: 79 xx xx     		adc	len_base,y
+   312 00:0144: 8D xx xx     		sta	nlen
+   313                        		
+   314 00:0147: 20 xx xx     		jsr	decode
+   315 00:014A: 0A           		asl
+   316 00:014B: A8           		tay
+   317 00:014C: B9 xx xx     		lda	dist_bits,y
+   318 00:014F: F0 03        		beq	decode_lendist_1
+   319 00:0151: 20 xx xx     		jsr	getBitX
+   320                        decode_lendist_1
+   321 00:0154: 79 xx xx     		adc	dist_base,y
+   322 00:0157: 85 0F        		sta	sourcePointer
+   323                        		
+   324 00:0159: 38           		sec
+   325 00:015A: A5 1C        		lda	outputPointer
+   326 00:015C: E5 0F        		sbc	sourcePointer
+   327 00:015E: 85 0F        		sta	sourcePointer
+   328 00:0160: A5 1E        		lda	outputPointer+2
+   329 00:0162: E9 00 00     		sbc	#0
+   330 00:0165: 85 11        		sta	sourcePointer+2
+   331                        
+   332 00:0167: A0 00 00     		ldy	#0
+   333 00:016A: AE xx xx     		ldx	nlen
+   334 00:016D: E2 20        		sep	#M
+   335                        decode_lendist_2
+   336 00:016F: B7 0F        		lda	[sourcePointer],y
+   337 00:0171: 97 1C        		sta	[outputPointer],y
+   338 00:0173: C8           		iny
+   339 00:0174: CA           		dex
+   340 00:0175: D0 F8        		bne	decode_lendist_2
+   341 00:0177: C2 20        		rep	#M
+   342                        		
+  Wed Feb  9 2022  8:09                                                                                                    Page 7
+
+
+   343 00:0179: A9 xx xx     		lda	#symbol_counts		;switch to symbol-tree
+   344 00:017C: 85 05        		sta	tree_ptr
+   345                        		
+   346 00:017E: 18           		clc
+   347 00:017F: 98           		tya
+   348 00:0180: 65 1C        		adc	outputPointer
+   349 00:0182: 85 1C        		sta	outputPointer
+   350 00:0184: 90 91        		bcc	decode_loop
+   351 00:0186: E6 1E        		inc	outputPointer+2
+   352 00:0188: 4C xx xx     		jmp	decode_loop
+   353                        decode_loop_ex
+   354 00:018B: 60           		rts
+   355                        ;
+   356                        ;
+   357                        ;
+   358                        ;error
+   359                        ;		brk
+   360                        
+   361                        
+   362                        
+   363                        ;
+   364                        ;
+   365                        ;
+   366                        construct
+   367 00:018C: A0 1E 00     		ldy	#MAXBITS*2
+   368 00:018F: A9 00 00     		lda	#0
+   369 00:0192: AA           		tax
+   370                        contruct_0
+   371 00:0193: 91 05        		sta	(tree_ptr),y	;clear counts
+   372 00:0195: 88           		dey
+   373 00:0196: 88           		dey
+   374 00:0197: 10 FA        		bpl	contruct_0
+   375                        	
+   376                        ;		ldx	#0
+   377                        construct_1
+   378 00:0199: 9B           		txy
+   379 00:019A: B1 0D        		lda	(length_ptr),y	;count code length
+   380                        ;		jsr	phex
+   381 00:019C: 0A           		asl
+   382 00:019D: A8           		tay
+   383 00:019E: B1 05        		lda	(tree_ptr),y
+   384 00:01A0: 1A           		ina
+   385 00:01A1: 91 05        		sta	(tree_ptr),y		
+   386 00:01A3: E8           		inx
+   387 00:01A4: E8           		inx
+   388 00:01A5: EC xx xx     		cpx	ncode
+   389 00:01A8: 90 EF        		bcc	construct_1
+   390                        	
+   391                        ;		lda	#'C'
+   392                        ;		jsr	pout
+   393                        ;		ldy	#0
+   394                        ;constuct_1a
+   395                        ;		lda	(tree_ptr),y
+   396                        ;		jsr	phex
+   397                        ;		iny
+   398                        ;		iny
+   399                        ;		cpy	#(MAXBITS+1)*2
+   400                        ;		bcc	constuct_1a
+  Wed Feb  9 2022  8:09                                                                                                    Page 8
+
+
+   401                        ;		jsr	newline
+   402                        	
+   403 00:01AA: 9C xx xx     		stz	offsets+2	;compute offsets from counts
+   404 00:01AD: A0 02 00     		ldy	#2
+   405                        construct_2
+   406 00:01B0: 18           		clc
+   407 00:01B1: B9 xx xx     		lda	offsets,y
+   408 00:01B4: 71 05        		adc	(tree_ptr),y
+   409 00:01B6: C8           		iny
+   410 00:01B7: C8           		iny
+   411 00:01B8: 99 xx xx     		sta	offsets,y
+   412 00:01BB: C0 1E 00     		cpy	#MAXBITS*2
+   413 00:01BE: 90 F0        		bcc	construct_2
+   414                        		
+   415                        ;		lda	#'O'
+   416                        ;		jsr	pout
+   417                        ;		ldx	#2
+   418                        ;off_loop
+   419                        ;		lda	offsets,x
+   420                        ;		jsr	phex
+   421                        ;		inx
+   422                        ;		inx
+   423                        ;		cpx	#MAXBITS*2
+   424                        ;		bcc	off_loop
+   425                        ;		beq	off_loop
+   426                        ;		jsr	newline
+   427                        
+   428                        ;     * put symbols in table sorted by length, by symbol order within each
+   429                        ;     * length
+   430                        		
+   431                        		
+   432 00:01C0: A0 00 00     		ldy	#0
+   433                        construct_3
+   434 00:01C3: B1 0D        		lda	(length_ptr),y
+   435 00:01C5: F0 11        		beq	construct_4	;skip if zero
+   436 00:01C7: 0A           		asl
+   437 00:01C8: AA           		tax
+   438 00:01C9: BD xx xx     		lda	offsets,x
+   439 00:01CC: FE xx xx     		inc	offsets,x
+   440 00:01CF: 0A           		asl
+   441 00:01D0: 65 05        		adc	tree_ptr
+   442 00:01D2: AA           		tax
+   443 00:01D3: 98           		tya
+   444 00:01D4: 4A           		lsr
+   445 00:01D5: 9D 20 00     		sta	|(MAXBITS+1)*2,x
+   446 00:01D8: C8           construct_4	iny
+   447 00:01D9: C8           		iny
+   448 00:01DA: CC xx xx     		cpy	ncode
+   449 00:01DD: 90 E4        		bcc	construct_3
+   450                        				
+   451 00:01DF: 60           		rts
+   452                        
+   453                        ;
+   454                        ;
+   455                        ;	
+   456 00:01E0: 5A           decode		phy
+   457 00:01E1: 64 07        		stz	base
+   458 00:01E3: A9 00 00     		lda	#0
+  Wed Feb  9 2022  8:09                                                                                                    Page 9
+
+
+   459 00:01E6: A0 02 00     		ldy	#2
+   460                        decode_b
+   461 00:01E9: 46 01        		lsr	bit_buffer
+   462 00:01EB: F0 1F        		beq	decode_c
+   463                        decode_d
+   464 00:01ED: 2A           		rol
+   465 00:01EE: D1 05        		cmp	(tree_ptr),y
+   466 00:01F0: 90 0F        		bcc	decode_a
+   467 00:01F2: F1 05        		sbc	(tree_ptr),y	;carry set
+   468 00:01F4: AA           		tax
+   469 00:01F5: 18           		clc
+   470 00:01F6: A5 07        		lda	base
+   471 00:01F8: 71 05        		adc	(tree_ptr),y
+   472 00:01FA: 85 07        		sta	base
+   473 00:01FC: 8A           		txa
+   474 00:01FD: C8           		iny
+   475 00:01FE: C8           		iny
+   476                        ;		cpy	#(MAXBITS+1)*2
+   477 00:01FF: 80 E8        		bra	decode_b
+   478                        
+   479                        decode_a		
+   480 00:0201: 65 07        		adc	base
+   481 00:0203: 0A           		asl
+   482 00:0204: 69 20 00     		adc	#(MAXBITS+1)*2
+   483 00:0207: A8           		tay
+   484 00:0208: B1 05        		lda	(tree_ptr),y
+   485 00:020A: 7A           		ply
+   486 00:020B: 60           		rts
+   487                        
+   488                        decode_c	
+   489 00:020C: AA           		tax
+   490 00:020D: A7 18        		lda	[inputPointer]
+   491 00:020F: 85 01        		sta	bit_buffer
+   492                        		;clc
+   493 00:0211: A5 18        		lda	inputPointer
+   494 00:0213: 69 01 00     		adc	#1			;actually adc #2, carry always set!
+   495 00:0216: 85 18        		sta	inputPointer
+   496 00:0218: 90 02        		bcc	decode_e
+   497 00:021A: E6 1A        		inc	inputPointer+2
+   498                        decode_e
+   499 00:021C: 8A           		txa
+   500 00:021D: 38           		sec
+   501 00:021E: 66 01        		ror	bit_buffer
+   502 00:0220: 80 CB        		bra	decode_d
+   503                        
+   504                        ;
+   505                        ;
+   506                        ;	
+   507                        getBitX		
+   508 00:0222: AA           		tax
+   509                        		;inc	bitcounts,x
+   510 00:0223: BD xx xx     		lda	bittab-2,x
+   511                        getBitX1
+   512 00:0226: 46 01        		lsr	bit_buffer
+   513 00:0228: F0 0E        		beq	getBitX3
+   514                        getBitX4	
+   515 00:022A: 6A           		ror
+   516 00:022B: 90 F9        		bcc	getBitX1
+  Wed Feb  9 2022  8:09                                                                                                    Page 10
+
+
+   517                        
+   518 00:022D: 89 FF 00     		bit 	#$FF
+   519 00:0230: D0 01        		bne	getBitX2
+   520 00:0232: EB           		xba
+   521                        getBitX2
+   522 00:0233: 4A           		lsr
+   523 00:0234: 90 FD        		bcc	getBitX2		
+   524 00:0236: 18           		clc
+   525 00:0237: 60           		rts
+   526                        
+   527                        getBitX3
+   528 00:0238: AA           		tax
+   529 00:0239: A7 18        		lda	[inputPointer]
+   530 00:023B: 85 01        		sta	bit_buffer
+   531                        ;		clc
+   532 00:023D: A5 18        		lda	inputPointer
+   533 00:023F: 69 01 00     		adc	#1		;carry always set!
+   534 00:0242: 85 18        		sta	inputPointer
+   535 00:0244: 90 02        		bcc	getBit3
+   536 00:0246: E6 1A        		inc	inputPointer+2
+   537                        getBit3
+   538 00:0248: 8A           		txa
+   539 00:0249: 38           		sec
+   540 00:024A: 66 01        		ror	bit_buffer
+   541 00:024C: 80 DC        		bra	getBitX4
+   542                        	
+   543                        	.IF 1=1
+   544 00:024E: A9 54 00     ptree		lda	#'T'
+   545 00:0251: 20 xx xx     		jsr	pout
+   546 00:0254: A2 00 00     		ldx	#0
+   547 00:0257: A0 20 00     		ldy	#(MAXBITS+1)*2
+   548 00:025A: B1 05        ptree1		lda	(tree_ptr),y
+   549 00:025C: 20 xx xx     		jsr	pword
+   550 00:025F: C8           		iny
+   551 00:0260: C8           		iny
+   552 00:0261: E8           		inx
+   553 00:0262: E8           		inx
+   554 00:0263: EC xx xx     		cpx	ncode
+   555 00:0266: 90 F2        		bcc	ptree1
+   556 00:0268: 4C xx xx     		jmp	newline
+   557                        		
+   558 00:026B: A9 4C 00     plength		lda	#'L'
+   559 00:026E: 20 xx xx     		jsr	pout
+   560 00:0271: AD xx xx     		lda	ncode
+   561 00:0274: 20 xx xx     		jsr	pword
+   562 00:0277: 20 xx xx     		jsr	newline
+   563 00:027A: A0 00 00     		ldy	#0
+   564 00:027D: B1 0D        plength1	lda	(length_ptr),y
+   565 00:027F: 20 xx xx     		jsr	phex
+   566 00:0282: C8           		iny
+   567 00:0283: C8           		iny
+   568 00:0284: CC xx xx     		cpy	ncode
+   569 00:0287: 90 F4        		bcc	plength1
+   570 00:0289: 4C xx xx     		jmp	newline
+   571                        
+   572                        ;
+   573                        ;
+   574                        ;
+  Wed Feb  9 2022  8:09                                                                                                    Page 11
+
+
+   575 00:028C: 08           pword:		php
+   576 00:028D: EB           		xba			;high-byte
+   577 00:028E: 20 xx xx     		jsr	phex
+   578 00:0291: EB           		xba			;low-byte
+   579 00:0292: 28           		plp
+   580                        
+   581                        ;
+   582                        ;
+   583                        ;		
+   584                        phex:	
+   585 00:0293: 08           		php
+   586 00:0294: 48           		pha
+   587 00:0295: 48           		pha
+   588 00:0296: 4A           		lsr
+   589 00:0297: 4A           		lsr
+   590 00:0298: 4A           		lsr
+   591 00:0299: 4A           		lsr
+   592 00:029A: 29 0F 00     		and	#15
+   593 00:029D: 20 xx xx     		jsr	pnibble
+   594 00:02A0: 68           		pla
+   595 00:02A1: 29 0F 00     		and	#15
+   596 00:02A4: 20 xx xx     		jsr	pnibble
+   597 00:02A7: A9 20 00     		lda	#32
+   598 00:02AA: 20 xx xx     		jsr	pout
+   599 00:02AD: 68           		pla
+   600 00:02AE: 28           		plp
+   601 00:02AF: 60           		rts
+   602                        
+   603                        	
+   604                        pnibble:
+   605 00:02B0: C9 0A 00     		cmp	#10
+   606 00:02B3: 90 03        		bcc	pnibble1
+   607 00:02B5: 69 06 00     		adc	#6
+   608                        pnibble1	
+   609 00:02B8: 69 30 00     		adc	#'0'
+   610 00:02BB: D0 03        		bne	pout
+   611                        		
+   612                        newline:	
+   613 00:02BD: A9 0A 00     		lda	#$0a
+   614                        pout:	
+   615 00:02C0: E2 20        		sep	#M
+   616                        		longa	off
+   617 00:02C2: 48           		pha
+   618 00:02C3: AF E5 FF FF  pout1:		lda	>LSR0
+   619 00:02C7: 29 40        		and	#64
+   620 00:02C9: F0 F8        		beq	pout1
+   621 00:02CB: 68           		pla
+   622 00:02CC: 8F E0 FF FF  		sta	>THR0
+   623 00:02D0: C2 20        		rep	#M
+   624                        		longa	on
+   625 00:02D2: 60           		rts
+   626                        	.ENDIF
+   627                        ;
+   628                        ;	constants and tables
+   629                        ;
+   630                        ;algo_tab	dw	stored
+   631                        ;		dw	fixed_codes
+   632                        ;		dw	dynamic_codes
+  Wed Feb  9 2022  8:09                                                                                                    Page 12
+
+
+   633                        ;		dw	error
+   634                        
+   635 00:02D3:              		ENDS
+   636                        		
+   637                        		DATA
+   638                        		
+   639 00:0000: 01 80 02 80  bittab		dw	$8001, $8002, $8004, $8008, $8010, $8020, $8040, $8080
+       00:0004: 04 80 08 80 
+       00:0008: 10 80 20 80 
+       00:000C: 40 80 80 80 
+   640 00:0010: 00 81 00 82  		dw	$8100, $8200, $8400, $8800, $9000, $A000, $C000
+       00:0014: 00 84 00 88 
+       00:0018: 00 90 00 A0 
+       00:001C: 00 C0 
+   641                        
+   642 00:001E: 08 00 0A 00  header_bits	dw	4*2, 5*2, 5*2
+       00:0022: 0A 00 
+   643 00:0024: 04 00 01 00  header_bases	dw	4, 1, 257
+       00:0028: 01 01 
+   644 00:002A: 20 00 22 00  order		dw	16*2, 17*2, 18*2, 0*2, 8*2, 7*2, 9*2, 6*2
+       00:002E: 24 00 00 00 
+       00:0032: 10 00 0E 00 
+       00:0036: 12 00 0C 00 
+   645 00:003A: 14 00 0A 00  		dw	10*2, 5*2, 11*2, 4*2, 12*2, 3*2, 13*2, 2*2
+       00:003E: 16 00 08 00 
+       00:0042: 18 00 06 00 
+       00:0046: 1A 00 04 00 
+   646 00:004A: 1C 00 02 00  		dw	14*2, 1*2, 15*2
+       00:004E: 1E 00 
+   647 00:0050: 04 00 06 00  temp_bits	dw	2*2, 3*2, 7*2
+       00:0054: 0E 00 
+   648 00:0056: 03 00 03 00  temp_base	dw	3, 3, 11	
+       00:005A: 0B 00 
+   649                        
+   650                        ;	Size base for length codes 257..285
+   651 00:005C: 03 00 04 00  len_base	dw	3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31
+       00:0060: 05 00 06 00 
+       00:0064: 07 00 08 00 
+       00:0068: 09 00 0A 00 
+       00:006C: 0B 00 0D 00 
+       00:0070: 0F 00 11 00 
+       00:0074: 13 00 17 00 
+       00:0078: 1B 00 1F 00 
+   652 00:007C: 23 00 2B 00  		dw	35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258
+       00:0080: 33 00 3B 00 
+       00:0084: 43 00 53 00 
+       00:0088: 63 00 73 00 
+       00:008C: 83 00 A3 00 
+       00:0090: C3 00 E3 00 
+       00:0094: 02 01 
+   653                        ;	Extra bits for length codes 257..285
+   654 00:0096: 00 00 00 00  len_bits	dw	0, 0, 0, 0, 0, 0, 0, 0, 1*2, 1*2, 1*2, 1*2, 2*2, 2*2, 2*2, 2*2
+       00:009A: 00 00 00 00 
+       00:009E: 00 00 00 00 
+       00:00A2: 00 00 00 00 
+       00:00A6: 02 00 02 00 
+       00:00AA: 02 00 02 00 
+       00:00AE: 04 00 04 00 
+  Wed Feb  9 2022  8:09                                                                                                    Page 13
+
+
+       00:00B2: 04 00 04 00 
+   655 00:00B6: 06 00 06 00  		dw	3*2, 3*2, 3*2, 3*2, 4*2, 4*2, 4*2, 4*2, 5*2, 5*2, 5*2, 5*2, 0
+       00:00BA: 06 00 06 00 
+       00:00BE: 08 00 08 00 
+       00:00C2: 08 00 08 00 
+       00:00C6: 0A 00 0A 00 
+       00:00CA: 0A 00 0A 00 
+       00:00CE: 00 00 
+   656                        ;	Offset base for distance codes 0..29
+   657 00:00D0: 01 00 02 00  dist_base	dw	1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193
+       00:00D4: 03 00 04 00 
+       00:00D8: 05 00 07 00 
+       00:00DC: 09 00 0D 00 
+       00:00E0: 11 00 19 00 
+       00:00E4: 21 00 31 00 
+       00:00E8: 41 00 61 00 
+       00:00EC: 81 00 C1 00 
+   658 00:00F0: 01 01 81 01  		dw	257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145
+       00:00F4: 01 02 01 03 
+       00:00F8: 01 04 01 06 
+       00:00FC: 01 08 01 0C 
+       00:0100: 01 10 01 18 
+   659 00:0104: 01 20 01 30  		dw	8193, 12289, 16385, 24577
+       00:0108: 01 40 01 60 
+   660                        ;	Extra bits for distance codes 0..29
+   661 00:010C: 00 00 00 00  dist_bits	dw	0, 0, 0, 0, 1*2, 1*2, 2*2, 2*2, 3*2, 3*2, 4*2, 4*2, 5*2, 5*2, 6*2, 6*2
+       00:0110: 00 00 00 00 
+       00:0114: 02 00 02 00 
+       00:0118: 04 00 04 00 
+       00:011C: 06 00 06 00 
+       00:0120: 08 00 08 00 
+       00:0124: 0A 00 0A 00 
+       00:0128: 0C 00 0C 00 
+   662 00:012C: 0E 00 0E 00  		dw	7*2, 7*2, 8*2, 8*2, 9*2, 9*2, 10*2, 10*2, 11*2, 11*2
+       00:0130: 10 00 10 00 
+       00:0134: 12 00 12 00 
+       00:0138: 14 00 14 00 
+       00:013C: 16 00 16 00 
+   663 00:0140: 18 00 18 00  		dw	12*2, 12*2, 13*2, 13*2
+       00:0144: 1A 00 1A 00 
+   664                        
+   665 00:0148:              		ENDS
+   666                        		
+   667                        		UDATA
+   668                        		
+   669                        ;	Working storage
+   670 00:0000:              ncode		dw	0
+   671 00:0002:              ndist		dw	0
+   672 00:0004:              nlen		dw	0
+   673                        
+   674 00:0006:              symbol_length	dsw	256
+   675 00:0206:              len_length	dsw	30
+   676 00:0242:              dist_length	dsw	30
+   677                        
+   678 00:027E:              symbol_counts	dsw	MAXBITS+1
+   679 00:029E:              symbol_tree	dsw	256
+   680 00:049E:              		dsw	30
+   681                        
+  Wed Feb  9 2022  8:09                                                                                                    Page 14
+
+
+   682 00:04DA:              dist_counts	dsw	MAXBITS+1
+   683 00:04FA:              dist_tree	dsw	30
+   684                        
+   685 00:0536:              offsets		dsw	MAXBITS+1
+   686                        ;bitcounts	dsw	MAXBITS+1
+   687                        
+   688 00:0556:              		ENDS
+   689                        
+   690                        		efunc
+   691                        		endmod
+
+
+      Lines assembled: 1335
+      Errors: 0

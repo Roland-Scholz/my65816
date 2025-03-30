@@ -1,0 +1,269 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;/*
+     7                        ;<!-- präsentiert von kostenlose-javascripts.de -
+                    ->
+     8                        ;<script type='text/javascript'>
+     9                        ;<!--
+    10                        ;var nachricht = "Mein bunter bunter Regenbogentex
+                    t"; // Dein Text
+    11                        ;var groesse   = 30; // Größe des Textes
+    12                        ;var geschwindigkeit = 50; // Geschwindigkeit der 
+                    Farbveränderung in Millisekunden
+    13                        ;
+    14                        ;// an hier nichts mehr ändern
+    15                        ;document.write('<span id="regenbogentext" style="
+                    font-size: ' + groesse + 'px;">' + nachricht + '</span>');
+    16                        ;var meinelement = document.getElementById("regenb
+                    ogentext");
+    17                        ;
+    18                        ;
+    19                        ;var hex = new Array("00","14","28","3C","50","64"
+                    ,"78","8C","A0","B4","C8","DC","F0");
+    20                        ;var r = 1;
+    21                        ;var g = 1;
+    22                        ;var b = 1;
+    23                        ;var seq = 1;
+    24                        ;function textaendern(){
+    25                        ;	farbe = "#" + hex[r] + hex[g] + hex[b];
+    26                        ;	meinelement.style.color = farbe;
+    27                        ;}
+    28                        ;function aendern(){
+    29                        ;	switch (seq) {
+    30                        ;		case 6: b--; if ( b == 0 ) seq = 1; brea
+                    k;
+    31                        ;		case 5: r++; if ( r == 12 ) seq = 6; bre
+                    ak;
+    32                        ;		case 4: g--; if ( g == 0 ) seq = 5; brea
+                    k;
+    33                        ;		case 3: b++; if ( b == 12 ) seq = 4; bre
+                    ak;
+    34                        ;		case 2: r--; if ( r == 0 ) seq = 3; brea
+                    k;
+    35                        ;		case 1: g++; if ( g == 12 ) seq = 2; bre
+                    ak;
+    36                        ;	}
+    37                        ;	textaendern();
+    38                        ;}
+    39                        ;function initregenbogen(){
+    40                        ;	setInterval("aendern()", geschwindigkeit);
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    41                        ;}
+    42                        ;//-->
+    43                        ;</script>
+    44                        ;<br />
+    45                        ;JavaScript von <a href="http://www.kostenlose-jav
+                    ascripts.de/javascripts/texteffekte/regenbogentext/" target=
+                    "_blank">kostenlose-javascripts.de</a>
+    46                        ;<br />
+    47                        ;<script type="text/javascript">initregenbogen();<
+                    /script>
+    48                        ;<!-- präsentiert von kostenlose-javascripts.de -
+                    ->
+    49                        ;*/
+    50                        ;
+    51                        ;#include <stdio.h>
+    52                        ;#include <stdlib.h>
+    53                        ;#include <string.h>
+    54                        ;#include <stdbool.h>
+    55                        ;#include "FreeRTOS.h"
+    56                        ;#include "task.h"
+    57                        ;#include <homebrew.h>
+    58                        ;
+    59                        ;int main(int argc, char**argv) {
+    60                        	code
+    61                        	xdef	~~main
+    62                        	func
+    63                        ~~main:
+    64                        	longa	on
+    65                        	longi	on
+    66 00:0000: 3B           	tsc
+    67 00:0001: 38           	sec
+    68 00:0002: E9 16 00     	sbc	#L2
+    69 00:0005: 1B           	tcs
+    70 00:0006: 0B           	phd
+    71 00:0007: 5B           	tcd
+    72             00000004   argc_0	set	4
+    73             00000006   argv_0	set	6
+    74                        ;	unsigned int r,g,b,color,seq;
+    75                        ;		
+    76                        ;	r = g = b = seq = 0;
+    77             00000000   r_1	set	0
+    78             00000002   g_1	set	2
+    79             00000004   b_1	set	4
+    80             00000006   color_1	set	6
+    81             00000008   seq_1	set	8
+    82 00:0008: 64 15        	stz	<L3+seq_1
+    83 00:000A: 64 11        	stz	<L3+b_1
+    84 00:000C: 64 0F        	stz	<L3+g_1
+    85 00:000E: 64 0D        	stz	<L3+r_1
+    86                        ;
+    87                        ;	for(;;) {	
+    88                        L10003:
+    89                        ;		//getchar();
+    90                        ;		vTaskDelay(25);
+    91 00:0010: F4 19 00     	pea	#<$19
+    92 00:0013: 22 xx xx xx  	jsl	~~vTaskDelay
+    93                        ;		switch(seq) {
+    94 00:0017: A5 15        	lda	<L3+seq_1
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+    95                        	xref	~~~fsw
+    96 00:0019: 22 xx xx xx  	jsl	~~~fsw
+    97 00:001D: 00 00        	dw	0
+    98 00:001F: 06 00        	dw	6
+    99 00:0021: xx xx        	dw	L10005-1
+   100 00:0023: xx xx        	dw	L10006-1
+   101 00:0025: xx xx        	dw	L10008-1
+   102 00:0027: xx xx        	dw	L10010-1
+   103 00:0029: xx xx        	dw	L10012-1
+   104 00:002B: xx xx        	dw	L10014-1
+   105 00:002D: xx xx        	dw	L10016-1
+   106                        ;			case 0:
+   107                        L10006:
+   108                        ;				r++;
+   109 00:002F: E6 0D        	inc	<L3+r_1
+   110                        ;				if (r == 7) seq = 1;
+   111 00:0031: A5 0D        	lda	<L3+r_1
+   112 00:0033: C9 07 00     	cmp	#<$7
+   113 00:0036: D0 05        	bne	L10005
+   114 00:0038: A9 01 00     	lda	#$1
+   115                        L20000:
+   116 00:003B: 85 15        	sta	<L3+seq_1
+   117                        ;				break;
+   118                        L10005:
+   119                        ;		color = (b << 6) | (g << 3) | r;
+   120 00:003D: A5 11        	lda	<L3+b_1
+   121 00:003F: A2 06 00     	ldx	#<$6
+   122                        	xref	~~~asl
+   123 00:0042: 22 xx xx xx  	jsl	~~~asl
+   124 00:0046: 85 01        	sta	<R0
+   125 00:0048: A5 0F        	lda	<L3+g_1
+   126 00:004A: 0A           	asl	A
+   127 00:004B: 0A           	asl	A
+   128 00:004C: 0A           	asl	A
+   129 00:004D: 05 01        	ora	<R0
+   130 00:004F: 85 09        	sta	<R2
+   131 00:0051: A5 0D        	lda	<L3+r_1
+   132 00:0053: 05 09        	ora	<R2
+   133 00:0055: 85 13        	sta	<L3+color_1
+   134                        ;		//printf("r:%d, g:%d, b:%d, color:%d\n",
+                     r, g, b, color);
+   135                        ;		COLORBORDERLO = COLORBACKGROUNDLO = colo
+                    r;
+   136 00:0057: E2 20        	sep	#$20
+   137                        	longa	off
+   138 00:0059: 8F 02 FE FF  	sta	>16776706
+   139 00:005D: 8F 00 FE FF  	sta	>16776704
+   140 00:0061: C2 20        	rep	#$20
+   141                        	longa	on
+   142                        ;		COLORBORDERHI = COLORBACKGROUNDHI = colo
+                    r >> 8;
+   143 00:0063: A5 13        	lda	<L3+color_1
+   144 00:0065: EB           	xba
+   145 00:0066: 29 FF 00     	and	#$00ff
+   146 00:0069: E2 20        	sep	#$20
+   147                        	longa	off
+   148 00:006B: 8F 03 FE FF  	sta	>16776707
+   149 00:006F: 8F 01 FE FF  	sta	>16776705
+  Sun Jan  9 2022 20:37                                                Page 4
+
+
+   150 00:0073: C2 20        	rep	#$20
+   151                        	longa	on
+   152                        ;		
+   153                        ;	}
+   154 00:0075: 80 99        	bra	L10003
+   155                        ;			case 1:
+   156                        L10008:
+   157                        ;				g++;
+   158 00:0077: E6 0F        	inc	<L3+g_1
+   159                        ;				if (g == 7) seq = 2;
+   160 00:0079: A5 0F        	lda	<L3+g_1
+   161 00:007B: C9 07 00     	cmp	#<$7
+   162 00:007E: D0 BD        	bne	L10005
+   163 00:0080: A9 02 00     	lda	#$2
+   164 00:0083: 80 B6        	bra	L20000
+   165                        ;				break;
+   166                        ;			case 2:
+   167                        L10010:
+   168                        ;				r--;
+   169 00:0085: C6 0D        	dec	<L3+r_1
+   170                        ;				if (r == 0) seq = 3;
+   171 00:0087: A5 0D        	lda	<L3+r_1
+   172 00:0089: D0 B2        	bne	L10005
+   173 00:008B: A9 03 00     	lda	#$3
+   174 00:008E: 80 AB        	bra	L20000
+   175                        ;				break;
+   176                        ;			case 3:
+   177                        L10012:
+   178                        ;				b++;
+   179 00:0090: E6 11        	inc	<L3+b_1
+   180                        ;				if (b == 7) seq = 4;
+   181 00:0092: A5 11        	lda	<L3+b_1
+   182 00:0094: C9 07 00     	cmp	#<$7
+   183 00:0097: D0 A4        	bne	L10005
+   184 00:0099: A9 04 00     	lda	#$4
+   185 00:009C: 80 9D        	bra	L20000
+   186                        ;				break;
+   187                        ;			case 4:
+   188                        L10014:
+   189                        ;				g--;
+   190 00:009E: C6 0F        	dec	<L3+g_1
+   191                        ;				if (g == 0) seq = 5;
+   192 00:00A0: A5 0F        	lda	<L3+g_1
+   193 00:00A2: D0 99        	bne	L10005
+   194 00:00A4: A9 05 00     	lda	#$5
+   195 00:00A7: 80 92        	bra	L20000
+   196                        ;				break;
+   197                        ;			case 5:
+   198                        L10016:
+   199                        ;				r++;
+   200 00:00A9: E6 0D        	inc	<L3+r_1
+   201                        ;				if (r > 7) {
+   202 00:00AB: A9 07 00     	lda	#$7
+   203 00:00AE: C5 0D        	cmp	<L3+r_1
+   204 00:00B0: B0 8B        	bcs	L10005
+   205                        ;					b = r = seq = 0;
+   206 00:00B2: 64 15        	stz	<L3+seq_1
+   207 00:00B4: 64 0D        	stz	<L3+r_1
+  Sun Jan  9 2022 20:37                                                Page 5
+
+
+   208 00:00B6: 64 11        	stz	<L3+b_1
+   209                        ;					vTaskDelay(100);
+   210 00:00B8: F4 64 00     	pea	#<$64
+   211 00:00BB: 22 xx xx xx  	jsl	~~vTaskDelay
+   212                        ;				}
+   213                        ;				break;
+   214 00:00BF: 82 7B FF     	brl	L10005
+   215                        ;		}
+   216                        ;	
+   217                        ;	//COLORBACKGROUNDLO = backLo;
+   218                        ;	//COLORBACKGROUNDHI = backHi;
+   219                        ;}
+   220             00000016   L2	equ	22
+   221             0000000D   L3	equ	13
+   222                        	ends
+   223                        	efunc
+   224                        ;
+   225                        	xref	~~vTaskDelay
+
+
+      Lines assembled: 225
+      Errors: 0

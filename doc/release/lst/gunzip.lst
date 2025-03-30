@@ -1,0 +1,657 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include <errno.h>
+    11                        ;#include <unistd.h>
+    12                        ;#include <dirent.h>
+    13                        ;#include <sys/stat.h>
+    14                        ;
+    15                        ;#include "freeRTOS.h"
+    16                        ;#include "task.h"
+    17                        ;#include <homebrew.h>
+    18                        ;
+    19                        ;int inflate(char *inBuf, char *outBuf, long *outL
+                    en);
+    20                        ;
+    21                        ;char* loadFile(char *fname, long *flenout) {
+    22                        	code
+    23                        	xdef	~~loadFile
+    24                        	func
+    25                        ~~loadFile:
+    26                        	longa	on
+    27                        	longi	on
+    28 00:0000: 3B           	tsc
+    29 00:0001: 38           	sec
+    30 00:0002: E9 16 00     	sbc	#L2
+    31 00:0005: 1B           	tcs
+    32 00:0006: 0B           	phd
+    33 00:0007: 5B           	tcd
+    34             00000004   fname_0	set	4
+    35             00000008   flenout_0	set	8
+    36                        ;	FILE *fin;
+    37                        ;	size_t flen;
+    38                        ;	struct stat st;
+    39                        ;	char *buf;
+    40                        ;	
+    41                        ;	if (stat(fname, &st) == -1) {
+    42             00000000   fin_1	set	0
+    43             00000004   flen_1	set	4
+    44             00000008   st_1	set	8
+    45             0000000E   buf_1	set	14
+    46 00:0008: F4 00 00     	pea	#0
+    47 00:000B: 18           	clc
+    48 00:000C: 7B           	tdc
+    49 00:000D: 69 0D 00     	adc	#<L3+st_1
+    50 00:0010: 48           	pha
+    51 00:0011: D4 1C        	pei	<L2+fname_0+2
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    52 00:0013: D4 1A        	pei	<L2+fname_0
+    53 00:0015: 22 xx xx xx  	jsl	~~stat
+    54 00:0019: C9 FF FF     	cmp	#<$ffffffff
+    55 00:001C: D0 16        	bne	L10001
+    56                        ;		return NULL;
+    57                        L20002:
+    58 00:001E: A9 00 00     	lda	#$0
+    59 00:0021: AA           	tax
+    60                        L5:
+    61 00:0022: A8           	tay
+    62 00:0023: A5 18        	lda	<L2+2
+    63 00:0025: 85 20        	sta	<L2+2+8
+    64 00:0027: A5 17        	lda	<L2+1
+    65 00:0029: 85 1F        	sta	<L2+1+8
+    66 00:002B: 2B           	pld
+    67 00:002C: 3B           	tsc
+    68 00:002D: 18           	clc
+    69 00:002E: 69 1E 00     	adc	#L2+8
+    70 00:0031: 1B           	tcs
+    71 00:0032: 98           	tya
+    72 00:0033: 6B           	rtl
+    73                        ;	}
+    74                        ;	*flenout = st.st_size;
+    75                        L10001:
+    76 00:0034: A5 0F        	lda	<L3+st_1+2
+    77 00:0036: 87 1E        	sta	[<L2+flenout_0]
+    78 00:0038: A5 11        	lda	<L3+st_1+4
+    79 00:003A: A0 02 00     	ldy	#$2
+    80 00:003D: 97 1E        	sta	[<L2+flenout_0],Y
+    81                        ;	
+    82                        ;	fin = fopen(fname, "rb");
+    83 00:003F: F4 xx xx     	pea	#^L1
+    84 00:0042: F4 xx xx     	pea	#<L1
+    85 00:0045: D4 1C        	pei	<L2+fname_0+2
+    86 00:0047: D4 1A        	pei	<L2+fname_0
+    87 00:0049: 22 xx xx xx  	jsl	~~fopen
+    88 00:004D: 85 05        	sta	<L3+fin_1
+    89 00:004F: 86 07        	stx	<L3+fin_1+2
+    90                        ;	
+    91                        ;	if (fin == NULL) {
+    92 00:0051: 05 07        	ora	<L3+fin_1+2
+    93 00:0053: D0 13        	bne	L10002
+    94                        ;		printf("can't read file %s\n", fname);
+    95 00:0055: D4 1C        	pei	<L2+fname_0+2
+    96 00:0057: D4 1A        	pei	<L2+fname_0
+    97 00:0059: F4 xx xx     	pea	#^L1+3
+    98 00:005C: F4 xx xx     	pea	#<L1+3
+    99 00:005F: F4 0A 00     	pea	#10
+   100 00:0062: 22 xx xx xx  	jsl	~~printf
+   101                        ;		return NULL;
+   102 00:0066: 80 B6        	bra	L20002
+   103                        ;	}
+   104                        ;	
+   105                        ;//	vbuf = malloc(1024);
+   106                        ;//	setvbuf(fin, vbuf, _IOFBF, 1024);
+   107                        ;
+   108                        ;	buf = malloc(st.st_size);
+   109                        L10002:
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   110 00:0068: D4 11        	pei	<L3+st_1+4
+   111 00:006A: D4 0F        	pei	<L3+st_1+2
+   112 00:006C: 22 xx xx xx  	jsl	~~malloc
+   113 00:0070: 85 13        	sta	<L3+buf_1
+   114 00:0072: 86 15        	stx	<L3+buf_1+2
+   115                        ;	//printf("loading %s, length: %lu\n", fname, st.
+                    st_size);
+   116                        ;	
+   117                        ;	flen = fread(buf, 1, st.st_size, fin);
+   118 00:0074: D4 07        	pei	<L3+fin_1+2
+   119 00:0076: D4 05        	pei	<L3+fin_1
+   120 00:0078: D4 11        	pei	<L3+st_1+4
+   121 00:007A: D4 0F        	pei	<L3+st_1+2
+   122 00:007C: F4 00 00     	pea	#^$1
+   123 00:007F: F4 01 00     	pea	#<$1
+   124 00:0082: D4 15        	pei	<L3+buf_1+2
+   125 00:0084: D4 13        	pei	<L3+buf_1
+   126 00:0086: 22 xx xx xx  	jsl	~~fread
+   127 00:008A: 85 09        	sta	<L3+flen_1
+   128 00:008C: 86 0B        	stx	<L3+flen_1+2
+   129                        ;	
+   130                        ;	//printf("%lu bytes loaded @ %p\n", flen, buf);
+   131                        ;	
+   132                        ;	fclose(fin);
+   133 00:008E: D4 07        	pei	<L3+fin_1+2
+   134 00:0090: D4 05        	pei	<L3+fin_1
+   135 00:0092: 22 xx xx xx  	jsl	~~fclose
+   136                        ;	
+   137                        ;	return buf;
+   138 00:0096: A6 15        	ldx	<L3+buf_1+2
+   139 00:0098: A5 13        	lda	<L3+buf_1
+   140 00:009A: 80 86        	bra	L5
+   141                        ;}
+   142             00000016   L2	equ	22
+   143             00000005   L3	equ	5
+   144                        	ends
+   145                        	efunc
+   146                        	data
+   147                        L1:
+   148 00:0000: 72 62 00 63  	db	$72,$62,$00,$63,$61,$6E,$27,$74,$20,$72,
+                    $65,$61,$64,$20,$66
+       00:0004: 61 6E 27 74 
+       00:0008: 20 72 65 61 
+       00:000C: 64 20 66 
+   149 00:000F: 69 6C 65 20  	db	$69,$6C,$65,$20,$25,$73,$0A,$00
+       00:0013: 25 73 0A 00 
+   150 00:0017:              	ends
+   151                        ;
+   152                        ;int gunzip(char *comprData, long flen) {
+   153                        	code
+   154                        	xdef	~~gunzip
+   155                        	func
+   156                        ~~gunzip:
+   157                        	longa	on
+   158                        	longi	on
+   159 00:009C: 3B           	tsc
+   160 00:009D: 38           	sec
+   161 00:009E: E9 24 00     	sbc	#L8
+  Sun Jan  9 2022 20:37                                                Page 4
+
+
+   162 00:00A1: 1B           	tcs
+   163 00:00A2: 0B           	phd
+   164 00:00A3: 5B           	tcd
+   165             00000004   comprData_0	set	4
+   166             00000008   flen_0	set	8
+   167                        ;	int flag, rc;
+   168                        ;	char *inBuf;
+   169                        ;	char *filename, *outBuf, *vbuf;
+   170                        ;	long *origLen, outLen;
+   171                        ;	FILE *fout;
+   172                        ;	
+   173                        ;	filename = NULL;
+   174             00000000   flag_1	set	0
+   175             00000002   rc_1	set	2
+   176             00000004   inBuf_1	set	4
+   177             00000008   filename_1	set	8
+   178             0000000C   outBuf_1	set	12
+   179             00000010   vbuf_1	set	16
+   180             00000014   origLen_1	set	20
+   181             00000018   outLen_1	set	24
+   182             0000001C   fout_1	set	28
+   183 00:00A4: 64 0D        	stz	<L9+filename_1
+   184 00:00A6: 64 0F        	stz	<L9+filename_1+2
+   185                        ;	
+   186                        ;	if (! (comprData[0] == 0x1f && comprData[1] == 0
+                    x8b)) {
+   187 00:00A8: E2 20        	sep	#$20
+   188                        	longa	off
+   189 00:00AA: A7 28        	lda	[<L8+comprData_0]
+   190 00:00AC: C9 1F        	cmp	#<$1f
+   191 00:00AE: C2 20        	rep	#$20
+   192                        	longa	on
+   193 00:00B0: D0 0D        	bne	L10
+   194 00:00B2: E2 20        	sep	#$20
+   195                        	longa	off
+   196 00:00B4: A0 01 00     	ldy	#$1
+   197 00:00B7: B7 28        	lda	[<L8+comprData_0],Y
+   198 00:00B9: C9 8B        	cmp	#<$8b
+   199 00:00BB: C2 20        	rep	#$20
+   200                        	longa	on
+   201 00:00BD: F0 15        	beq	L10003
+   202                        L10:
+   203                        ;		return -1;
+   204 00:00BF: A9 FF FF     	lda	#$ffff
+   205                        L13:
+   206 00:00C2: A8           	tay
+   207 00:00C3: A5 26        	lda	<L8+2
+   208 00:00C5: 85 2E        	sta	<L8+2+8
+   209 00:00C7: A5 25        	lda	<L8+1
+   210 00:00C9: 85 2D        	sta	<L8+1+8
+   211 00:00CB: 2B           	pld
+   212 00:00CC: 3B           	tsc
+   213 00:00CD: 18           	clc
+   214 00:00CE: 69 2C 00     	adc	#L8+8
+   215 00:00D1: 1B           	tcs
+   216 00:00D2: 98           	tya
+   217 00:00D3: 6B           	rtl
+   218                        ;	}
+  Sun Jan  9 2022 20:37                                                Page 5
+
+
+   219                        ;	
+   220                        ;	/*
+   221                        ;		bit 0   FTEXT
+   222                        ;		bit 1   FHCRC
+   223                        ;		bit 2   FEXTRA
+   224                        ;		bit 3   FNAME
+   225                        ;		bit 4   FCOMMENT
+   226                        ;	*/	   
+   227                        ;	flag = comprData[3];
+   228                        L10003:
+   229 00:00D4: A0 03 00     	ldy	#$3
+   230 00:00D7: B7 28        	lda	[<L8+comprData_0],Y
+   231 00:00D9: 29 FF 00     	and	#$ff
+   232 00:00DC: 85 05        	sta	<L9+flag_1
+   233                        ;	//printf("flag: %d\n", flag);
+   234                        ;		
+   235                        ;	inBuf = comprData+10;
+   236 00:00DE: A9 0A 00     	lda	#$a
+   237 00:00E1: 18           	clc
+   238 00:00E2: 65 28        	adc	<L8+comprData_0
+   239 00:00E4: 85 09        	sta	<L9+inBuf_1
+   240 00:00E6: A9 00 00     	lda	#$0
+   241 00:00E9: 65 2A        	adc	<L8+comprData_0+2
+   242 00:00EB: 85 0B        	sta	<L9+inBuf_1+2
+   243                        ;	
+   244                        ;	//skip comment
+   245                        ;	if (flag & 0x10) {
+   246 00:00ED: A5 05        	lda	<L9+flag_1
+   247 00:00EF: 29 10 00     	and	#<$10
+   248 00:00F2: F0 15        	beq	L10004
+   249                        ;		while(*inBuf++);
+   250                        L10005:
+   251 00:00F4: A5 09        	lda	<L9+inBuf_1
+   252 00:00F6: 85 01        	sta	<R0
+   253 00:00F8: A5 0B        	lda	<L9+inBuf_1+2
+   254 00:00FA: 85 03        	sta	<R0+2
+   255 00:00FC: E6 09        	inc	<L9+inBuf_1
+   256 00:00FE: D0 02        	bne	L15
+   257 00:0100: E6 0B        	inc	<L9+inBuf_1+2
+   258                        L15:
+   259 00:0102: A7 01        	lda	[<R0]
+   260 00:0104: 29 FF 00     	and	#$ff
+   261 00:0107: D0 EB        	bne	L10005
+   262                        ;	}
+   263                        ;	//skip filename
+   264                        ;	if (flag & 0x08) {
+   265                        L10004:
+   266 00:0109: A5 05        	lda	<L9+flag_1
+   267 00:010B: 29 08 00     	and	#<$8
+   268 00:010E: F0 1D        	beq	L10007
+   269                        ;		filename = inBuf;
+   270 00:0110: A5 09        	lda	<L9+inBuf_1
+   271 00:0112: 85 0D        	sta	<L9+filename_1
+   272 00:0114: A5 0B        	lda	<L9+inBuf_1+2
+   273 00:0116: 85 0F        	sta	<L9+filename_1+2
+   274                        ;		while(*inBuf++);
+   275                        L10008:
+   276 00:0118: A5 09        	lda	<L9+inBuf_1
+  Sun Jan  9 2022 20:37                                                Page 6
+
+
+   277 00:011A: 85 01        	sta	<R0
+   278 00:011C: A5 0B        	lda	<L9+inBuf_1+2
+   279 00:011E: 85 03        	sta	<R0+2
+   280 00:0120: E6 09        	inc	<L9+inBuf_1
+   281 00:0122: D0 02        	bne	L18
+   282 00:0124: E6 0B        	inc	<L9+inBuf_1+2
+   283                        L18:
+   284 00:0126: A7 01        	lda	[<R0]
+   285 00:0128: 29 FF 00     	and	#$ff
+   286 00:012B: D0 EB        	bne	L10008
+   287                        ;	}
+   288                        ;	if (flag & 0x02) {
+   289                        L10007:
+   290 00:012D: A5 05        	lda	<L9+flag_1
+   291 00:012F: 29 02 00     	and	#<$2
+   292 00:0132: F0 0C        	beq	L10010
+   293                        ;		inBuf += 2;
+   294 00:0134: A9 02 00     	lda	#$2
+   295 00:0137: 18           	clc
+   296 00:0138: 65 09        	adc	<L9+inBuf_1
+   297 00:013A: 85 09        	sta	<L9+inBuf_1
+   298 00:013C: 90 02        	bcc	L10010
+   299 00:013E: E6 0B        	inc	<L9+inBuf_1+2
+   300                        ;	}
+   301                        ;
+   302                        ;	if (filename)
+   303                        L10010:
+   304                        ;		printf("filename: %s\n", filename);
+   305 00:0140: A5 0D        	lda	<L9+filename_1
+   306 00:0142: 05 0F        	ora	<L9+filename_1+2
+   307 00:0144: F0 11        	beq	L10011
+   308 00:0146: D4 0F        	pei	<L9+filename_1+2
+   309 00:0148: D4 0D        	pei	<L9+filename_1
+   310 00:014A: F4 xx xx     	pea	#^L7
+   311 00:014D: F4 xx xx     	pea	#<L7
+   312 00:0150: F4 0A 00     	pea	#10
+   313 00:0153: 22 xx xx xx  	jsl	~~printf
+   314                        ;	
+   315                        ;	origLen = (long *)&(comprData[flen-4]);
+   316                        L10011:
+   317 00:0157: A9 FC FF     	lda	#$fffc
+   318 00:015A: 18           	clc
+   319 00:015B: 65 2C        	adc	<L8+flen_0
+   320 00:015D: 85 01        	sta	<R0
+   321 00:015F: A9 FF FF     	lda	#$ffff
+   322 00:0162: 65 2E        	adc	<L8+flen_0+2
+   323 00:0164: 85 03        	sta	<R0+2
+   324 00:0166: A5 28        	lda	<L8+comprData_0
+   325 00:0168: 18           	clc
+   326 00:0169: 65 01        	adc	<R0
+   327 00:016B: 85 19        	sta	<L9+origLen_1
+   328 00:016D: A5 2A        	lda	<L8+comprData_0+2
+   329 00:016F: 65 03        	adc	<R0+2
+   330 00:0171: 85 1B        	sta	<L9+origLen_1+2
+   331                        ;	//printf("origLen: %lu\n", *origLen);
+   332                        ;	
+   333                        ;	outBuf = malloc(*origLen);
+   334 00:0173: A0 02 00     	ldy	#$2
+  Sun Jan  9 2022 20:37                                                Page 7
+
+
+   335 00:0176: B7 19        	lda	[<L9+origLen_1],Y
+   336 00:0178: 48           	pha
+   337 00:0179: A7 19        	lda	[<L9+origLen_1]
+   338 00:017B: 48           	pha
+   339 00:017C: 22 xx xx xx  	jsl	~~malloc
+   340 00:0180: 85 11        	sta	<L9+outBuf_1
+   341 00:0182: 86 13        	stx	<L9+outBuf_1+2
+   342                        ;	//printf("inBuf: %p, outBuf: %p\n", inBuf, outBu
+                    f);
+   343                        ;	
+   344                        ;	rc = inflate(inBuf, outBuf, &outLen);
+   345 00:0184: F4 00 00     	pea	#0
+   346 00:0187: 18           	clc
+   347 00:0188: 7B           	tdc
+   348 00:0189: 69 1D 00     	adc	#<L9+outLen_1
+   349 00:018C: 48           	pha
+   350 00:018D: D4 13        	pei	<L9+outBuf_1+2
+   351 00:018F: D4 11        	pei	<L9+outBuf_1
+   352 00:0191: D4 0B        	pei	<L9+inBuf_1+2
+   353 00:0193: D4 09        	pei	<L9+inBuf_1
+   354 00:0195: 22 xx xx xx  	jsl	~~inflate
+   355 00:0199: 85 07        	sta	<L9+rc_1
+   356                        ;	//printf("rc:%d\n", rc);
+   357                        ;	
+   358                        ;	if (rc != 0) {
+   359 00:019B: A5 07        	lda	<L9+rc_1
+   360 00:019D: F0 28        	beq	L10012
+   361                        ;		printf("inflate: unsupported compression
+                     algorithm\n");
+   362 00:019F: F4 xx xx     	pea	#^L7+14
+   363 00:01A2: F4 xx xx     	pea	#<L7+14
+   364 00:01A5: F4 06 00     	pea	#6
+   365 00:01A8: 80 16        	bra	L20003
+   366                        L20005:
+   367                        ;		printf("error originalLength != outputLe
+                    ngth (%lu != %lu)\n", *origLen, outLen);
+   368 00:01AA: D4 1F        	pei	<L9+outLen_1+2
+   369 00:01AC: D4 1D        	pei	<L9+outLen_1
+   370 00:01AE: A0 02 00     	ldy	#$2
+   371 00:01B1: B7 19        	lda	[<L9+origLen_1],Y
+   372 00:01B3: 48           	pha
+   373 00:01B4: A7 19        	lda	[<L9+origLen_1]
+   374 00:01B6: 48           	pha
+   375 00:01B7: F4 xx xx     	pea	#^L7+58
+   376 00:01BA: F4 xx xx     	pea	#<L7+58
+   377 00:01BD: F4 0E 00     	pea	#14
+   378                        ;		return -1;
+   379                        L20003:
+   380 00:01C0: 22 xx xx xx  	jsl	~~printf
+   381                        ;		return -1;
+   382 00:01C4: 82 F8 FE     	brl	L10
+   383                        ;	}
+   384                        ;	
+   385                        ;	if (*origLen != outLen) {
+   386                        L10012:
+   387 00:01C7: A7 19        	lda	[<L9+origLen_1]
+   388 00:01C9: C5 1D        	cmp	<L9+outLen_1
+   389 00:01CB: D0 07        	bne	L24
+  Sun Jan  9 2022 20:37                                                Page 8
+
+
+   390 00:01CD: A0 02 00     	ldy	#$2
+   391 00:01D0: B7 19        	lda	[<L9+origLen_1],Y
+   392 00:01D2: C5 1F        	cmp	<L9+outLen_1+2
+   393                        L24:
+   394 00:01D4: D0 D4        	bne	L20005
+   395                        ;	}
+   396                        ;
+   397                        ;	if (filename) {
+   398 00:01D6: A5 0D        	lda	<L9+filename_1
+   399 00:01D8: 05 0F        	ora	<L9+filename_1+2
+   400 00:01DA: F0 48        	beq	L10014
+   401                        ;		filename = adjustFilename(filename, 0);
+   402 00:01DC: F4 00 00     	pea	#<$0
+   403 00:01DF: D4 0F        	pei	<L9+filename_1+2
+   404 00:01E1: D4 0D        	pei	<L9+filename_1
+   405 00:01E3: 22 xx xx xx  	jsl	~~adjustFilename
+   406 00:01E7: 85 0D        	sta	<L9+filename_1
+   407 00:01E9: 86 0F        	stx	<L9+filename_1+2
+   408                        ;		
+   409                        ;		fout = fopen(filename, "wb");
+   410 00:01EB: F4 xx xx     	pea	#^L7+109
+   411 00:01EE: F4 xx xx     	pea	#<L7+109
+   412 00:01F1: D4 0F        	pei	<L9+filename_1+2
+   413 00:01F3: D4 0D        	pei	<L9+filename_1
+   414 00:01F5: 22 xx xx xx  	jsl	~~fopen
+   415 00:01F9: 85 21        	sta	<L9+fout_1
+   416 00:01FB: 86 23        	stx	<L9+fout_1+2
+   417                        ;		//vbuf = malloc(1024);
+   418                        ;		//setvbuf(fout, vbuf, _IOFBF, 1024);
+   419                        ;		if (fout) {
+   420 00:01FD: 05 23        	ora	<L9+fout_1+2
+   421 00:01FF: F0 23        	beq	L10014
+   422                        ;			fwrite(outBuf, 1, *origLen, fout
+                    );
+   423 00:0201: D4 23        	pei	<L9+fout_1+2
+   424 00:0203: D4 21        	pei	<L9+fout_1
+   425 00:0205: A0 02 00     	ldy	#$2
+   426 00:0208: B7 19        	lda	[<L9+origLen_1],Y
+   427 00:020A: 48           	pha
+   428 00:020B: A7 19        	lda	[<L9+origLen_1]
+   429 00:020D: 48           	pha
+   430 00:020E: F4 00 00     	pea	#^$1
+   431 00:0211: F4 01 00     	pea	#<$1
+   432 00:0214: D4 13        	pei	<L9+outBuf_1+2
+   433 00:0216: D4 11        	pei	<L9+outBuf_1
+   434 00:0218: 22 xx xx xx  	jsl	~~fwrite
+   435                        ;			fclose(fout);
+   436 00:021C: D4 23        	pei	<L9+fout_1+2
+   437 00:021E: D4 21        	pei	<L9+fout_1
+   438 00:0220: 22 xx xx xx  	jsl	~~fclose
+   439                        ;		}
+   440                        ;	}
+   441                        ;	return 0;
+   442                        L10014:
+   443 00:0224: A9 00 00     	lda	#$0
+   444 00:0227: 82 98 FE     	brl	L13
+   445                        ;}
+   446             00000024   L8	equ	36
+  Sun Jan  9 2022 20:37                                                Page 9
+
+
+   447             00000005   L9	equ	5
+   448                        	ends
+   449                        	efunc
+   450                        	data
+   451                        L7:
+   452 00:0017: 66 69 6C 65  	db	$66,$69,$6C,$65,$6E,$61,$6D,$65,$3A,$20,
+                    $25,$73,$0A,$00,$69
+       00:001B: 6E 61 6D 65 
+       00:001F: 3A 20 25 73 
+       00:0023: 0A 00 69 
+   453 00:0026: 6E 66 6C 61  	db	$6E,$66,$6C,$61,$74,$65,$3A,$20,$75,$6E,
+                    $73,$75,$70,$70,$6F
+       00:002A: 74 65 3A 20 
+       00:002E: 75 6E 73 75 
+       00:0032: 70 70 6F 
+   454 00:0035: 72 74 65 64  	db	$72,$74,$65,$64,$20,$63,$6F,$6D,$70,$72,
+                    $65,$73,$73,$69,$6F
+       00:0039: 20 63 6F 6D 
+       00:003D: 70 72 65 73 
+       00:0041: 73 69 6F 
+   455 00:0044: 6E 20 61 6C  	db	$6E,$20,$61,$6C,$67,$6F,$72,$69,$74,$68,
+                    $6D,$0A,$00,$65,$72
+       00:0048: 67 6F 72 69 
+       00:004C: 74 68 6D 0A 
+       00:0050: 00 65 72 
+   456 00:0053: 72 6F 72 20  	db	$72,$6F,$72,$20,$6F,$72,$69,$67,$69,$6E,
+                    $61,$6C,$4C,$65,$6E
+       00:0057: 6F 72 69 67 
+       00:005B: 69 6E 61 6C 
+       00:005F: 4C 65 6E 
+   457 00:0062: 67 74 68 20  	db	$67,$74,$68,$20,$21,$3D,$20,$6F,$75,$74,
+                    $70,$75,$74,$4C,$65
+       00:0066: 21 3D 20 6F 
+       00:006A: 75 74 70 75 
+       00:006E: 74 4C 65 
+   458 00:0071: 6E 67 74 68  	db	$6E,$67,$74,$68,$20,$28,$25,$6C,$75,$20,
+                    $21,$3D,$20,$25,$6C
+       00:0075: 20 28 25 6C 
+       00:0079: 75 20 21 3D 
+       00:007D: 20 25 6C 
+   459 00:0080: 75 29 0A 00  	db	$75,$29,$0A,$00,$77,$62,$00
+       00:0084: 77 62 00 
+   460 00:0087:              	ends
+   461                        ;
+   462                        ;int main(int argc, char **argv) {
+   463                        	code
+   464                        	xdef	~~main
+   465                        	func
+   466                        ~~main:
+   467                        	longa	on
+   468                        	longi	on
+   469 00:022A: 3B           	tsc
+   470 00:022B: 38           	sec
+   471 00:022C: E9 0E 00     	sbc	#L29
+   472 00:022F: 1B           	tcs
+   473 00:0230: 0B           	phd
+   474 00:0231: 5B           	tcd
+   475             00000004   argc_0	set	4
+  Sun Jan  9 2022 20:37                                                Page 10
+
+
+   476             00000006   argv_0	set	6
+   477                        ;	char *fname;
+   478                        ;	char *comprData;
+   479                        ;	int rc;
+   480                        ;	long flen;
+   481                        ;	
+   482                        ;	if (argc < 2) {
+   483             00000000   fname_1	set	0
+   484             00000004   comprData_1	set	4
+   485             00000008   rc_1	set	8
+   486             0000000A   flen_1	set	10
+   487 00:0232: A5 12        	lda	<L29+argc_0
+   488 00:0234: 30 04        	bmi	L31
+   489 00:0236: 3A           	dea
+   490 00:0237: 3A           	dea
+   491 00:0238: 10 0B        	bpl	L10016
+   492                        L31:
+   493                        ;		fname = adjustFilename("z*.gz", 0);
+   494 00:023A: F4 00 00     	pea	#<$0
+   495 00:023D: F4 xx xx     	pea	#^L28
+   496 00:0240: F4 xx xx     	pea	#<L28
+   497 00:0243: 80 0E        	bra	L20008
+   498                        ;		//printf("png <filename.png>\n");
+   499                        ;		//return 0;
+   500                        ;	} else {
+   501                        L10016:
+   502                        ;		fname = adjustFilename(argv[1], 0);
+   503 00:0245: F4 00 00     	pea	#<$0
+   504 00:0248: A0 06 00     	ldy	#$6
+   505 00:024B: B7 14        	lda	[<L29+argv_0],Y
+   506 00:024D: 48           	pha
+   507 00:024E: 88           	dey
+   508 00:024F: 88           	dey
+   509 00:0250: B7 14        	lda	[<L29+argv_0],Y
+   510 00:0252: 48           	pha
+   511                        L20008:
+   512 00:0253: 22 xx xx xx  	jsl	~~adjustFilename
+   513 00:0257: 85 01        	sta	<L30+fname_1
+   514 00:0259: 86 03        	stx	<L30+fname_1+2
+   515                        ;	}
+   516                        ;	
+   517                        ;	comprData = loadFile(fname, &flen);
+   518 00:025B: F4 00 00     	pea	#0
+   519 00:025E: 18           	clc
+   520 00:025F: 7B           	tdc
+   521 00:0260: 69 0B 00     	adc	#<L30+flen_1
+   522 00:0263: 48           	pha
+   523 00:0264: D4 03        	pei	<L30+fname_1+2
+   524 00:0266: D4 01        	pei	<L30+fname_1
+   525 00:0268: 22 xx xx xx  	jsl	~~loadFile
+   526 00:026C: 85 05        	sta	<L30+comprData_1
+   527 00:026E: 86 07        	stx	<L30+comprData_1+2
+   528                        ;	
+   529                        ;	if (comprData) {
+   530 00:0270: 05 07        	ora	<L30+comprData_1+2
+   531 00:0272: F0 0E        	beq	L33
+   532                        ;		rc = gunzip(comprData, flen);
+   533 00:0274: D4 0D        	pei	<L30+flen_1+2
+  Sun Jan  9 2022 20:37                                                Page 11
+
+
+   534 00:0276: D4 0B        	pei	<L30+flen_1
+   535 00:0278: D4 07        	pei	<L30+comprData_1+2
+   536 00:027A: D4 05        	pei	<L30+comprData_1
+   537 00:027C: 22 xx xx xx  	jsl	~~gunzip
+   538 00:0280: 85 09        	sta	<L30+rc_1
+   539                        ;		//printf("rc=%d\n", rc);
+   540                        ;	}
+   541                        ;}
+   542                        L33:
+   543 00:0282: A8           	tay
+   544 00:0283: A5 10        	lda	<L29+2
+   545 00:0285: 85 16        	sta	<L29+2+6
+   546 00:0287: A5 0F        	lda	<L29+1
+   547 00:0289: 85 15        	sta	<L29+1+6
+   548 00:028B: 2B           	pld
+   549 00:028C: 3B           	tsc
+   550 00:028D: 18           	clc
+   551 00:028E: 69 14 00     	adc	#L29+6
+   552 00:0291: 1B           	tcs
+   553 00:0292: 98           	tya
+   554 00:0293: 6B           	rtl
+   555             0000000E   L29	equ	14
+   556             00000001   L30	equ	1
+   557                        	ends
+   558                        	efunc
+   559                        	data
+   560                        L28:
+   561 00:0087: 7A 2A 2E 67  	db	$7A,$2A,$2E,$67,$7A,$00
+       00:008B: 7A 00 
+   562 00:008D:              	ends
+   563                        ;
+   564                        	xref	~~inflate
+   565                        	xref	~~adjustFilename
+   566                        	xref	~~stat
+   567                        	xref	~~malloc
+   568                        	xref	~~fclose
+   569                        	xref	~~fwrite
+   570                        	xref	~~fread
+   571                        	xref	~~printf
+   572                        	xref	~~fopen
+
+
+      Lines assembled: 572
+      Errors: 0

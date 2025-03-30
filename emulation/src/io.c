@@ -7,32 +7,152 @@
  */
 
 #include <stdio.h>
-
-//#include <SDL/SDL.h>
-
 #include <lib65816/cpu.h>
 #include "io.h"
-#include "lib65816/cpu.h"
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <conio.h>
+
+
+#define DEFAULT_BUFLEN 8
+#define DEFAULT_PORT "816"
+#define DEFAULT_PORT_NR 816
+
+SOCKET ClientSocket = INVALID_SOCKET;
+
+int write_socket(char c) {
+	int iSendResult;
+
+	// Echo the buffer back to the sender
+	iSendResult = send(ClientSocket, &c, 1, 0);
+
+	if (iSendResult == SOCKET_ERROR)
+	{
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(ClientSocket);
+		WSACleanup();
+		exit(0);
+	}
+	//printf("Bytes sent: %d\n", iSendResult);
+
+	return 1;
+}
+
+
+
+char read_socket() {
+	int iResult;
+    char recvbuf[DEFAULT_BUFLEN];
+    int recvbuflen = DEFAULT_BUFLEN;
+
+	iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+	if (iResult <= 0) {
+		printf("recv failed with error: %d\n", WSAGetLastError());
+		closesocket(ClientSocket);
+		WSACleanup();
+		exit(0);
+	}
+	
+	//printf("%c", recvbuf[0]);
+	return (char) (recvbuf[0]);
+}
+
+
+int initialize_socket() {
+    WSADATA wsaData;
+    int iResult;
+
+    SOCKET ListenSocket = INVALID_SOCKET;
+ 
+    struct addrinfo *result = NULL;
+    struct addrinfo hints;
+
+ 
+    printf("sizeof int: %d\n", sizeof(int));
+
+    printf("Initialising Winsock...\n");
+    // Initialize Winsock
+    iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (iResult != 0)
+    {
+        printf("WSAStartup failed with error: %d\n", iResult);
+        return 1;
+    }
+
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    hints.ai_flags = AI_PASSIVE;
+
+    // Resolve the server address and port
+    iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
+    if (iResult != 0)
+    {
+        printf("getaddrinfo failed with error: %d\n", iResult);
+        WSACleanup();
+        return 1;
+    }
+
+    // Create a SOCKET for the server to listen for client connections.
+    ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+    if (ListenSocket == INVALID_SOCKET)
+    {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        freeaddrinfo(result);
+        WSACleanup();
+        return 1;
+    }
+
+    // Setup the TCP listening socket
+    iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("bind failed with error: %d\n", WSAGetLastError());
+        freeaddrinfo(result);
+        closesocket(ListenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    freeaddrinfo(result);
+
+    iResult = listen(ListenSocket, SOMAXCONN);
+    if (iResult == SOCKET_ERROR)
+    {
+        printf("listen failed with error: %d\n", WSAGetLastError());
+        closesocket(ListenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    // Accept a client socket
+	printf("waiting for connection on port %d\n", DEFAULT_PORT_NR);
+    ClientSocket = accept(ListenSocket, NULL, NULL);
+    if (ClientSocket == INVALID_SOCKET)
+    {
+        printf("accept failed with error: %d\n", WSAGetLastError());
+        closesocket(ListenSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    // No longer need server socket
+    closesocket(ListenSocket);	
+
+	printf("socket accepted\n");
+}
+
 
 int io_initialize(void) {
-	int success;
+	int success = 1;
 
-	/*
-	 success = mgia_initialize();
-	 if( !success ) fprintf( stderr, "MGIA failed to initialize\n" );
 
-	 success = kimo_initialize();
-	 if( !success ) fprintf( stderr, "KIMO failed to initialize\n" );
+	initialize_socket();
 
-	 success = timers_initialize();
-	 if( !success ) fprintf( stderr, "TIMERS failed to initialize\n" );
-
-	 
-
-	success = mouse_initialize();
-	*/
 	if (!success)
-		fprintf( stderr, "MOUSE failed to initialize\n");
+		fprintf( stderr, "IO failed to initialize\n");
 
 	return success;
 }
@@ -43,6 +163,10 @@ void io_expunge(void) {
 
 byte io_read(word32 address, word32 timestamp) {
 	//word32 adr_palette = address & IOMASK_PALETTE;
+
+	if ((address & 0xFF00) == 0xD900) {
+		return (byte) read_socket();
+	}
 
 	/*
 	 if( ( address & IOMASK_MGIA ) == IOBASE_MGIA )
@@ -74,9 +198,14 @@ byte io_read(word32 address, word32 timestamp) {
 }
 
 void io_write(word32 address, byte b, word32 timestamp) {
-	/*
-	word32 adr_palette = address & IOMASK_PALETTE;
+	
+	//word32 adr_palette = address & IOMASK_PALETTE;
 
+	if ((address & 0xFF00) == 0xD800) {
+		write_socket((char) b);
+	}
+
+	/*
 	if ((address & IOMASK_MOUSE) == IOBASE_MOUSE)
 		mouse_write(address, b, timestamp);
 	else if ((address & IOMASK_KIMO) == IOBASE_KIMO)

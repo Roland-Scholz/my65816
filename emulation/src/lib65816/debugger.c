@@ -9,6 +9,7 @@
  */
 
 #include <lib65816/config.h>
+#include <stdlib.h>
 
 #ifdef DEBUG
 
@@ -18,6 +19,8 @@
 #include "cpumicro.h"
 
 /* 65816 debugger module */
+
+static int debug_cnt = 0;
 
 char *mnemonics[256] = {
 "BRK", "ORA", "COP", "ORA", "TSB", "ORA", "ASL", "ORA",
@@ -127,6 +130,8 @@ void CPU_debug(void) {
 	//int	operand;
     //int ea;
     //char operands[40];
+
+    if (debug_cnt++ > 50) exit (0);
 
 	opcode = M_READ(PC.A);
 	//mode = addrmodes[opcode];

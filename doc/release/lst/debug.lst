@@ -1,0 +1,1130 @@
+  Sun Jan  9 2022 20:53                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#define THR0	(*(char *)0xFFFFE0)
+     7                        ;#define LSR0	(*(char *)0xFFFFE5)
+     8                        ;
+     9                        ;//#ifndef _SIZE_T
+    10                        ;//#define _SIZE_T
+    11                        ;//  typedef unsigned long size_t;
+    12                        ;//#endif
+    13                        ;
+    14                        ;
+    15                        ;/*
+    16                        ;	Copyright 2001, 2002 Georges Menie (www.menie.or
+                    g)
+    17                        ;	stdarg version contributed by Christian Ettinger
+    18                        ;
+    19                        ;    This program is free software; you can redist
+                    ribute it and/or modify
+    20                        ;    it under the terms of the GNU Lesser General 
+                    Public License as published by
+    21                        ;    the Free Software Foundation; either version 
+                    2 of the License, or
+    22                        ;    (at your option) any later version.
+    23                        ;
+    24                        ;    This program is distributed in the hope that 
+                    it will be useful,
+    25                        ;    but WITHOUT ANY WARRANTY; without even the im
+                    plied warranty of
+    26                        ;    MERCHANTABILITY or FITNESS FOR A PARTICULAR P
+                    URPOSE.  See the
+    27                        ;    GNU Lesser General Public License for more de
+                    tails.
+    28                        ;
+    29                        ;    You should have received a copy of the GNU Le
+                    sser General Public License
+    30                        ;    along with this program; if not, write to the
+                     Free Software
+    31                        ;    Foundation, Inc., 59 Temple Place, Suite 330,
+                     Boston, MA  02111-1307  USA
+    32                        ;*/
+    33                        ;
+    34                        ;/*
+    35                        ;	putchar is the only external dependency for this
+                     file,
+    36                        ;	if you have a working putchar, leave it commente
+                    d out.
+    37                        ;	If not, uncomment the define below and
+    38                        ;	replace outbyte(c) by your own function call.
+    39                        ;*/
+  Sun Jan  9 2022 20:53                                                Page 2
+
+
+    40                        ;//#define putchar(c) outbyte(c)
+    41                        ;
+    42                        ;
+    43                        ;#include <stdlib.h>
+    44                        ;#include <stdarg.h>
+    45                        ;
+    46                        ;
+    47                        ;static void outbyte(int c) {
+    48                        	code
+    49                        	func
+    50                        ~~outbyte:
+    51                        	longa	on
+    52                        	longi	on
+    53 00:0000: 3B           	tsc
+    54 00:0001: 38           	sec
+    55 00:0002: E9 00 00     	sbc	#L2
+    56 00:0005: 1B           	tcs
+    57 00:0006: 0B           	phd
+    58 00:0007: 5B           	tcd
+    59             00000004   c_0	set	4
+    60                        ;	while (!(LSR0 & 0x40));
+    61                        L10001:
+    62 00:0008: E2 20        	sep	#$20
+    63                        	longa	off
+    64 00:000A: AF E5 FF FF  	lda	>16777189
+    65 00:000E: 29 40        	and	#<$40
+    66 00:0010: C2 20        	rep	#$20
+    67                        	longa	on
+    68 00:0012: F0 F4        	beq	L10001
+    69                        ;	THR0 = c;
+    70 00:0014: E2 20        	sep	#$20
+    71                        	longa	off
+    72 00:0016: A5 04        	lda	<L2+c_0
+    73 00:0018: 8F E0 FF FF  	sta	>16777184
+    74 00:001C: C2 20        	rep	#$20
+    75                        	longa	on
+    76                        ;}
+    77 00:001E: A5 02        	lda	<L2+2
+    78 00:0020: 85 04        	sta	<L2+2+2
+    79 00:0022: A5 01        	lda	<L2+1
+    80 00:0024: 85 03        	sta	<L2+1+2
+    81 00:0026: 2B           	pld
+    82 00:0027: 3B           	tsc
+    83 00:0028: 18           	clc
+    84 00:0029: 69 02 00     	adc	#L2+2
+    85 00:002C: 1B           	tcs
+    86 00:002D: 6B           	rtl
+    87             00000000   L2	equ	0
+    88             00000001   L3	equ	1
+    89                        	ends
+    90                        	efunc
+    91                        ;
+    92                        ;static void debugchar(char **str, int c)
+    93                        ;{
+    94                        	code
+    95                        	func
+    96                        ~~debugchar:
+    97                        	longa	on
+  Sun Jan  9 2022 20:53                                                Page 3
+
+
+    98                        	longi	on
+    99 00:002E: 3B           	tsc
+   100 00:002F: 38           	sec
+   101 00:0030: E9 04 00     	sbc	#L6
+   102 00:0033: 1B           	tcs
+   103 00:0034: 0B           	phd
+   104 00:0035: 5B           	tcd
+   105             00000004   str_0	set	4
+   106             00000008   c_0	set	8
+   107                        ;	//extern void putchar(int c);
+   108                        ;	
+   109                        ;	if (str) {
+   110 00:0036: A5 08        	lda	<L6+str_0
+   111 00:0038: 05 0A        	ora	<L6+str_0+2
+   112 00:003A: F0 24        	beq	L10003
+   113                        ;		**str = c;
+   114 00:003C: A7 08        	lda	[<L6+str_0]
+   115 00:003E: 85 01        	sta	<R0
+   116 00:0040: A0 02 00     	ldy	#$2
+   117 00:0043: B7 08        	lda	[<L6+str_0],Y
+   118 00:0045: 85 03        	sta	<R0+2
+   119 00:0047: E2 20        	sep	#$20
+   120                        	longa	off
+   121 00:0049: A5 0C        	lda	<L6+c_0
+   122 00:004B: 87 01        	sta	[<R0]
+   123 00:004D: C2 20        	rep	#$20
+   124                        	longa	on
+   125                        ;		++(*str);
+   126 00:004F: A9 01 00     	lda	#$1
+   127 00:0052: 18           	clc
+   128 00:0053: 67 08        	adc	[<L6+str_0]
+   129 00:0055: 87 08        	sta	[<L6+str_0]
+   130 00:0057: A9 00 00     	lda	#$0
+   131 00:005A: 77 08        	adc	[<L6+str_0],Y
+   132 00:005C: 97 08        	sta	[<L6+str_0],Y
+   133                        ;	}
+   134                        ;	else (void)outbyte(c);
+   135 00:005E: 80 06        	bra	L9
+   136                        L10003:
+   137 00:0060: D4 0C        	pei	<L6+c_0
+   138 00:0062: 22 xx xx xx  	jsl	~~outbyte
+   139                        ;}
+   140                        L9:
+   141 00:0066: A5 06        	lda	<L6+2
+   142 00:0068: 85 0C        	sta	<L6+2+6
+   143 00:006A: A5 05        	lda	<L6+1
+   144 00:006C: 85 0B        	sta	<L6+1+6
+   145 00:006E: 2B           	pld
+   146 00:006F: 3B           	tsc
+   147 00:0070: 18           	clc
+   148 00:0071: 69 0A 00     	adc	#L6+6
+   149 00:0074: 1B           	tcs
+   150 00:0075: 6B           	rtl
+   151             00000004   L6	equ	4
+   152             00000005   L7	equ	5
+   153                        	ends
+   154                        	efunc
+   155                        ;
+  Sun Jan  9 2022 20:53                                                Page 4
+
+
+   156                        ;#define PAD_RIGHT 1
+   157                        ;#define PAD_ZERO 2
+   158                        ;
+   159                        ;static int debugs(char **out, const char *string,
+                     int width, int pad)
+   160                        ;{
+   161                        	code
+   162                        	func
+   163                        ~~debugs:
+   164                        	longa	on
+   165                        	longi	on
+   166 00:0076: 3B           	tsc
+   167 00:0077: 38           	sec
+   168 00:0078: E9 0A 00     	sbc	#L10
+   169 00:007B: 1B           	tcs
+   170 00:007C: 0B           	phd
+   171 00:007D: 5B           	tcd
+   172             00000004   out_0	set	4
+   173             00000008   string_0	set	8
+   174             0000000C   width_0	set	12
+   175             0000000E   pad_0	set	14
+   176                        ;	register int pc = 0, padchar = ' ';
+   177                        ;
+   178                        ;	if (width > 0) {
+   179             00000000   pc_1	set	0
+   180             00000002   padchar_1	set	2
+   181 00:007E: 64 01        	stz	<L11+pc_1
+   182 00:0080: A9 20 00     	lda	#$20
+   183 00:0083: 85 03        	sta	<L11+padchar_1
+   184 00:0085: 38           	sec
+   185 00:0086: A9 00 00     	lda	#$0
+   186 00:0089: E5 16        	sbc	<L10+width_0
+   187 00:008B: 70 03        	bvs	L12
+   188 00:008D: 49 00 80     	eor	#$8000
+   189                        L12:
+   190 00:0090: 30 3E        	bmi	L10005
+   191                        ;		register int len = 0;
+   192                        ;		register const char *ptr;
+   193                        ;		for (ptr = string; *ptr; ++ptr) ++len;
+   194             00000004   len_2	set	4
+   195             00000006   ptr_2	set	6
+   196 00:0092: 64 05        	stz	<L11+len_2
+   197 00:0094: A5 12        	lda	<L10+string_0
+   198 00:0096: 85 07        	sta	<L11+ptr_2
+   199 00:0098: A5 14        	lda	<L10+string_0+2
+   200 00:009A: 85 09        	sta	<L11+ptr_2+2
+   201 00:009C: 80 08        	bra	L10009
+   202                        L10008:
+   203 00:009E: E6 05        	inc	<L11+len_2
+   204 00:00A0: E6 07        	inc	<L11+ptr_2
+   205 00:00A2: D0 02        	bne	L10009
+   206 00:00A4: E6 09        	inc	<L11+ptr_2+2
+   207                        L10009:
+   208 00:00A6: A7 07        	lda	[<L11+ptr_2]
+   209 00:00A8: 29 FF 00     	and	#$ff
+   210 00:00AB: D0 F1        	bne	L10008
+   211                        ;		if (len >= width) width = 0;
+   212 00:00AD: 38           	sec
+  Sun Jan  9 2022 20:53                                                Page 5
+
+
+   213 00:00AE: A5 05        	lda	<L11+len_2
+   214 00:00B0: E5 16        	sbc	<L10+width_0
+   215 00:00B2: 70 03        	bvs	L16
+   216 00:00B4: 49 00 80     	eor	#$8000
+   217                        L16:
+   218 00:00B7: 10 04        	bpl	L10010
+   219 00:00B9: 64 16        	stz	<L10+width_0
+   220                        ;		else width -= len;
+   221 00:00BB: 80 07        	bra	L10011
+   222                        L10010:
+   223 00:00BD: 38           	sec
+   224 00:00BE: A5 16        	lda	<L10+width_0
+   225 00:00C0: E5 05        	sbc	<L11+len_2
+   226 00:00C2: 85 16        	sta	<L10+width_0
+   227                        L10011:
+   228                        ;		if (pad & PAD_ZERO) padchar = '0';
+   229 00:00C4: A5 18        	lda	<L10+pad_0
+   230 00:00C6: 29 02 00     	and	#<$2
+   231 00:00C9: F0 05        	beq	L10005
+   232 00:00CB: A9 30 00     	lda	#$30
+   233 00:00CE: 85 03        	sta	<L11+padchar_1
+   234                        ;	}
+   235                        ;	if (!(pad & PAD_RIGHT)) {
+   236                        L10005:
+   237 00:00D0: A5 18        	lda	<L10+pad_0
+   238 00:00D2: 29 01 00     	and	#<$1
+   239 00:00D5: F0 10        	beq	L10017
+   240 00:00D7: 80 33        	bra	L10021
+   241                        ;		for ( ; width > 0; --width) {
+   242                        L10016:
+   243                        ;			debugchar (out, padchar);
+   244 00:00D9: D4 03        	pei	<L11+padchar_1
+   245 00:00DB: D4 10        	pei	<L10+out_0+2
+   246 00:00DD: D4 0E        	pei	<L10+out_0
+   247 00:00DF: 22 xx xx xx  	jsl	~~debugchar
+   248                        ;			++pc;
+   249 00:00E3: E6 01        	inc	<L11+pc_1
+   250                        ;		}
+   251 00:00E5: C6 16        	dec	<L10+width_0
+   252                        L10017:
+   253 00:00E7: 38           	sec
+   254 00:00E8: A9 00 00     	lda	#$0
+   255 00:00EB: E5 16        	sbc	<L10+width_0
+   256 00:00ED: 70 03        	bvs	L20
+   257 00:00EF: 49 00 80     	eor	#$8000
+   258                        L20:
+   259 00:00F2: 30 18        	bmi	L10021
+   260 00:00F4: 80 E3        	bra	L10016
+   261                        ;	}
+   262                        ;	for ( ; *string ; ++string) {
+   263                        L10020:
+   264                        ;		debugchar (out, *string);
+   265 00:00F6: A7 12        	lda	[<L10+string_0]
+   266 00:00F8: 29 FF 00     	and	#$ff
+   267 00:00FB: 48           	pha
+   268 00:00FC: D4 10        	pei	<L10+out_0+2
+   269 00:00FE: D4 0E        	pei	<L10+out_0
+   270 00:0100: 22 xx xx xx  	jsl	~~debugchar
+  Sun Jan  9 2022 20:53                                                Page 6
+
+
+   271                        ;		++pc;
+   272 00:0104: E6 01        	inc	<L11+pc_1
+   273                        ;	}
+   274 00:0106: E6 12        	inc	<L10+string_0
+   275 00:0108: D0 02        	bne	L10021
+   276 00:010A: E6 14        	inc	<L10+string_0+2
+   277                        L10021:
+   278 00:010C: A7 12        	lda	[<L10+string_0]
+   279 00:010E: 29 FF 00     	and	#$ff
+   280 00:0111: F0 10        	beq	L10025
+   281 00:0113: 80 E1        	bra	L10020
+   282                        ;	for ( ; width > 0; --width) {
+   283                        L10024:
+   284                        ;		debugchar (out, padchar);
+   285 00:0115: D4 03        	pei	<L11+padchar_1
+   286 00:0117: D4 10        	pei	<L10+out_0+2
+   287 00:0119: D4 0E        	pei	<L10+out_0
+   288 00:011B: 22 xx xx xx  	jsl	~~debugchar
+   289                        ;		++pc;
+   290 00:011F: E6 01        	inc	<L11+pc_1
+   291                        ;	}
+   292 00:0121: C6 16        	dec	<L10+width_0
+   293                        L10025:
+   294 00:0123: 38           	sec
+   295 00:0124: A9 00 00     	lda	#$0
+   296 00:0127: E5 16        	sbc	<L10+width_0
+   297 00:0129: 70 03        	bvs	L24
+   298 00:012B: 49 00 80     	eor	#$8000
+   299                        L24:
+   300 00:012E: 10 E5        	bpl	L10024
+   301                        ;
+   302                        ;	return pc;
+   303 00:0130: A5 01        	lda	<L11+pc_1
+   304 00:0132: A8           	tay
+   305 00:0133: A5 0C        	lda	<L10+2
+   306 00:0135: 85 18        	sta	<L10+2+12
+   307 00:0137: A5 0B        	lda	<L10+1
+   308 00:0139: 85 17        	sta	<L10+1+12
+   309 00:013B: 2B           	pld
+   310 00:013C: 3B           	tsc
+   311 00:013D: 18           	clc
+   312 00:013E: 69 16 00     	adc	#L10+12
+   313 00:0141: 1B           	tcs
+   314 00:0142: 98           	tya
+   315 00:0143: 6B           	rtl
+   316                        ;}
+   317             0000000A   L10	equ	10
+   318             00000001   L11	equ	1
+   319                        	ends
+   320                        	efunc
+   321                        ;
+   322                        ;/* the following should be enough for 32 bit int 
+                    */
+   323                        ;#define PRINT_BUF_LEN 12
+   324                        ;
+   325                        ;static int debugi(char **out, long i, int b, int 
+                    sg, int width, int pad, int letbase)
+   326                        ;{
+  Sun Jan  9 2022 20:53                                                Page 7
+
+
+   327                        	code
+   328                        	func
+   329                        ~~debugi:
+   330                        	longa	on
+   331                        	longi	on
+   332 00:0144: 3B           	tsc
+   333 00:0145: 38           	sec
+   334 00:0146: E9 1E 00     	sbc	#L27
+   335 00:0149: 1B           	tcs
+   336 00:014A: 0B           	phd
+   337 00:014B: 5B           	tcd
+   338             00000004   out_0	set	4
+   339             00000008   i_0	set	8
+   340             0000000C   b_0	set	12
+   341             0000000E   sg_0	set	14
+   342             00000010   width_0	set	16
+   343             00000012   pad_0	set	18
+   344             00000014   letbase_0	set	20
+   345                        ;	char print_buf[PRINT_BUF_LEN];
+   346                        ;	/*register*/ char *s;
+   347                        ;	/*register*/ unsigned int t, neg = 0, pc = 0;
+   348                        ;	/*register*/ unsigned long u = i;
+   349                        ;
+   350                        ;	if (i == 0) {
+   351             00000000   print_buf_1	set	0
+   352             0000000C   s_1	set	12
+   353             00000010   t_1	set	16
+   354             00000012   neg_1	set	18
+   355             00000014   pc_1	set	20
+   356             00000016   u_1	set	22
+   357 00:014C: 64 17        	stz	<L28+neg_1
+   358 00:014E: 64 19        	stz	<L28+pc_1
+   359 00:0150: A5 26        	lda	<L27+i_0
+   360 00:0152: 85 1B        	sta	<L28+u_1
+   361 00:0154: A5 28        	lda	<L27+i_0+2
+   362 00:0156: 85 1D        	sta	<L28+u_1+2
+   363 00:0158: A5 26        	lda	<L27+i_0
+   364 00:015A: 05 28        	ora	<L27+i_0+2
+   365 00:015C: D0 31        	bne	L10026
+   366                        ;		print_buf[0] = '0';
+   367 00:015E: E2 20        	sep	#$20
+   368                        	longa	off
+   369 00:0160: A9 30        	lda	#$30
+   370 00:0162: 85 05        	sta	<L28+print_buf_1
+   371                        ;		print_buf[1] = '\0';
+   372 00:0164: 64 06        	stz	<L28+print_buf_1+1
+   373 00:0166: C2 20        	rep	#$20
+   374                        	longa	on
+   375                        ;		return debugs (out, print_buf, width, pa
+                    d);
+   376 00:0168: D4 30        	pei	<L27+pad_0
+   377 00:016A: D4 2E        	pei	<L27+width_0
+   378 00:016C: F4 00 00     	pea	#0
+   379 00:016F: 18           	clc
+   380 00:0170: 7B           	tdc
+   381 00:0171: 69 05 00     	adc	#<L28+print_buf_1
+   382 00:0174: 48           	pha
+   383 00:0175: D4 24        	pei	<L27+out_0+2
+  Sun Jan  9 2022 20:53                                                Page 8
+
+
+   384 00:0177: D4 22        	pei	<L27+out_0
+   385 00:0179: 22 xx xx xx  	jsl	~~debugs
+   386                        L30:
+   387 00:017D: A8           	tay
+   388 00:017E: A5 20        	lda	<L27+2
+   389 00:0180: 85 32        	sta	<L27+2+18
+   390 00:0182: A5 1F        	lda	<L27+1
+   391 00:0184: 85 31        	sta	<L27+1+18
+   392 00:0186: 2B           	pld
+   393 00:0187: 3B           	tsc
+   394 00:0188: 18           	clc
+   395 00:0189: 69 30 00     	adc	#L27+18
+   396 00:018C: 1B           	tcs
+   397 00:018D: 98           	tya
+   398 00:018E: 6B           	rtl
+   399                        ;	}
+   400                        ;
+   401                        ;	if (sg && b == 10 && i < 0) {
+   402                        L10026:
+   403 00:018F: A5 2C        	lda	<L27+sg_0
+   404 00:0191: F0 1D        	beq	L10027
+   405 00:0193: A5 2A        	lda	<L27+b_0
+   406 00:0195: C9 0A 00     	cmp	#<$a
+   407 00:0198: D0 16        	bne	L10027
+   408 00:019A: A5 28        	lda	<L27+i_0+2
+   409 00:019C: 10 12        	bpl	L10027
+   410                        ;		neg = 1;
+   411 00:019E: A9 01 00     	lda	#$1
+   412 00:01A1: 85 17        	sta	<L28+neg_1
+   413                        ;		u = -i;
+   414 00:01A3: 38           	sec
+   415 00:01A4: 3A           	dea
+   416 00:01A5: E5 26        	sbc	<L27+i_0
+   417 00:01A7: 85 1B        	sta	<L28+u_1
+   418 00:01A9: A9 00 00     	lda	#$0
+   419 00:01AC: E5 28        	sbc	<L27+i_0+2
+   420 00:01AE: 85 1D        	sta	<L28+u_1+2
+   421                        ;	}
+   422                        ;
+   423                        ;	s = print_buf + PRINT_BUF_LEN-1;
+   424                        L10027:
+   425 00:01B0: 18           	clc
+   426 00:01B1: 7B           	tdc
+   427 00:01B2: 69 10 00     	adc	#<L28+print_buf_1+11
+   428 00:01B5: 85 11        	sta	<L28+s_1
+   429 00:01B7: A9 00 00     	lda	#$0
+   430 00:01BA: 85 13        	sta	<L28+s_1+2
+   431                        ;	*s = '\0';
+   432 00:01BC: E2 20        	sep	#$20
+   433                        	longa	off
+   434 00:01BE: A9 00        	lda	#$0
+   435 00:01C0: 87 11        	sta	[<L28+s_1]
+   436 00:01C2: C2 20        	rep	#$20
+   437                        	longa	on
+   438                        ;
+   439                        ;	while (u) {
+   440 00:01C4: 80 5C        	bra	L10028
+   441                        L20001:
+  Sun Jan  9 2022 20:53                                                Page 9
+
+
+   442                        ;		t = u % b;
+   443 00:01C6: A0 00 00     	ldy	#$0
+   444 00:01C9: A5 2A        	lda	<L27+b_0
+   445 00:01CB: 10 01        	bpl	L35
+   446 00:01CD: 88           	dey
+   447                        L35:
+   448 00:01CE: 85 01        	sta	<R0
+   449 00:01D0: 84 03        	sty	<R0+2
+   450 00:01D2: D4 03        	pei	<R0+2
+   451 00:01D4: D4 01        	pei	<R0
+   452 00:01D6: D4 1D        	pei	<L28+u_1+2
+   453 00:01D8: D4 1B        	pei	<L28+u_1
+   454                        	xref	~~~lumd
+   455 00:01DA: 22 xx xx xx  	jsl	~~~lumd
+   456 00:01DE: 86 03        	stx	<R0+2
+   457 00:01E0: 85 15        	sta	<L28+t_1
+   458                        ;		if( t >= 10 )
+   459                        ;			t += letbase - '0' - 10;
+   460 00:01E2: C9 0A 00     	cmp	#<$a
+   461 00:01E5: 90 0B        	bcc	L10030
+   462 00:01E7: A5 15        	lda	<L28+t_1
+   463 00:01E9: 18           	clc
+   464 00:01EA: 65 32        	adc	<L27+letbase_0
+   465 00:01EC: 18           	clc
+   466 00:01ED: 69 C6 FF     	adc	#$ffc6
+   467 00:01F0: 85 15        	sta	<L28+t_1
+   468                        ;		*--s = t + '0';
+   469                        L10030:
+   470 00:01F2: A5 11        	lda	<L28+s_1
+   471 00:01F4: D0 02        	bne	L37
+   472 00:01F6: C6 13        	dec	<L28+s_1+2
+   473                        L37:
+   474 00:01F8: C6 11        	dec	<L28+s_1
+   475 00:01FA: A9 30 00     	lda	#$30
+   476 00:01FD: 18           	clc
+   477 00:01FE: 65 15        	adc	<L28+t_1
+   478 00:0200: E2 20        	sep	#$20
+   479                        	longa	off
+   480 00:0202: 87 11        	sta	[<L28+s_1]
+   481 00:0204: C2 20        	rep	#$20
+   482                        	longa	on
+   483                        ;		u /= b;
+   484 00:0206: A0 00 00     	ldy	#$0
+   485 00:0209: A5 2A        	lda	<L27+b_0
+   486 00:020B: 10 01        	bpl	L38
+   487 00:020D: 88           	dey
+   488                        L38:
+   489 00:020E: 85 01        	sta	<R0
+   490 00:0210: 84 03        	sty	<R0+2
+   491 00:0212: D4 03        	pei	<R0+2
+   492 00:0214: D4 01        	pei	<R0
+   493 00:0216: D4 1D        	pei	<L28+u_1+2
+   494 00:0218: D4 1B        	pei	<L28+u_1
+   495                        	xref	~~~ludv
+   496 00:021A: 22 xx xx xx  	jsl	~~~ludv
+   497 00:021E: 85 1B        	sta	<L28+u_1
+   498 00:0220: 86 1D        	stx	<L28+u_1+2
+   499                        ;	}
+  Sun Jan  9 2022 20:53                                                Page 10
+
+
+   500                        L10028:
+   501 00:0222: A5 1B        	lda	<L28+u_1
+   502 00:0224: 05 1D        	ora	<L28+u_1+2
+   503 00:0226: D0 9E        	bne	L20001
+   504                        ;
+   505                        ;	if (neg) {
+   506 00:0228: A5 17        	lda	<L28+neg_1
+   507 00:022A: F0 2C        	beq	L10031
+   508                        ;		if( width && (pad & PAD_ZERO) ) {
+   509 00:022C: A5 2E        	lda	<L27+width_0
+   510 00:022E: F0 18        	beq	L10032
+   511 00:0230: A5 30        	lda	<L27+pad_0
+   512 00:0232: 29 02 00     	and	#<$2
+   513 00:0235: F0 11        	beq	L10032
+   514                        ;			debugchar (out, '-');
+   515 00:0237: F4 2D 00     	pea	#<$2d
+   516 00:023A: D4 24        	pei	<L27+out_0+2
+   517 00:023C: D4 22        	pei	<L27+out_0
+   518 00:023E: 22 xx xx xx  	jsl	~~debugchar
+   519                        ;			++pc;
+   520 00:0242: E6 19        	inc	<L28+pc_1
+   521                        ;			--width;
+   522 00:0244: C6 2E        	dec	<L27+width_0
+   523                        ;		}
+   524                        ;		else {
+   525 00:0246: 80 10        	bra	L10031
+   526                        L10032:
+   527                        ;			*--s = '-';
+   528 00:0248: A5 11        	lda	<L28+s_1
+   529 00:024A: D0 02        	bne	L42
+   530 00:024C: C6 13        	dec	<L28+s_1+2
+   531                        L42:
+   532 00:024E: C6 11        	dec	<L28+s_1
+   533 00:0250: E2 20        	sep	#$20
+   534                        	longa	off
+   535 00:0252: A9 2D        	lda	#$2d
+   536 00:0254: 87 11        	sta	[<L28+s_1]
+   537 00:0256: C2 20        	rep	#$20
+   538                        	longa	on
+   539                        ;		}
+   540                        ;	}
+   541                        ;
+   542                        ;	return pc + debugs (out, s, width, pad);
+   543                        L10031:
+   544 00:0258: D4 30        	pei	<L27+pad_0
+   545 00:025A: D4 2E        	pei	<L27+width_0
+   546 00:025C: D4 13        	pei	<L28+s_1+2
+   547 00:025E: D4 11        	pei	<L28+s_1
+   548 00:0260: D4 24        	pei	<L27+out_0+2
+   549 00:0262: D4 22        	pei	<L27+out_0
+   550 00:0264: 22 xx xx xx  	jsl	~~debugs
+   551 00:0268: A5 01        	lda	<R0
+   552 00:026A: 18           	clc
+   553 00:026B: 65 19        	adc	<L28+pc_1
+   554 00:026D: 82 0D FF     	brl	L30
+   555                        ;}
+   556             0000001E   L27	equ	30
+   557             00000005   L28	equ	5
+  Sun Jan  9 2022 20:53                                                Page 11
+
+
+   558                        	ends
+   559                        	efunc
+   560                        ;
+   561                        ;static int debug( char **out, const char *format,
+                     va_list args )
+   562                        ;{
+   563                        	code
+   564                        	func
+   565                        ~~debug:
+   566                        	longa	on
+   567                        	longi	on
+   568 00:0270: 3B           	tsc
+   569 00:0271: 38           	sec
+   570 00:0272: E9 14 00     	sbc	#L43
+   571 00:0275: 1B           	tcs
+   572 00:0276: 0B           	phd
+   573 00:0277: 5B           	tcd
+   574             00000004   out_0	set	4
+   575             00000008   format_0	set	8
+   576             0000000C   args_0	set	12
+   577                        ;	/*register*/ unsigned int width, pad;
+   578                        ;	/*register*/ unsigned int pc = 0;
+   579                        ;	char scr[2];
+   580                        ;
+   581                        ;	for (; *format != 0; ++format) {
+   582             00000000   width_1	set	0
+   583             00000002   pad_1	set	2
+   584             00000004   pc_1	set	4
+   585             00000006   scr_1	set	6
+   586 00:0278: 64 0D        	stz	<L44+pc_1
+   587 00:027A: 82 C8 01     	brl	L10037
+   588                        L10036:
+   589                        ;		if (*format == '%') {
+   590 00:027D: E2 20        	sep	#$20
+   591                        	longa	off
+   592 00:027F: A7 1C        	lda	[<L43+format_0]
+   593 00:0281: C9 25        	cmp	#<$25
+   594 00:0283: C2 20        	rep	#$20
+   595                        	longa	on
+   596 00:0285: F0 03        	beq	*+5
+   597 00:0287: 82 A5 01     	brl	L10039
+   598                        ;			++format;
+   599 00:028A: E6 1C        	inc	<L43+format_0
+   600 00:028C: D0 02        	bne	L46
+   601 00:028E: E6 1E        	inc	<L43+format_0+2
+   602                        L46:
+   603                        ;			width = pad = 0;
+   604 00:0290: 64 0B        	stz	<L44+pad_1
+   605 00:0292: 64 09        	stz	<L44+width_1
+   606                        ;			if (*format == '\0') break;
+   607 00:0294: A7 1C        	lda	[<L43+format_0]
+   608 00:0296: 29 FF 00     	and	#$ff
+   609 00:0299: D0 03        	bne	*+5
+   610 00:029B: 82 B1 01     	brl	L10035
+   611                        ;			if (*format == '%') goto out;
+   612 00:029E: E2 20        	sep	#$20
+   613                        	longa	off
+   614 00:02A0: A7 1C        	lda	[<L43+format_0]
+  Sun Jan  9 2022 20:53                                                Page 12
+
+
+   615 00:02A2: C9 25        	cmp	#<$25
+   616 00:02A4: C2 20        	rep	#$20
+   617                        	longa	on
+   618 00:02A6: D0 03        	bne	*+5
+   619 00:02A8: 82 84 01     	brl	L10039
+   620                        ;			if (*format == '-') {
+   621 00:02AB: E2 20        	sep	#$20
+   622                        	longa	off
+   623 00:02AD: A7 1C        	lda	[<L43+format_0]
+   624 00:02AF: C9 2D        	cmp	#<$2d
+   625 00:02B1: C2 20        	rep	#$20
+   626                        	longa	on
+   627 00:02B3: D0 18        	bne	L10041
+   628                        ;				++format;
+   629 00:02B5: E6 1C        	inc	<L43+format_0
+   630 00:02B7: D0 02        	bne	L50
+   631 00:02B9: E6 1E        	inc	<L43+format_0+2
+   632                        L50:
+   633                        ;				pad = PAD_RIGHT;
+   634 00:02BB: A9 01 00     	lda	#$1
+   635 00:02BE: 85 0B        	sta	<L44+pad_1
+   636                        ;			}
+   637                        ;			while (*format == '0') {
+   638 00:02C0: 80 0B        	bra	L10041
+   639                        L20003:
+   640                        ;				++format;
+   641 00:02C2: E6 1C        	inc	<L43+format_0
+   642 00:02C4: D0 02        	bne	L52
+   643 00:02C6: E6 1E        	inc	<L43+format_0+2
+   644                        L52:
+   645                        ;				pad |= PAD_ZERO;
+   646 00:02C8: A9 02 00     	lda	#$2
+   647 00:02CB: 04 0B        	tsb	<L44+pad_1
+   648                        ;			}
+   649                        L10041:
+   650 00:02CD: E2 20        	sep	#$20
+   651                        	longa	off
+   652 00:02CF: A7 1C        	lda	[<L43+format_0]
+   653 00:02D1: C9 30        	cmp	#<$30
+   654 00:02D3: C2 20        	rep	#$20
+   655                        	longa	on
+   656 00:02D5: F0 EB        	beq	L20003
+   657                        ;			for ( ; *format >= '0' && *forma
+                    t <= '9'; ++format) {
+   658 00:02D7: 80 1D        	bra	L10046
+   659                        L10045:
+   660                        ;				width *= 10;
+   661 00:02D9: A5 09        	lda	<L44+width_1
+   662 00:02DB: 0A           	asl	A
+   663 00:02DC: 0A           	asl	A
+   664 00:02DD: 65 09        	adc	<L44+width_1
+   665 00:02DF: 0A           	asl	A
+   666 00:02E0: 85 09        	sta	<L44+width_1
+   667                        ;				width += *format - '0';
+   668 00:02E2: A7 1C        	lda	[<L43+format_0]
+   669 00:02E4: 29 FF 00     	and	#$ff
+   670 00:02E7: 18           	clc
+   671 00:02E8: 65 09        	adc	<L44+width_1
+  Sun Jan  9 2022 20:53                                                Page 13
+
+
+   672 00:02EA: 18           	clc
+   673 00:02EB: 69 D0 FF     	adc	#$ffd0
+   674 00:02EE: 85 09        	sta	<L44+width_1
+   675                        ;			}
+   676 00:02F0: E6 1C        	inc	<L43+format_0
+   677 00:02F2: D0 02        	bne	L10046
+   678 00:02F4: E6 1E        	inc	<L43+format_0+2
+   679                        L10046:
+   680 00:02F6: E2 20        	sep	#$20
+   681                        	longa	off
+   682 00:02F8: A7 1C        	lda	[<L43+format_0]
+   683 00:02FA: C9 30        	cmp	#<$30
+   684 00:02FC: C2 20        	rep	#$20
+   685                        	longa	on
+   686 00:02FE: 90 0A        	bcc	L10044
+   687 00:0300: E2 20        	sep	#$20
+   688                        	longa	off
+   689 00:0302: A9 39        	lda	#$39
+   690 00:0304: C7 1C        	cmp	[<L43+format_0]
+   691 00:0306: C2 20        	rep	#$20
+   692                        	longa	on
+   693 00:0308: B0 CF        	bcs	L10045
+   694                        L10044:
+   695                        ;			if( *format == 's' ) {
+   696 00:030A: E2 20        	sep	#$20
+   697                        	longa	off
+   698 00:030C: A7 1C        	lda	[<L43+format_0]
+   699 00:030E: C9 73        	cmp	#<$73
+   700 00:0310: C2 20        	rep	#$20
+   701                        	longa	on
+   702 00:0312: F0 03        	beq	*+5
+   703 00:0314: 82 90 00     	brl	L10047
+   704                        ;				register char *s = (char
+                     *)va_arg( args, long );
+   705                        ;				pc += debugs (out, s?s:"
+                    (null)", width, pad);
+   706             00000008   s_2	set	8
+   707 00:0317: A9 04 00     	lda	#$4
+   708 00:031A: 18           	clc
+   709 00:031B: 65 20        	adc	<L43+args_0
+   710 00:031D: 85 20        	sta	<L43+args_0
+   711 00:031F: 90 02        	bcc	L58
+   712 00:0321: E6 22        	inc	<L43+args_0+2
+   713                        L58:
+   714 00:0323: A9 FC FF     	lda	#$fffc
+   715 00:0326: 18           	clc
+   716 00:0327: 65 20        	adc	<L43+args_0
+   717 00:0329: 85 01        	sta	<R0
+   718 00:032B: A9 FF FF     	lda	#$ffff
+   719 00:032E: 65 22        	adc	<L43+args_0+2
+   720 00:0330: 85 03        	sta	<R0+2
+   721 00:0332: A7 01        	lda	[<R0]
+   722 00:0334: 85 11        	sta	<L44+s_2
+   723 00:0336: A0 02 00     	ldy	#$2
+   724 00:0339: B7 01        	lda	[<R0],Y
+   725 00:033B: 85 13        	sta	<L44+s_2+2
+   726 00:033D: D4 0B        	pei	<L44+pad_1
+   727 00:033F: D4 09        	pei	<L44+width_1
+  Sun Jan  9 2022 20:53                                                Page 14
+
+
+   728 00:0341: A5 11        	lda	<L44+s_2
+   729 00:0343: 05 13        	ora	<L44+s_2+2
+   730 00:0345: F0 06        	beq	L59
+   731 00:0347: A6 13        	ldx	<L44+s_2+2
+   732 00:0349: A5 11        	lda	<L44+s_2
+   733 00:034B: 80 07        	bra	L61
+   734                        L59:
+   735 00:034D: A9 xx xx     	lda	#^L1
+   736 00:0350: AA           	tax
+   737 00:0351: A9 xx xx     	lda	#<L1
+   738                        L61:
+   739 00:0354: 85 01        	sta	<R0
+   740 00:0356: 86 03        	stx	<R0+2
+   741 00:0358: D4 03        	pei	<R0+2
+   742 00:035A: D4 01        	pei	<R0
+   743                        L20076:
+   744 00:035C: D4 1A        	pei	<L43+out_0+2
+   745 00:035E: D4 18        	pei	<L43+out_0
+   746 00:0360: 22 xx xx xx  	jsl	~~debugs
+   747 00:0364: 80 39        	bra	L20008
+   748                        L20066:
+   749                        ;				pc += debugi (out, va_ar
+                    g( args, long), 10, 1, width, pad, 'a');
+   750 00:0366: F4 61 00     	pea	#<$61
+   751 00:0369: D4 0B        	pei	<L44+pad_1
+   752 00:036B: D4 09        	pei	<L44+width_1
+   753 00:036D: F4 01 00     	pea	#<$1
+   754                        L20073:
+   755 00:0370: F4 0A 00     	pea	#<$a
+   756                        L20072:
+   757 00:0373: A9 04 00     	lda	#$4
+   758 00:0376: 18           	clc
+   759 00:0377: 65 20        	adc	<L43+args_0
+   760 00:0379: 85 20        	sta	<L43+args_0
+   761 00:037B: 90 02        	bcc	L63
+   762 00:037D: E6 22        	inc	<L43+args_0+2
+   763                        L63:
+   764 00:037F: A9 FC FF     	lda	#$fffc
+   765 00:0382: 18           	clc
+   766 00:0383: 65 20        	adc	<L43+args_0
+   767 00:0385: 85 01        	sta	<R0
+   768 00:0387: A9 FF FF     	lda	#$ffff
+   769 00:038A: 65 22        	adc	<L43+args_0+2
+   770 00:038C: 85 03        	sta	<R0+2
+   771 00:038E: A0 02 00     	ldy	#$2
+   772 00:0391: B7 01        	lda	[<R0],Y
+   773 00:0393: 48           	pha
+   774 00:0394: A7 01        	lda	[<R0]
+   775 00:0396: 48           	pha
+   776 00:0397: D4 1A        	pei	<L43+out_0+2
+   777 00:0399: D4 18        	pei	<L43+out_0
+   778 00:039B: 22 xx xx xx  	jsl	~~debugi
+   779                        ;				continue;
+   780                        L20008:
+   781 00:039F: 18           	clc
+   782 00:03A0: 65 0D        	adc	<L44+pc_1
+   783 00:03A2: 85 0D        	sta	<L44+pc_1
+   784                        ;				continue;
+  Sun Jan  9 2022 20:53                                                Page 15
+
+
+   785 00:03A4: 82 98 00     	brl	L10034
+   786                        ;			}
+   787                        ;			if( *format == 'd' ) {
+   788                        L10047:
+   789 00:03A7: E2 20        	sep	#$20
+   790                        	longa	off
+   791 00:03A9: A7 1C        	lda	[<L43+format_0]
+   792 00:03AB: C9 64        	cmp	#<$64
+   793 00:03AD: C2 20        	rep	#$20
+   794                        	longa	on
+   795 00:03AF: F0 B5        	beq	L20066
+   796                        ;			}
+   797                        ;			if( *format == 'x' ) {
+   798 00:03B1: E2 20        	sep	#$20
+   799                        	longa	off
+   800 00:03B3: A7 1C        	lda	[<L43+format_0]
+   801 00:03B5: C9 78        	cmp	#<$78
+   802 00:03B7: C2 20        	rep	#$20
+   803                        	longa	on
+   804 00:03B9: D0 14        	bne	L10049
+   805                        ;				pc += debugi (out, va_ar
+                    g( args, long), 16, 0, width, pad, 'a');
+   806 00:03BB: F4 61 00     	pea	#<$61
+   807 00:03BE: 80 03        	bra	L20080
+   808                        L20082:
+   809                        ;				pc += debugi (out, va_ar
+                    g( args, long), 16, 0, width, pad, 'A');
+   810 00:03C0: F4 41 00     	pea	#<$41
+   811                        L20080:
+   812 00:03C3: D4 0B        	pei	<L44+pad_1
+   813 00:03C5: D4 09        	pei	<L44+width_1
+   814 00:03C7: F4 00 00     	pea	#<$0
+   815 00:03CA: F4 10 00     	pea	#<$10
+   816 00:03CD: 80 A4        	bra	L20072
+   817                        ;				continue;
+   818                        ;			}
+   819                        ;			if( *format == 'X' ) {
+   820                        L10049:
+   821 00:03CF: E2 20        	sep	#$20
+   822                        	longa	off
+   823 00:03D1: A7 1C        	lda	[<L43+format_0]
+   824 00:03D3: C9 58        	cmp	#<$58
+   825 00:03D5: C2 20        	rep	#$20
+   826                        	longa	on
+   827 00:03D7: F0 E7        	beq	L20082
+   828                        ;				continue;
+   829                        ;			}
+   830                        ;			if( *format == 'u' ) {
+   831 00:03D9: E2 20        	sep	#$20
+   832                        	longa	off
+   833 00:03DB: A7 1C        	lda	[<L43+format_0]
+   834 00:03DD: C9 75        	cmp	#<$75
+   835 00:03DF: C2 20        	rep	#$20
+   836                        	longa	on
+   837 00:03E1: D0 0D        	bne	L10051
+   838                        ;				pc += debugi (out, va_ar
+                    g( args, long), 10, 0, width, pad, 'a');
+   839 00:03E3: F4 61 00     	pea	#<$61
+  Sun Jan  9 2022 20:53                                                Page 16
+
+
+   840 00:03E6: D4 0B        	pei	<L44+pad_1
+   841 00:03E8: D4 09        	pei	<L44+width_1
+   842 00:03EA: F4 00 00     	pea	#<$0
+   843 00:03ED: 82 80 FF     	brl	L20073
+   844                        ;				continue;
+   845                        ;			}
+   846                        ;			if( *format == 'c' ) {
+   847                        L10051:
+   848 00:03F0: E2 20        	sep	#$20
+   849                        	longa	off
+   850 00:03F2: A7 1C        	lda	[<L43+format_0]
+   851 00:03F4: C9 63        	cmp	#<$63
+   852 00:03F6: C2 20        	rep	#$20
+   853                        	longa	on
+   854 00:03F8: D0 45        	bne	L10034
+   855                        ;				/* char are converted to
+                     int then pushed on the stack */
+   856                        ;				scr[0] = (char)va_arg( a
+                    rgs, int );
+   857 00:03FA: A9 02 00     	lda	#$2
+   858 00:03FD: 18           	clc
+   859 00:03FE: 65 20        	adc	<L43+args_0
+   860 00:0400: 85 20        	sta	<L43+args_0
+   861 00:0402: 90 02        	bcc	L71
+   862 00:0404: E6 22        	inc	<L43+args_0+2
+   863                        L71:
+   864 00:0406: A9 FE FF     	lda	#$fffe
+   865 00:0409: 18           	clc
+   866 00:040A: 65 20        	adc	<L43+args_0
+   867 00:040C: 85 01        	sta	<R0
+   868 00:040E: A9 FF FF     	lda	#$ffff
+   869 00:0411: 65 22        	adc	<L43+args_0+2
+   870 00:0413: 85 03        	sta	<R0+2
+   871 00:0415: E2 20        	sep	#$20
+   872                        	longa	off
+   873 00:0417: A7 01        	lda	[<R0]
+   874 00:0419: 85 0F        	sta	<L44+scr_1
+   875                        ;				scr[1] = '\0';
+   876 00:041B: 64 10        	stz	<L44+scr_1+1
+   877 00:041D: C2 20        	rep	#$20
+   878                        	longa	on
+   879                        ;				pc += debugs (out, scr, 
+                    width, pad);
+   880 00:041F: D4 0B        	pei	<L44+pad_1
+   881 00:0421: D4 09        	pei	<L44+width_1
+   882 00:0423: F4 00 00     	pea	#0
+   883 00:0426: 18           	clc
+   884 00:0427: 7B           	tdc
+   885 00:0428: 69 0F 00     	adc	#<L44+scr_1
+   886 00:042B: 48           	pha
+   887 00:042C: 82 2D FF     	brl	L20076
+   888                        ;				continue;
+   889                        ;			}
+   890                        ;		}
+   891                        ;		else {
+   892                        ;		out:
+   893                        L10039:
+   894                        ;			debugchar (out, *format);
+  Sun Jan  9 2022 20:53                                                Page 17
+
+
+   895 00:042F: A7 1C        	lda	[<L43+format_0]
+   896 00:0431: 29 FF 00     	and	#$ff
+   897 00:0434: 48           	pha
+   898 00:0435: D4 1A        	pei	<L43+out_0+2
+   899 00:0437: D4 18        	pei	<L43+out_0
+   900 00:0439: 22 xx xx xx  	jsl	~~debugchar
+   901                        ;			++pc;
+   902 00:043D: E6 0D        	inc	<L44+pc_1
+   903                        ;		}
+   904                        ;	}
+   905                        L10034:
+   906 00:043F: E6 1C        	inc	<L43+format_0
+   907 00:0441: D0 02        	bne	L10037
+   908 00:0443: E6 1E        	inc	<L43+format_0+2
+   909                        L10037:
+   910 00:0445: A7 1C        	lda	[<L43+format_0]
+   911 00:0447: 29 FF 00     	and	#$ff
+   912 00:044A: F0 03        	beq	*+5
+   913 00:044C: 82 2E FE     	brl	L10036
+   914                        L10035:
+   915                        ;	if (out) **out = '\0';
+   916 00:044F: A5 18        	lda	<L43+out_0
+   917 00:0451: 05 1A        	ora	<L43+out_0+2
+   918 00:0453: F0 13        	beq	L10054
+   919 00:0455: A7 18        	lda	[<L43+out_0]
+   920 00:0457: 85 01        	sta	<R0
+   921 00:0459: A0 02 00     	ldy	#$2
+   922 00:045C: B7 18        	lda	[<L43+out_0],Y
+   923 00:045E: 85 03        	sta	<R0+2
+   924 00:0460: E2 20        	sep	#$20
+   925                        	longa	off
+   926 00:0462: A9 00        	lda	#$0
+   927 00:0464: 87 01        	sta	[<R0]
+   928 00:0466: C2 20        	rep	#$20
+   929                        	longa	on
+   930                        ;	va_end( args );
+   931                        L10054:
+   932                        ;	
+   933                        ;	return pc;
+   934 00:0468: A5 0D        	lda	<L44+pc_1
+   935 00:046A: A8           	tay
+   936 00:046B: A5 16        	lda	<L43+2
+   937 00:046D: 85 22        	sta	<L43+2+12
+   938 00:046F: A5 15        	lda	<L43+1
+   939 00:0471: 85 21        	sta	<L43+1+12
+   940 00:0473: 2B           	pld
+   941 00:0474: 3B           	tsc
+   942 00:0475: 18           	clc
+   943 00:0476: 69 20 00     	adc	#L43+12
+   944 00:0479: 1B           	tcs
+   945 00:047A: 98           	tya
+   946 00:047B: 6B           	rtl
+   947                        ;}
+   948             00000014   L43	equ	20
+   949             00000009   L44	equ	9
+   950                        	ends
+   951                        	efunc
+   952                        	data
+  Sun Jan  9 2022 20:53                                                Page 18
+
+
+   953                        L1:
+   954 00:0000: 28 6E 75 6C  	db	$28,$6E,$75,$6C,$6C,$29,$00
+       00:0004: 6C 29 00 
+   955 00:0007:              	ends
+   956                        ;
+   957                        ;int debugf(const char *format, ...)
+   958                        ;{	
+   959                        	code
+   960                        	xdef	~~debugf
+   961                        	func
+   962                        ~~debugf:
+   963                        	longa	on
+   964                        	longi	on
+   965 00:047C: 3B           	tsc
+   966 00:047D: 38           	sec
+   967 00:047E: E9 04 00     	sbc	#L77
+   968 00:0481: 1B           	tcs
+   969 00:0482: 0B           	phd
+   970 00:0483: 5B           	tcd
+   971             00000006   format_0	set	6
+   972                        ;        va_list args;
+   973                        ;        
+   974                        ;        va_start( args, format );
+   975             00000000   args_1	set	0
+   976 00:0484: 18           	clc
+   977 00:0485: 7B           	tdc
+   978 00:0486: 69 0E 00     	adc	#<L77+format_0+4
+   979 00:0489: 85 01        	sta	<L78+args_1
+   980 00:048B: A9 00 00     	lda	#$0
+   981 00:048E: 85 03        	sta	<L78+args_1+2
+   982                        ;        return debug( 0, format, args );
+   983 00:0490: 48           	pha
+   984 00:0491: D4 01        	pei	<L78+args_1
+   985 00:0493: D4 0C        	pei	<L77+format_0+2
+   986 00:0495: D4 0A        	pei	<L77+format_0
+   987 00:0497: F4 00 00     	pea	#^$0
+   988 00:049A: F4 00 00     	pea	#<$0
+   989 00:049D: 22 xx xx xx  	jsl	~~debug
+   990 00:04A1: A8           	tay
+   991 00:04A2: DA           	phx
+   992 00:04A3: A6 08        	ldx	<L77+4
+   993 00:04A5: A5 06        	lda	<L77+2
+   994 00:04A7: 95 06        	sta	<L77+2,X
+   995 00:04A9: A5 05        	lda	<L77+1
+   996 00:04AB: 95 05        	sta	<L77+1,X
+   997 00:04AD: 8A           	txa
+   998 00:04AE: FA           	plx
+   999 00:04AF: 2B           	pld
+  1000 00:04B0: 48           	pha
+  1001 00:04B1: 3B           	tsc
+  1002 00:04B2: 18           	clc
+  1003 00:04B3: 69 06 00     	adc	#L77+2
+  1004 00:04B6: 63 01        	adc	<1,s
+  1005 00:04B8: 1B           	tcs
+  1006 00:04B9: 98           	tya
+  1007 00:04BA: 6B           	rtl
+  1008                        ;}
+  1009             00000004   L77	equ	4
+  Sun Jan  9 2022 20:53                                                Page 19
+
+
+  1010             00000001   L78	equ	1
+  1011                        	ends
+  1012                        	efunc
+  1013                        ;/*
+  1014                        ;int sprintf(char *out, const char *format, ...)
+  1015                        ;{
+  1016                        ;        va_list args;
+  1017                        ;        
+  1018                        ;        va_start( args, format );
+  1019                        ;        return print( &out, format, args );
+  1020                        ;}
+  1021                        ;
+  1022                        ;
+  1023                        ;int snprintf( char *buf, unsigned int count, cons
+                    t char *format, ... )
+  1024                        ;{
+  1025                        ;        va_list args;
+  1026                        ;        
+  1027                        ;        ( void ) count;
+  1028                        ;        
+  1029                        ;        va_start( args, format );
+  1030                        ;        return print( &buf, format, args );
+  1031                        ;}
+  1032                        ;*/
+  1033                        ;
+
+
+      Lines assembled: 1033
+      Errors: 0

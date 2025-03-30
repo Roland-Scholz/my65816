@@ -1,0 +1,595 @@
+  Mon Aug 16 2021 23:18                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        	
+     2                        ;-------------------------------------------------
+                    ---------------------------------
+     3                        ;	char xio(char channel, char cmd, const char *s, 
+                    int len, int aux1, int aux2)
+     4                        ;-------------------------------------------------
+                    ---------------------------------
+     5                        	module	xio
+     6                        	include homebrewWDC.inc
+     7                        	code
+     8                        	xdef	__xio
+     9                        	func
+    10                        	
+    11                        __xio:
+    12                        
+    13             00000003   s_channel	set 3
+    14             00000005   s_cmd		set 5
+    15             00000007   s_s		set 7
+    16             00000009   s_len		set 9
+    17             0000000B   s_aux1		set 11
+    18             0000000D   s_aux2		set 13
+    19                        
+    20 00:0000: E2 30        	sep	#M+IX		;A+IX = 8
+    21                        	longa	off
+    22                        	longi	off
+    23                        	
+    24 00:0002: A3 03        	lda	s_channel,s
+    25 00:0004: 0A           	asl
+    26 00:0005: 0A           	asl
+    27 00:0006: 0A           	asl
+    28 00:0007: 0A           	asl
+    29 00:0008: AA           	tax
+    30                        
+    31 00:0009: A3 05        	lda	s_cmd,s		;cmd
+    32 00:000B: 9D 82 02     	sta	ICCOM,x
+    33 00:000E: A3 0B        	lda	s_aux1,s	;aux1
+    34 00:0010: 9D 82 02     	sta	ICCOM,x
+    35 00:0013: A3 0D        	lda	s_aux2,s	;aux2
+    36 00:0015: 9D 82 02     	sta	ICCOM,x
+    37                        	
+    38 00:0018: C2 20        	rep	#M
+    39                        	longa	on
+    40                        	
+    41 00:001A: A3 09        	lda	s_len,s
+    42 00:001C: 9D 87 02     	sta	ICBLL,x
+    43 00:001F: A3 07        	lda	s_s,s
+    44 00:0021: 9D 84 02     	sta	ICBAL,x
+    45                        	
+    46 00:0024: 0B           	phd
+    47 00:0025: A9 00 00     	lda	#0
+    48 00:0028: 5B           	tcd	
+    49                        	
+  Mon Aug 16 2021 23:18                                                Page 2
+
+
+    50 00:0029: E2 30        	sep 	#$30
+    51                        	longa	off
+    52                        	longi	off
+    53                        	
+    54 00:002B: 20 0F C0     	jsr	$C00F
+    55                        	
+    56 00:002E: 2B           	pld	
+    57 00:002F: C2 31        	rep 	#M+IX+CARRY
+    58                        	longa on
+    59                        	longi on
+    60                        
+    61 00:0031: FA           	plx	;return adr
+    62 00:0032: 3B           	tsc
+    63 00:0033: 69 0C 00     	adc 	#12
+    64 00:0036: 1B           	tcs
+    65 00:0037: DA           	phx
+    66 00:0038: 98           	tya
+    67 00:0039: 60           	rts
+    68                        	
+    69                        	ends
+    70                        	efunc
+    71                        	endmod
+    72                        	
+    73                        
+    74                        ;-------------------------------------------------
+                    -------------------
+    75                        ;	char callCIOV(char channel, char cmd, const char
+                     *s, int len)
+    76                        ;-------------------------------------------------
+                    -------------------
+    77                        	module	callCIOV
+    78                        	include homebrewWDC.inc
+    79                        	code
+    80                        	xdef	__callCIOV
+    81                        	func
+    82                        	
+    83                        __callCIOV:
+    84                        
+    85             00000003   s_channel	set 3
+    86             00000005   s_cmd		set 5
+    87             00000007   s_s		set 7
+    88             00000009   s_len		set 9
+    89                        
+    90 00:0000: E2 30        	sep	#M+IX		;A+IX = 8
+    91                        	longa	off
+    92                        	longi	off
+    93                        	
+    94 00:0002: A3 03        	lda	s_channel,s
+    95 00:0004: 0A           	asl
+    96 00:0005: 0A           	asl
+    97 00:0006: 0A           	asl
+    98 00:0007: 0A           	asl
+    99 00:0008: AA           	tax
+   100                        
+   101 00:0009: A3 05        	lda	s_cmd,s		;cmd
+   102 00:000B: 9D 82 02     	sta	ICCOM,x
+   103                        	
+   104 00:000E: C2 20        	rep	#M
+  Mon Aug 16 2021 23:18                                                Page 3
+
+
+   105                        	longa	on
+   106                        	
+   107 00:0010: A3 09        	lda	s_len,s
+   108 00:0012: 9D 87 02     	sta	ICBLL,x
+   109 00:0015: A3 07        	lda	s_s,s
+   110 00:0017: 9D 84 02     	sta	ICBAL,x
+   111                        	
+   112 00:001A: 0B           	phd
+   113 00:001B: A9 00 00     	lda	#0
+   114 00:001E: 5B           	tcd	
+   115                        	
+   116 00:001F: E2 30        	sep 	#$30
+   117                        	longa	off
+   118                        	longi	off
+   119                        	
+   120 00:0021: 20 0F C0     	jsr	$C00F
+   121                        	
+   122 00:0024: 2B           	pld	
+   123 00:0025: C2 31        	rep 	#M+IX+CARRY
+   124                        	longa on
+   125                        	longi on
+   126                        
+   127 00:0027: FA           	plx	;return adr
+   128 00:0028: 3B           	tsc
+   129 00:0029: 69 08 00     	adc 	#8
+   130 00:002C: 1B           	tcs
+   131 00:002D: DA           	phx
+   132 00:002E: 98           	tya
+   133 00:002F: 60           	rts
+   134                        	
+   135                        	ends
+   136                        	efunc
+   137                        	endmod
+   138                        	
+   139                        ;-------------------------------------------------
+                    -------------------
+   140                        ;	char aopen(char channel, const char *s, char aux
+                    1, char aux2)
+   141                        ;-------------------------------------------------
+                    -------------------
+   142                        	module	aopen
+   143                        	include homebrewWDC.inc
+   144                        	code
+   145                        	xdef	__aopen
+   146                        	func
+   147                        	
+   148                        __aopen:
+   149                        
+   150             00000003   s_channel	set 3
+   151             00000005   s_s		set 5
+   152             00000007   s_aux1		set 7
+   153             00000009   s_aux2		set 9
+   154                        
+   155 00:0000: E2 30        	sep	#M+IX		;A+IX = 8
+   156                        	longa	off
+   157                        	longi	off
+   158                        	
+   159 00:0002: A3 03        	lda	s_channel,s
+  Mon Aug 16 2021 23:18                                                Page 4
+
+
+   160 00:0004: 0A           	asl
+   161 00:0005: 0A           	asl
+   162 00:0006: 0A           	asl
+   163 00:0007: 0A           	asl
+   164 00:0008: AA           	tax
+   165                        
+   166 00:0009: A9 03        	lda	#OPEN		;cmd
+   167 00:000B: 9D 82 02     	sta	ICCOM,x
+   168 00:000E: A3 07        	lda	s_aux1,s
+   169 00:0010: 9D 8A 02     	sta	ICAX1,x
+   170 00:0013: A3 09        	lda	s_aux2,s
+   171 00:0015: 9D 8B 02     	sta	ICAX2,x
+   172                        	
+   173 00:0018: C2 20        	rep	#M
+   174                        	longa	on
+   175 00:001A: A3 05        	lda	s_s,s
+   176 00:001C: 9D 84 02     	sta	ICBAL,x
+   177                        	
+   178 00:001F: 0B           	phd
+   179 00:0020: A9 00 00     	lda	#0
+   180 00:0023: 5B           	tcd	
+   181                        	
+   182 00:0024: E2 30        	sep 	#$30
+   183                        	longa	off
+   184                        	longi	off
+   185                        	
+   186 00:0026: 20 0F C0     	jsr	$C00F
+   187                        	
+   188 00:0029: 2B           	pld	
+   189 00:002A: C2 31        	rep 	#M+IX+CARRY
+   190                        	longa on
+   191                        	longi on
+   192                        
+   193 00:002C: FA           	plx	;return adr
+   194 00:002D: 3B           	tsc
+   195 00:002E: 69 08 00     	adc 	#8
+   196 00:0031: 1B           	tcs
+   197 00:0032: DA           	phx
+   198 00:0033: 98           	tya
+   199 00:0034: 60           	rts
+   200                        	
+   201                        	ends
+   202                        	efunc
+   203                        	endmod
+   204                        	
+   205                        	
+   206                        ;-------------------------------------------------
+                    ----------------------------
+   207                        ;	char aclose(char channel)
+   208                        ;-------------------------------------------------
+                    ----------------------------
+   209                        	module	aclose
+   210                        	include homebrewWDC.inc
+   211                        	code
+   212                        	xdef	__aclose
+   213                        	xref	__callCIOV
+   214                        	func
+   215                        	
+  Mon Aug 16 2021 23:18                                                Page 5
+
+
+   216                        __aclose:
+   217                        
+   218             00000003   s_channel	set 3
+   219                        
+   220 00:0000: F4 00 00     	pea	#0
+   221 00:0003: F4 00 00     	pea	#0
+   222 00:0006: F4 0C 00     	pea	#CLOSE
+   223 00:0009: A3 09        	lda	s_channel+6,s
+   224 00:000B: 48           	pha
+   225 00:000C: 20 xx xx     	jsr	__callCIOV
+   226 00:000F: FA           	plx			;pop return address
+   227 00:0010: 7A           	ply			;discard channel from st
+                    ack
+   228 00:0011: DA           	phx			;push return address
+   229 00:0012: 60           	rts
+   230                        	
+   231                        	ends
+   232                        	efunc
+   233                        	endmod
+   234                        
+   235                        
+   236                        ;-------------------------------------------------
+                    ----------------------------
+   237                        ;	char getchr(char channel, char *s, int len)
+   238                        ;-------------------------------------------------
+                    ----------------------------
+   239                        	module	getchr
+   240                        	include homebrewWDC.inc
+   241                        	code
+   242                        	xdef	__getchr
+   243                        	xref	__callCIOV
+   244                        	func
+   245                        	
+   246                        __getchr:
+   247                        
+   248             00000003   s_channel	set 3
+   249             00000005   s_s		set 5
+   250             00000007   s_len		set 7
+   251                        
+   252 00:0000: A3 07        	lda	s_len,s
+   253 00:0002: 48           	pha
+   254 00:0003: A3 07        	lda	s_s+2,s
+   255 00:0005: 48           	pha
+   256 00:0006: F4 07 00     	pea	#GETCHR
+   257 00:0009: A3 09        	lda	s_channel+6,s
+   258 00:000B: 48           	pha
+   259                        	
+   260 00:000C: 20 xx xx     	jsr	__callCIOV
+   261                        	
+   262 00:000F: FA           	plx			;pop return address
+   263 00:0010: 18           	clc
+   264 00:0011: 3B           	tsc
+   265 00:0012: 69 06 00     	adc	#6
+   266 00:0015: 1B           	tcs
+   267 00:0016: DA           	phx			;push return address
+   268 00:0017: 98           	tya
+   269 00:0018: 60           	rts
+   270                        	
+  Mon Aug 16 2021 23:18                                                Page 6
+
+
+   271                        	ends
+   272                        	efunc
+   273                        	endmod
+   274                        	
+   275                        
+   276                        ;-------------------------------------------------
+                    ----------------------------
+   277                        ;	char putchr(char channel, char *s, int len)
+   278                        ;-------------------------------------------------
+                    ----------------------------
+   279                        	module	putchr
+   280                        	include homebrewWDC.inc
+   281                        	code
+   282                        	xdef	__putchr
+   283                        	xref	__callCIOV
+   284                        	func
+   285                        	
+   286                        __putchr:
+   287                        
+   288             00000003   s_channel	set 3
+   289             00000005   s_s		set 5
+   290             00000007   s_len		set 7
+   291                        
+   292 00:0000: A3 07        	lda	s_len,s
+   293 00:0002: 48           	pha
+   294 00:0003: A3 07        	lda	s_s+2,s
+   295 00:0005: 48           	pha
+   296 00:0006: F4 0B 00     	pea	#PUTCHR
+   297 00:0009: A3 09        	lda	s_channel+6,s
+   298 00:000B: 48           	pha
+   299                        	
+   300 00:000C: 20 xx xx     	jsr	__callCIOV
+   301                        	
+   302 00:000F: FA           	plx			;pop return address
+   303 00:0010: 18           	clc
+   304 00:0011: 3B           	tsc
+   305 00:0012: 69 06 00     	adc	#6
+   306 00:0015: 1B           	tcs
+   307 00:0016: DA           	phx			;push return address
+   308 00:0017: 98           	tya
+   309 00:0018: 60           	rts
+   310                        	
+   311                        	ends
+   312                        	efunc
+   313                        	endmod
+   314                        	
+   315                        
+   316                        ;-------------------------------------------------
+                    ----------------------------
+   317                        ;	char getrec(char channel, char *s)
+   318                        ;-------------------------------------------------
+                    ----------------------------
+   319                        	module	getrec
+   320                        	include homebrewWDC.inc
+   321                        	code
+   322                        	xdef	__getrec
+   323                        	xref	__callCIOV
+   324                        	func
+  Mon Aug 16 2021 23:18                                                Page 7
+
+
+   325                        	
+   326                        __getrec:
+   327                        
+   328             00000003   s_channel	set 3
+   329             00000005   s_s		set 5
+   330                        
+   331 00:0000: F4 80 00     	pea	#128
+   332 00:0003: A3 07        	lda	s_s+2,s
+   333 00:0005: 48           	pha
+   334 00:0006: F4 05 00     	pea	#GETREC
+   335 00:0009: A3 09        	lda	s_channel+6,s
+   336 00:000B: 48           	pha
+   337                        	
+   338 00:000C: 20 xx xx     	jsr	__callCIOV
+   339                        	
+   340 00:000F: FA           	plx			;pop return address
+   341 00:0010: 18           	clc
+   342 00:0011: 3B           	tsc
+   343 00:0012: 69 04 00     	adc	#4
+   344 00:0015: 1B           	tcs
+   345 00:0016: DA           	phx			;push return address
+   346 00:0017: 98           	tya
+   347 00:0018: 60           	rts
+   348                        	
+   349                        	ends
+   350                        	efunc
+   351                        	endmod
+   352                        	
+   353                        ;-------------------------------------------------
+                    ----------------------------
+   354                        ;	char putrec(char channel, char *s)
+   355                        ;-------------------------------------------------
+                    ----------------------------
+   356                        	module	putrec
+   357                        	include homebrewWDC.inc
+   358                        	code
+   359                        	xdef	__putrec
+   360                        	xref	__callCIOV
+   361                        	func
+   362                        	
+   363                        __putrec:
+   364                        
+   365             00000003   s_channel	set 3
+   366             00000005   s_s		set 5
+   367                        
+   368 00:0000: F4 80 00     	pea	#128
+   369 00:0003: A3 07        	lda	s_s+2,s
+   370 00:0005: 48           	pha
+   371 00:0006: F4 09 00     	pea	#PUTREC
+   372 00:0009: A3 09        	lda	s_channel+6,s
+   373 00:000B: 48           	pha
+   374                        
+   375 00:000C: 20 xx xx     	jsr	__callCIOV
+   376                        
+   377 00:000F: FA           	plx			;pop return address
+   378 00:0010: 18           	clc
+   379 00:0011: 3B           	tsc
+   380 00:0012: 69 04 00     	adc	#4
+  Mon Aug 16 2021 23:18                                                Page 8
+
+
+   381 00:0015: 1B           	tcs
+   382 00:0016: DA           	phx			;push return address
+   383 00:0017: 98           	tya
+   384 00:0018: 60           	rts
+   385                        	
+   386                        	ends
+   387                        	efunc
+   388                        	endmod
+   389                        	
+   390                        ;-------------------------------------------------
+                    ----------------------------
+   391                        ;	hex(char *buf, char b)
+   392                        ;-------------------------------------------------
+                    ----------------------------
+   393                        	module	hex
+   394                        	include homebrewWDC.inc
+   395                        	code
+   396                        	xdef	__hex
+   397                        	func
+   398                        	
+   399                        __hex:
+   400                        
+   401             00000003   s_p_buf	set 3
+   402             00000005   s_byte	set 5
+   403                        
+   404 00:0000: E2 30        	sep	#M+IX
+   405                        	longa	off
+   406                        	longi	off
+   407                        	
+   408 00:0002: A0 00        	ldy	#0
+   409 00:0004: A3 05        	lda	s_byte,s	;load byte from stack
+   410 00:0006: 4A           	lsr	
+   411 00:0007: 4A           	lsr	
+   412 00:0008: 4A           	lsr	
+   413 00:0009: 4A           	lsr	
+   414 00:000A: 20 xx xx     	jsr	nibble
+   415 00:000D: 93 03        	sta	(s_p_buf,s),y
+   416 00:000F: C8           	iny
+   417                        
+   418 00:0010: A3 05        	lda	s_byte,s	;load byte from stack
+   419 00:0012: 29 0F        	and	#15
+   420 00:0014: 20 xx xx     	jsr	nibble
+   421 00:0017: 93 03        	sta	(s_p_buf,s),y
+   422                        		
+   423 00:0019: C2 30        	rep	#M+IX
+   424                        	longa	on
+   425                        	longi	on
+   426                        	
+   427 00:001B: FA           	plx			;pop return address
+   428 00:001C: 7A           	ply
+   429 00:001D: 7A           	ply
+   430 00:001E: DA           	phx			;push return address
+   431 00:001F: 60           	rts
+   432                        	
+   433                        nibble:
+   434                        	longa	off
+   435                        	longi	off
+   436 00:0020: 18           	clc	
+  Mon Aug 16 2021 23:18                                                Page 9
+
+
+   437 00:0021: 69 30        	adc	#'0'
+   438 00:0023: C9 3A        	cmp	#'9'+1
+   439 00:0025: 90 02        	bcc	nibble99
+   440 00:0027: 69 06        	adc	#6
+   441                        nibble99:
+   442 00:0029: 60           	rts
+   443                        
+   444                        	ends
+   445                        	efunc
+   446                        	endmod
+   447                        
+   448                        
+   449                        ;-------------------------------------------------
+                    ----------------------------
+   450                        ;	hex4(char *buf, int i)
+   451                        ;-------------------------------------------------
+                    ----------------------------
+   452                        	module	hex4
+   453                        	include homebrewWDC.inc
+   454                        	code
+   455                        	xdef	__hex4
+   456                        	xref	__hex
+   457                        	func
+   458                        	
+   459                        __hex4:
+   460                        
+   461             00000003   s_p_buf	set 3
+   462             00000005   s_int	set 5
+   463                        	
+   464 00:0000: A3 05        	lda	s_int,s	;load byte from stack
+   465 00:0002: EB           	xba
+   466 00:0003: 48           	pha
+   467 00:0004: A3 05        	lda	s_p_buf+2,s
+   468 00:0006: 48           	pha
+   469 00:0007: 20 xx xx     	jsr	__hex
+   470                        	
+   471 00:000A: A3 05        	lda	s_int,s	;load byte from stack
+   472 00:000C: 48           	pha
+   473 00:000D: A3 05        	lda	s_p_buf+2,s
+   474 00:000F: 1A           	ina
+   475 00:0010: 1A           	ina
+   476 00:0011: 48           	pha
+   477 00:0012: 20 xx xx     	jsr	__hex
+   478                        	
+   479 00:0015: FA           	plx			;pop return address
+   480 00:0016: 7A           	ply
+   481 00:0017: 7A           	ply
+   482 00:0018: DA           	phx			;push return address
+   483 00:0019: 60           	rts
+   484                        
+   485                        	ends
+   486                        	efunc
+   487                        	endmod
+   488                        	
+   489                        	
+   490                        ;-------------------------------------------------
+                    ----------------------------
+   491                        ;	hex8(char *buf, unsigned long l)
+  Mon Aug 16 2021 23:18                                                Page 10
+
+
+   492                        ;-------------------------------------------------
+                    ----------------------------
+   493                        	module	hex8
+   494                        	include homebrewWDC.inc
+   495                        	code
+   496                        	xdef	__hex8
+   497                        	xref	__hex4
+   498                        	func
+   499                        	
+   500                        __hex8:
+   501                        
+   502             00000003   s_p_buf	set 3
+   503             00000005   s_intlo	set 5
+   504             00000007   s_inthi	set 7
+   505                        	
+   506 00:0000: A3 07        	lda	s_inthi,s	;load byte from stack
+   507 00:0002: 48           	pha
+   508 00:0003: A3 05        	lda	s_p_buf+2,s
+   509 00:0005: 48           	pha
+   510 00:0006: 20 xx xx     	jsr	__hex4
+   511                        	
+   512 00:0009: A3 05        	lda	s_intlo,s	;load byte from stack
+   513 00:000B: 48           	pha
+   514 00:000C: A3 05        	lda	s_p_buf+2,s
+   515 00:000E: 18           	clc
+   516 00:000F: 69 04 00     	adc	#4
+   517 00:0012: 48           	pha
+   518 00:0013: 20 xx xx     	jsr	__hex4
+   519                        	
+   520 00:0016: FA           	plx			;pop return address
+   521 00:0017: 7A           	ply
+   522 00:0018: 7A           	ply
+   523 00:0019: 7A           	ply
+   524 00:001A: DA           	phx			;push return address
+   525 00:001B: 60           	rts
+   526                        	
+   527                        	ends
+   528                        	efunc
+   529                        	endmod
+
+
+      Lines assembled: 7536
+      Errors: 0

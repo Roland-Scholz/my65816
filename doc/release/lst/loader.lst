@@ -1,0 +1,403 @@
+  Sun Jan  9 2022 20:53                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;
+    11                        ;#include <homebrew.h>
+    12                        ;
+    13                        ;#define BUFSIZE	4096
+    14                        ;
+    15                        ;#ifdef RTOS
+    16                        ;#include "FreeRTOS.h"
+    17                        ;#include "task.h"
+    18                        ;#include "semphr.h"
+    19                        ;#endif
+    20                        ;
+    21                        ;//unsigned char *ucHeap16 = (unsigned char *)0x00
+                    9000;
+    22                        ;//unsigned char *ucHeap = (unsigned char *)0x0200
+                    00;
+    23                        ;
+    24                        ;void *heap_start = ( void * )0x8000;
+    25                        	data
+    26                        	xdef	~~heap_start
+    27                        ~~heap_start:
+    28 00:0000: 00 80 00 00  	dl	$8000
+    29 00:0004:              	ends
+    30                        ;void *heap_end = (void * )0xbfff;
+    31                        	data
+    32                        	xdef	~~heap_end
+    33                        ~~heap_end:
+    34 00:0004: FF BF 00 00  	dl	$BFFF
+    35 00:0008:              	ends
+    36                        ;
+    37                        ;static char buffer[BUFSIZE];
+    38                        ;
+    39                        ;extern unsigned char fd2iocb[8];
+    40                        ;
+    41                        ;void strupper(char *str) {
+    42                        	code
+    43                        	xdef	~~strupper
+    44                        	func
+    45                        ~~strupper:
+    46                        	longa	on
+    47                        	longi	on
+    48 00:0000: 3B           	tsc
+    49 00:0001: 38           	sec
+    50 00:0002: E9 00 00     	sbc	#L2
+  Sun Jan  9 2022 20:53                                                Page 2
+
+
+    51 00:0005: 1B           	tcs
+    52 00:0006: 0B           	phd
+    53 00:0007: 5B           	tcd
+    54             00000004   str_0	set	4
+    55                        ;	while(*str != 0) {
+    56 00:0008: 80 16        	bra	L10001
+    57                        L20001:
+    58                        ;		*str = toupper(*str);
+    59 00:000A: A7 04        	lda	[<L2+str_0]
+    60 00:000C: 29 FF 00     	and	#$ff
+    61 00:000F: 48           	pha
+    62 00:0010: 22 xx xx xx  	jsl	~~toupper
+    63 00:0014: E2 20        	sep	#$20
+    64                        	longa	off
+    65 00:0016: 87 04        	sta	[<L2+str_0]
+    66 00:0018: C2 20        	rep	#$20
+    67                        	longa	on
+    68                        ;		str++;
+    69 00:001A: E6 04        	inc	<L2+str_0
+    70 00:001C: D0 02        	bne	L10001
+    71 00:001E: E6 06        	inc	<L2+str_0+2
+    72                        ;	}
+    73                        L10001:
+    74 00:0020: A7 04        	lda	[<L2+str_0]
+    75 00:0022: 29 FF 00     	and	#$ff
+    76 00:0025: D0 E3        	bne	L20001
+    77                        ;}
+    78 00:0027: A5 02        	lda	<L2+2
+    79 00:0029: 85 06        	sta	<L2+2+4
+    80 00:002B: A5 01        	lda	<L2+1
+    81 00:002D: 85 05        	sta	<L2+1+4
+    82 00:002F: 2B           	pld
+    83 00:0030: 3B           	tsc
+    84 00:0031: 18           	clc
+    85 00:0032: 69 04 00     	adc	#L2+4
+    86 00:0035: 1B           	tcs
+    87 00:0036: 6B           	rtl
+    88             00000000   L2	equ	0
+    89             00000001   L3	equ	1
+    90                        	ends
+    91                        	efunc
+    92                        ;
+    93                        ;void loaderTask()
+    94                        ;{
+    95                        	code
+    96                        	xdef	~~loaderTask
+    97                        	func
+    98                        ~~loaderTask:
+    99                        	longa	on
+   100                        	longi	on
+   101 00:0037: 3B           	tsc
+   102 00:0038: 38           	sec
+   103 00:0039: E9 16 00     	sbc	#L7
+   104 00:003C: 1B           	tcs
+   105 00:003D: 0B           	phd
+   106 00:003E: 5B           	tcd
+   107                        ;	FILE *fin;
+   108                        ;	size_t r;
+  Sun Jan  9 2022 20:53                                                Page 3
+
+
+   109                        ;	char *p;
+   110                        ;	unsigned int i;
+   111                        ;	int fd;
+   112                        ;	struct stat *stats;
+   113                        ;	
+   114                        ;	p = (char *)0x010000;
+   115             00000000   fin_1	set	0
+   116             00000004   r_1	set	4
+   117             00000006   p_1	set	6
+   118             0000000A   i_1	set	10
+   119             0000000C   fd_1	set	12
+   120             0000000E   stats_1	set	14
+   121 00:003F: A9 00 00     	lda	#$0
+   122 00:0042: 85 0B        	sta	<L8+p_1
+   123 00:0044: 1A           	ina
+   124 00:0045: 85 0D        	sta	<L8+p_1+2
+   125                        ;	
+   126                        ;	//setvbuf(stdin, NULL, _IONBF, 1);
+   127                        ;	
+   128                        ;	printf("loading rtest.a\n");
+   129 00:0047: F4 xx xx     	pea	#^L1
+   130 00:004A: F4 xx xx     	pea	#<L1
+   131 00:004D: F4 06 00     	pea	#6
+   132 00:0050: 22 xx xx xx  	jsl	~~printf
+   133                        ;
+   134                        ;	if(stat("D:RTEST.A", stats) != -1) {
+   135 00:0054: D4 15        	pei	<L8+stats_1+2
+   136 00:0056: D4 13        	pei	<L8+stats_1
+   137 00:0058: F4 xx xx     	pea	#^L1+17
+   138 00:005B: F4 xx xx     	pea	#<L1+17
+   139 00:005E: 22 xx xx xx  	jsl	~~stat
+   140 00:0062: C9 FF FF     	cmp	#<$ffffffff
+   141 00:0065: F0 18        	beq	L10003
+   142                        ;		printf("length: %lu\n", stats->st_size);
+                     
+   143 00:0067: A0 04 00     	ldy	#$4
+   144 00:006A: B7 13        	lda	[<L8+stats_1],Y
+   145 00:006C: 48           	pha
+   146 00:006D: 88           	dey
+   147 00:006E: 88           	dey
+   148 00:006F: B7 13        	lda	[<L8+stats_1],Y
+   149 00:0071: 48           	pha
+   150 00:0072: F4 xx xx     	pea	#^L1+27
+   151 00:0075: F4 xx xx     	pea	#<L1+27
+   152 00:0078: F4 0A 00     	pea	#10
+   153 00:007B: 22 xx xx xx  	jsl	~~printf
+   154                        ;		//printf("length: %lx\n", (unsigned long
+                    )0xCafebabe); 
+   155                        ;	}
+   156                        ;	
+   157                        ;	fin = fopen("D:RTEST.A", "r");
+   158                        L10003:
+   159 00:007F: F4 xx xx     	pea	#^L1+50
+   160 00:0082: F4 xx xx     	pea	#<L1+50
+   161 00:0085: F4 xx xx     	pea	#^L1+40
+   162 00:0088: F4 xx xx     	pea	#<L1+40
+   163 00:008B: 22 xx xx xx  	jsl	~~fopen
+   164 00:008F: 85 05        	sta	<L8+fin_1
+  Sun Jan  9 2022 20:53                                                Page 4
+
+
+   165 00:0091: 86 07        	stx	<L8+fin_1+2
+   166                        ;	if (fin == NULL) {
+   167 00:0093: 05 07        	ora	<L8+fin_1+2
+   168 00:0095: D0 15        	bne	L10004
+   169                        ;		printf("can't load\n");
+   170 00:0097: F4 xx xx     	pea	#^L1+52
+   171 00:009A: F4 xx xx     	pea	#<L1+52
+   172 00:009D: F4 06 00     	pea	#6
+   173 00:00A0: 22 xx xx xx  	jsl	~~printf
+   174                        ;		return;
+   175                        L11:
+   176 00:00A4: 2B           	pld
+   177 00:00A5: 3B           	tsc
+   178 00:00A6: 18           	clc
+   179 00:00A7: 69 16 00     	adc	#L7
+   180 00:00AA: 1B           	tcs
+   181 00:00AB: 6B           	rtl
+   182                        ;	}
+   183                        ;
+   184                        ;	fd = fileno(fin);
+   185                        L10004:
+   186 00:00AC: A0 0E 00     	ldy	#$e
+   187 00:00AF: B7 05        	lda	[<L8+fin_1],Y
+   188 00:00B1: 29 FF 00     	and	#$ff
+   189 00:00B4: 85 11        	sta	<L8+fd_1
+   190                        ;	
+   191                        ;	for(i = 0; i < 16; i++){
+   192 00:00B6: 64 0F        	stz	<L8+i_1
+   193                        L10007:
+   194                        ;		//r = fread(buffer, 1, BUFSIZE, fin);
+   195                        ;		r = read(fd, buffer, BUFSIZE);
+   196 00:00B8: F4 00 10     	pea	#<$1000
+   197 00:00BB: A9 xx xx     	lda	#<~~buffer
+   198 00:00BE: 85 01        	sta	<R0
+   199                        	xref	_BEG_DATA
+   200 00:00C0: A9 xx xx     	lda	#_BEG_DATA>>16
+   201 00:00C3: 48           	pha
+   202 00:00C4: D4 01        	pei	<R0
+   203 00:00C6: D4 11        	pei	<L8+fd_1
+   204 00:00C8: 22 xx xx xx  	jsl	~~read
+   205 00:00CC: 85 09        	sta	<L8+r_1
+   206                        ;		//printf("%d dummy bytes read\n", r);
+   207                        ;	}
+   208 00:00CE: E6 0F        	inc	<L8+i_1
+   209 00:00D0: A5 0F        	lda	<L8+i_1
+   210 00:00D2: C9 10 00     	cmp	#<$10
+   211 00:00D5: 90 E1        	bcc	L10007
+   212                        ;	
+   213                        ;	
+   214                        ;	for(;;) {
+   215                        L10010:
+   216                        ;		//r = fread(p, 1, BUFSIZE, fin);
+   217                        ;		r = read(fd, p, BUFSIZE);
+   218 00:00D7: F4 00 10     	pea	#<$1000
+   219 00:00DA: D4 0D        	pei	<L8+p_1+2
+   220 00:00DC: D4 0B        	pei	<L8+p_1
+   221 00:00DE: D4 11        	pei	<L8+fd_1
+   222 00:00E0: 22 xx xx xx  	jsl	~~read
+  Sun Jan  9 2022 20:53                                                Page 5
+
+
+   223 00:00E4: 85 09        	sta	<L8+r_1
+   224                        ;		printf("%d bytes read @ %p\n", r, p);
+   225 00:00E6: D4 0D        	pei	<L8+p_1+2
+   226 00:00E8: D4 0B        	pei	<L8+p_1
+   227 00:00EA: D4 09        	pei	<L8+r_1
+   228 00:00EC: F4 xx xx     	pea	#^L1+64
+   229 00:00EF: F4 xx xx     	pea	#<L1+64
+   230 00:00F2: F4 0C 00     	pea	#12
+   231 00:00F5: 22 xx xx xx  	jsl	~~printf
+   232                        ;		p += r;
+   233 00:00F9: A5 09        	lda	<L8+r_1
+   234 00:00FB: 85 01        	sta	<R0
+   235 00:00FD: 64 03        	stz	<R0+2
+   236 00:00FF: A5 0B        	lda	<L8+p_1
+   237 00:0101: 18           	clc
+   238 00:0102: 65 01        	adc	<R0
+   239 00:0104: 85 0B        	sta	<L8+p_1
+   240 00:0106: A5 0D        	lda	<L8+p_1+2
+   241 00:0108: 65 03        	adc	<R0+2
+   242 00:010A: 85 0D        	sta	<L8+p_1+2
+   243                        ;		if (r != BUFSIZE) break;
+   244 00:010C: A5 09        	lda	<L8+r_1
+   245 00:010E: C9 00 10     	cmp	#<$1000
+   246 00:0111: F0 C4        	beq	L10010
+   247                        ;	}
+   248                        ;	
+   249                        ;	fclose(fin);
+   250 00:0113: D4 07        	pei	<L8+fin_1+2
+   251 00:0115: D4 05        	pei	<L8+fin_1
+   252 00:0117: 22 xx xx xx  	jsl	~~fclose
+   253                        ;}	
+   254 00:011B: 80 87        	bra	L11
+   255             00000016   L7	equ	22
+   256             00000005   L8	equ	5
+   257                        	ends
+   258                        	efunc
+   259                        	data
+   260                        L1:
+   261 00:0008: 6C 6F 61 64  	db	$6C,$6F,$61,$64,$69,$6E,$67,$20,$72,$74,
+                    $65,$73,$74,$2E,$61
+       00:000C: 69 6E 67 20 
+       00:0010: 72 74 65 73 
+       00:0014: 74 2E 61 
+   262 00:0017: 0A 00 44 3A  	db	$0A,$00,$44,$3A,$52,$54,$45,$53,$54,$2E,
+                    $41,$00,$6C,$65,$6E
+       00:001B: 52 54 45 53 
+       00:001F: 54 2E 41 00 
+       00:0023: 6C 65 6E 
+   263 00:0026: 67 74 68 3A  	db	$67,$74,$68,$3A,$20,$25,$6C,$75,$0A,$00,
+                    $44,$3A,$52,$54,$45
+       00:002A: 20 25 6C 75 
+       00:002E: 0A 00 44 3A 
+       00:0032: 52 54 45 
+   264 00:0035: 53 54 2E 41  	db	$53,$54,$2E,$41,$00,$72,$00,$63,$61,$6E,
+                    $27,$74,$20,$6C,$6F
+       00:0039: 00 72 00 63 
+       00:003D: 61 6E 27 74 
+       00:0041: 20 6C 6F 
+  Sun Jan  9 2022 20:53                                                Page 6
+
+
+   265 00:0044: 61 64 0A 00  	db	$61,$64,$0A,$00,$25,$64,$20,$62,$79,$74,
+                    $65,$73,$20,$72,$65
+       00:0048: 25 64 20 62 
+       00:004C: 79 74 65 73 
+       00:0050: 20 72 65 
+   266 00:0053: 61 64 20 40  	db	$61,$64,$20,$40,$20,$25,$70,$0A,$00
+       00:0057: 20 25 70 0A 
+       00:005B: 00 
+   267 00:005C:              	ends
+   268                        ;
+   269                        ;
+   270                        ;int main(int argc, char **argv) {
+   271                        	code
+   272                        	xdef	~~main
+   273                        	func
+   274                        ~~main:
+   275                        	longa	on
+   276                        	longi	on
+   277 00:011D: 3B           	tsc
+   278 00:011E: 38           	sec
+   279 00:011F: E9 02 00     	sbc	#L15
+   280 00:0122: 1B           	tcs
+   281 00:0123: 0B           	phd
+   282 00:0124: 5B           	tcd
+   283             00000004   argc_0	set	4
+   284             00000006   argv_0	set	6
+   285                        ;	
+   286                        ;	int rc;
+   287                        ;	
+   288                        ;	//asm {wdm 7;};
+   289                        ;	
+   290                        ;    fd2iocb[0] = 0;
+   291             00000000   rc_1	set	0
+   292 00:0125: E2 20        	sep	#$20
+   293                        	longa	off
+   294 00:0127: 9C xx xx     	stz	|~~fd2iocb
+   295                        ;    fd2iocb[1] = 0;
+   296 00:012A: 9C xx xx     	stz	|~~fd2iocb+1
+   297                        ;    fd2iocb[2] = 0;
+   298 00:012D: 9C xx xx     	stz	|~~fd2iocb+2
+   299                        ;    fd2iocb[3] = 0xff;
+   300 00:0130: A9 FF        	lda	#$ff
+   301 00:0132: 8D xx xx     	sta	|~~fd2iocb+3
+   302                        ;    fd2iocb[4] = 0xff;
+   303 00:0135: 8D xx xx     	sta	|~~fd2iocb+4
+   304                        ;    fd2iocb[5] = 0xff;
+   305 00:0138: 8D xx xx     	sta	|~~fd2iocb+5
+   306                        ;    fd2iocb[6] = 0xff;
+   307 00:013B: 8D xx xx     	sta	|~~fd2iocb+6
+   308                        ;    fd2iocb[7] = 0xff;
+   309 00:013E: 8D xx xx     	sta	|~~fd2iocb+7
+   310 00:0141: C2 20        	rep	#$20
+   311                        	longa	on
+   312                        ;
+   313                        ;	//printf("Hallo\n");
+   314                        ;	loaderTask();
+   315 00:0143: 22 xx xx xx  	jsl	~~loaderTask
+   316                        ;	return 0;
+  Sun Jan  9 2022 20:53                                                Page 7
+
+
+   317 00:0147: A9 00 00     	lda	#$0
+   318 00:014A: A8           	tay
+   319 00:014B: A5 04        	lda	<L15+2
+   320 00:014D: 85 0A        	sta	<L15+2+6
+   321 00:014F: A5 03        	lda	<L15+1
+   322 00:0151: 85 09        	sta	<L15+1+6
+   323 00:0153: 2B           	pld
+   324 00:0154: 3B           	tsc
+   325 00:0155: 18           	clc
+   326 00:0156: 69 08 00     	adc	#L15+6
+   327 00:0159: 1B           	tcs
+   328 00:015A: 98           	tya
+   329 00:015B: 6B           	rtl
+   330                        ;}
+   331             00000002   L15	equ	2
+   332             00000001   L16	equ	1
+   333                        	ends
+   334                        	efunc
+   335                        ;
+   336                        	xref	~~read
+   337                        	xref	~~stat
+   338                        	xref	~~toupper
+   339                        	xref	~~printf
+   340                        	xref	~~fopen
+   341                        	xref	~~fclose
+   342                        	xref	~~fd2iocb
+   343                        	udata
+   344                        ~~buffer
+   345 00:0000:              	ds	4096
+   346 00:1000:              	ends
+
+
+      Lines assembled: 346
+      Errors: 0

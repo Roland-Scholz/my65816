@@ -1,0 +1,4112 @@
+  Tue Feb  8 2022 21:01                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#define SLOW
+     7                        ;/*
+     8                        ; * puff.c
+     9                        ; * Copyright (C) 2002-2010 Mark Adler
+    10                        ; * For conditions of distribution and use, see co
+                    pyright notice in puff.h
+    11                        ; * version 2.2, 25 Apr 2010
+    12                        ; *
+    13                        ; * puff.c is a simple inflate written to be an un
+                    ambiguous way to specify the
+    14                        ; * deflate format.  It is not written for speed b
+                    ut rather simplicity.  As a
+    15                        ; * side benefit, this code might actually be usef
+                    ul when small code is more
+    16                        ; * important than speed, such as bootstrap applic
+                    ations.  For typical deflate
+    17                        ; * data, zlib's inflate() is about four times as 
+                    fast as puff().  zlib's
+    18                        ; * inflate compiles to around 20K on my machine, 
+                    whereas puff.c compiles to
+    19                        ; * around 4K on my machine (a PowerPC using GNU c
+                    c).  If the faster decode()
+    20                        ; * function here is used, then puff() is only twi
+                    ce as slow as zlib's
+    21                        ; * inflate().
+    22                        ; *
+    23                        ; * All dynamically allocated memory comes from th
+                    e stack.  The stack required
+    24                        ; * is less than 2K bytes.  This code is compatibl
+                    e with 16-bit int's and
+    25                        ; * assumes that long's are at least 32 bits.  puf
+                    f.c uses the short data type,
+    26                        ; * assumed to be 16 bits, for arrays in order to 
+                    to conserve memory.  The code
+    27                        ; * works whether integers are stored big endian o
+                    r little endian.
+    28                        ; *
+    29                        ; * In the comments below are "Format notes" that 
+                    describe the inflate process
+    30                        ; * and document some of the less obvious aspects 
+                    of the format.  This source
+    31                        ; * code is meant to supplement RFC 1951, which fo
+                    rmally describes the deflate
+    32                        ; * format:
+    33                        ; *
+    34                        ; *    http://www.zlib.org/rfc-deflate.html
+    35                        ; */
+  Tue Feb  8 2022 21:01                                                Page 2
+
+
+    36                        ;
+    37                        ;/*
+    38                        ; * Change history:
+    39                        ; *
+    40                        ; * 1.0  10 Feb 2002     - First version
+    41                        ; * 1.1  17 Feb 2002     - Clarifications of some 
+                    comments and notes
+    42                        ; *                      - Update puff() dest and 
+                    source pointers on negative
+    43                        ; *                        errors to facilitate de
+                    bugging deflators
+    44                        ; *                      - Remove longest from str
+                    uct huffman -- not needed
+    45                        ; *                      - Simplify offs[] index i
+                    n construct()
+    46                        ; *                      - Add input size and chec
+                    king, using longjmp() to
+    47                        ; *                        maintain easy readabili
+                    ty
+    48                        ; *                      - Use short data type for
+                     large arrays
+    49                        ; *                      - Use pointers instead of
+                     long to specify source and
+    50                        ; *                        destination sizes to av
+                    oid arbitrary 4 GB limits
+    51                        ; * 1.2  17 Mar 2002     - Add faster version of d
+                    ecode(), doubles speed (!),
+    52                        ; *                        but leave simple versio
+                    n for readabilty
+    53                        ; *                      - Make sure invalid dista
+                    nces detected if pointers
+    54                        ; *                        are 16 bits
+    55                        ; *                      - Fix fixed codes table e
+                    rror
+    56                        ; *                      - Provide a scanning mode
+                     for determining size of
+    57                        ; *                        uncompressed data
+    58                        ; * 1.3  20 Mar 2002     - Go back to lengths for 
+                    puff() parameters [Gailly]
+    59                        ; *                      - Add a puff.h file for t
+                    he interface
+    60                        ; *                      - Add braces in puff() fo
+                    r else do [Gailly]
+    61                        ; *                      - Use indexes instead of 
+                    pointers for readability
+    62                        ; * 1.4  31 Mar 2002     - Simplify construct() co
+                    de set check
+    63                        ; *                      - Fix some comments
+    64                        ; *                      - Add FIXLCODES #define
+    65                        ; * 1.5   6 Apr 2002     - Minor comment fixes
+    66                        ; * 1.6   7 Aug 2002     - Minor format changes
+    67                        ; * 1.7   3 Mar 2003     - Added test code for dis
+                    tribution
+    68                        ; *                      - Added zlib-like license
+    69                        ; * 1.8   9 Jan 2004     - Added some comments on 
+                    no distance codes case
+    70                        ; * 1.9  21 Feb 2008     - Fix bug on 16-bit integ
+                    er architectures [Pohland]
+  Tue Feb  8 2022 21:01                                                Page 3
+
+
+    71                        ; *                      - Catch missing end-of-bl
+                    ock symbol error
+    72                        ; * 2.0  25 Jul 2008     - Add #define to permit d
+                    istance too far back
+    73                        ; *                      - Add option in TEST code
+                     for puff to write the data
+    74                        ; *                      - Add option in TEST code
+                     to skip input bytes
+    75                        ; *                      - Allow TEST code to read
+                     from piped stdin
+    76                        ; * 2.1   4 Apr 2010     - Avoid variable initiali
+                    zation for happier compilers
+    77                        ; *                      - Avoid unsigned comparis
+                    ons for even happier compilers
+    78                        ; * 2.2  25 Apr 2010     - Fix bug in variable ini
+                    tializations [Oberhumer]
+    79                        ; *                      - Add const where appropr
+                    iate [Oberhumer]
+    80                        ; *                      - Split if's and ?'s for 
+                    coverage testing
+    81                        ; *                      - Break out test code to 
+                    separate file
+    82                        ; *                      - Move NIL to puff.h
+    83                        ; *                      - Allow incomplete code o
+                    nly if single code length is 1
+    84                        ; *                      - Add full code coverage 
+                    test to Makefile
+    85                        ; */
+    86                        ;
+    87                        ;#include <stdio.h>
+    88                        ;#include <stdlib.h>
+    89                        ;#include <setjmp.h>             /* for setjmp(), 
+                    longjmp(), and jmp_buf */
+    90                        ;#include "puff.h"               /* prototype for 
+                    puff() */
+    91                        ;
+    92                        ;int debugf(const char *format, ...);
+    93                        ;
+    94                        ;#define local static            /* for local func
+                    tion definitions */
+    95                        ;
+    96                        ;/*
+    97                        ; * Maximums for allocations and loops.  It is not
+                     useful to change these --
+    98                        ; * they are fixed by the deflate format.
+    99                        ; */
+   100                        ;#define MAXBITS 15              /* maximum bits i
+                    n a code */
+   101                        ;#define MAXLCODES 286           /* maximum number
+                     of literal/length codes */
+   102                        ;#define MAXDCODES 30            /* maximum number
+                     of distance codes */
+   103                        ;#define MAXCODES (MAXLCODES+MAXDCODES)  /* maximu
+                    m codes lengths to read */
+   104                        ;#define FIXLCODES 288           /* number of fixe
+                    d literal/length codes */
+   105                        ;
+   106                        ;/* input and output state */
+  Tue Feb  8 2022 21:01                                                Page 4
+
+
+   107                        ;struct state {
+   108                        ;    /* output state */
+   109                        ;    unsigned char *out;         /* output buffer 
+                    */
+   110                        ;    unsigned long outlen;       /* available spac
+                    e at out */
+   111                        ;    unsigned long outcnt;       /* bytes written 
+                    to out so far */
+   112                        ;
+   113                        ;    /* input state */
+   114                        ;    const unsigned char *in;    /* input buffer *
+                    /
+   115                        ;    unsigned long inlen;        /* available inpu
+                    t at in */
+   116                        ;    unsigned long incnt;        /* bytes read so 
+                    far */
+   117                        ;    int bitbuf;                 /* bit buffer */
+   118                        ;    int bitcnt;                 /* number of bits
+                     in bit buffer */
+   119                        ;
+   120                        ;    /* input limit error return state for bits() 
+                    and decode() */
+   121                        ;    jmp_buf env;
+   122                        ;};
+   123                        ;
+   124                        ;/*
+   125                        ; * Return need bits from the input stream.  This 
+                    always leaves less than
+   126                        ; * eight bits in the buffer.  bits() works proper
+                    ly for need == 0.
+   127                        ; *
+   128                        ; * Format notes:
+   129                        ; *
+   130                        ; * - Bits are stored in bytes from the least sign
+                    ificant bit to the most
+   131                        ; *   significant bit.  Therefore bits are dropped
+                     from the bottom of the bit
+   132                        ; *   buffer, using shift right, and new bytes are
+                     appended to the top of the
+   133                        ; *   bit buffer, using shift left.
+   134                        ; */
+   135                        ;void longjmp(jmp_buf env, int val) {
+   136                        	code
+   137                        	xdef	~~longjmp
+   138                        	func
+   139                        ~~longjmp:
+   140                        	longa	on
+   141                        	longi	on
+   142 00:0000: 3B           	tsc
+   143 00:0001: 38           	sec
+   144 00:0002: E9 00 00     	sbc	#L2
+   145 00:0005: 1B           	tcs
+   146 00:0006: 0B           	phd
+   147 00:0007: 5B           	tcd
+   148             00000004   env_0	set	4
+   149             00000008   val_0	set	8
+   150                        ;	printf("longjump error: %d\n", val);
+   151 00:0008: D4 08        	pei	<L2+val_0
+  Tue Feb  8 2022 21:01                                                Page 5
+
+
+   152 00:000A: F4 xx xx     	pea	#^L1
+   153 00:000D: F4 xx xx     	pea	#<L1
+   154 00:0010: F4 08 00     	pea	#8
+   155 00:0013: 22 xx xx xx  	jsl	~~printf
+   156                        ;}
+   157 00:0017: A5 02        	lda	<L2+2
+   158 00:0019: 85 08        	sta	<L2+2+6
+   159 00:001B: A5 01        	lda	<L2+1
+   160 00:001D: 85 07        	sta	<L2+1+6
+   161 00:001F: 2B           	pld
+   162 00:0020: 3B           	tsc
+   163 00:0021: 18           	clc
+   164 00:0022: 69 06 00     	adc	#L2+6
+   165 00:0025: 1B           	tcs
+   166 00:0026: 6B           	rtl
+   167             00000000   L2	equ	0
+   168             00000001   L3	equ	1
+   169                        	ends
+   170                        	efunc
+   171                        	data
+   172                        L1:
+   173 00:0000: 6C 6F 6E 67  	db	$6C,$6F,$6E,$67,$6A,$75,$6D,$70,$20,$65,
+                    $72,$72,$6F,$72,$3A
+       00:0004: 6A 75 6D 70 
+       00:0008: 20 65 72 72 
+       00:000C: 6F 72 3A 
+   174 00:000F: 20 25 64 0A  	db	$20,$25,$64,$0A,$00
+       00:0013: 00 
+   175 00:0014:              	ends
+   176                        ; 
+   177                        ;local int bits(struct state *s, int need)
+   178                        ;{
+   179                        	code
+   180                        	func
+   181                        ~~bits:
+   182                        	longa	on
+   183                        	longi	on
+   184 00:0027: 3B           	tsc
+   185 00:0028: 38           	sec
+   186 00:0029: E9 12 00     	sbc	#L6
+   187 00:002C: 1B           	tcs
+   188 00:002D: 0B           	phd
+   189 00:002E: 5B           	tcd
+   190             00000004   s_0	set	4
+   191             00000008   need_0	set	8
+   192                        ;    long val;           /* bit accumulator (can u
+                    se up to 20 bits) */
+   193                        ;	int ret;
+   194                        ;	
+   195                        ;    /* load at least need bits into val */
+   196                        ;    val = s->bitbuf;
+   197             00000000   val_1	set	0
+   198             00000004   ret_1	set	4
+   199 00:002F: A0 00 00     	ldy	#$0
+   200 00:0032: 5A           	phy
+   201 00:0033: A0 18 00     	ldy	#$18
+   202 00:0036: B7 16        	lda	[<L6+s_0],Y
+   203 00:0038: 7A           	ply
+  Tue Feb  8 2022 21:01                                                Page 6
+
+
+   204 00:0039: 2A           	rol	A
+   205 00:003A: 6A           	ror	A
+   206 00:003B: 10 01        	bpl	L8
+   207 00:003D: 88           	dey
+   208                        L8:
+   209 00:003E: 85 0D        	sta	<L7+val_1
+   210 00:0040: 84 0F        	sty	<L7+val_1+2
+   211                        ;    while (s->bitcnt < need) {
+   212 00:0042: 82 9F 00     	brl	L10001
+   213                        L20001:
+   214                        ;        if (s->incnt == s->inlen)
+   215                        ;            longjmp(s->env, 1);         /* out of
+                     input */
+   216 00:0045: A0 14 00     	ldy	#$14
+   217 00:0048: B7 16        	lda	[<L6+s_0],Y
+   218 00:004A: A0 10 00     	ldy	#$10
+   219 00:004D: D7 16        	cmp	[<L6+s_0],Y
+   220 00:004F: D0 0A        	bne	L11
+   221 00:0051: A0 16 00     	ldy	#$16
+   222 00:0054: B7 16        	lda	[<L6+s_0],Y
+   223 00:0056: A0 12 00     	ldy	#$12
+   224 00:0059: D7 16        	cmp	[<L6+s_0],Y
+   225                        L11:
+   226 00:005B: D0 17        	bne	L10003
+   227 00:005D: F4 01 00     	pea	#<$1
+   228 00:0060: A9 1C 00     	lda	#$1c
+   229 00:0063: 18           	clc
+   230 00:0064: 65 16        	adc	<L6+s_0
+   231 00:0066: 85 01        	sta	<R0
+   232 00:0068: A9 00 00     	lda	#$0
+   233 00:006B: 65 18        	adc	<L6+s_0+2
+   234 00:006D: 48           	pha
+   235 00:006E: D4 01        	pei	<R0
+   236 00:0070: 22 xx xx xx  	jsl	~~longjmp
+   237                        ;		val |= (long)(s->in[s->incnt++]) << s->b
+                    itcnt;  /* load eight bits */
+   238                        L10003:
+   239 00:0074: A0 14 00     	ldy	#$14
+   240 00:0077: B7 16        	lda	[<L6+s_0],Y
+   241 00:0079: 85 05        	sta	<R1
+   242 00:007B: C8           	iny
+   243 00:007C: C8           	iny
+   244 00:007D: B7 16        	lda	[<L6+s_0],Y
+   245 00:007F: 85 07        	sta	<R1+2
+   246 00:0081: 18           	clc
+   247 00:0082: A0 0C 00     	ldy	#$c
+   248 00:0085: B7 16        	lda	[<L6+s_0],Y
+   249 00:0087: 65 05        	adc	<R1
+   250 00:0089: 85 09        	sta	<R2
+   251 00:008B: C8           	iny
+   252 00:008C: C8           	iny
+   253 00:008D: B7 16        	lda	[<L6+s_0],Y
+   254 00:008F: 65 07        	adc	<R1+2
+   255 00:0091: 85 0B        	sta	<R2+2
+   256 00:0093: A7 09        	lda	[<R2]
+   257 00:0095: 29 FF 00     	and	#$ff
+   258 00:0098: 85 05        	sta	<R1
+   259 00:009A: 64 07        	stz	<R1+2
+  Tue Feb  8 2022 21:01                                                Page 7
+
+
+   260 00:009C: D4 07        	pei	<R1+2
+   261 00:009E: D4 05        	pei	<R1
+   262 00:00A0: A0 1A 00     	ldy	#$1a
+   263 00:00A3: B7 16        	lda	[<L6+s_0],Y
+   264                        	xref	~~~lasl
+   265 00:00A5: 22 xx xx xx  	jsl	~~~lasl
+   266 00:00A9: 85 01        	sta	<R0
+   267 00:00AB: 86 03        	stx	<R0+2
+   268 00:00AD: A5 0D        	lda	<L7+val_1
+   269 00:00AF: 05 01        	ora	<R0
+   270 00:00B1: 85 0D        	sta	<L7+val_1
+   271 00:00B3: A5 0F        	lda	<L7+val_1+2
+   272 00:00B5: 05 03        	ora	<R0+2
+   273 00:00B7: 85 0F        	sta	<L7+val_1+2
+   274 00:00B9: 18           	clc
+   275 00:00BA: A9 01 00     	lda	#$1
+   276 00:00BD: A0 14 00     	ldy	#$14
+   277 00:00C0: 77 16        	adc	[<L6+s_0],Y
+   278 00:00C2: 97 16        	sta	[<L6+s_0],Y
+   279 00:00C4: A9 00 00     	lda	#$0
+   280 00:00C7: C8           	iny
+   281 00:00C8: C8           	iny
+   282 00:00C9: 77 16        	adc	[<L6+s_0],Y
+   283 00:00CB: 97 16        	sta	[<L6+s_0],Y
+   284                        ;        s->bitcnt += 8;
+   285 00:00CD: A9 1A 00     	lda	#$1a
+   286 00:00D0: 18           	clc
+   287 00:00D1: 65 16        	adc	<L6+s_0
+   288 00:00D3: 85 01        	sta	<R0
+   289 00:00D5: A9 00 00     	lda	#$0
+   290 00:00D8: 65 18        	adc	<L6+s_0+2
+   291 00:00DA: 85 03        	sta	<R0+2
+   292 00:00DC: A9 08 00     	lda	#$8
+   293 00:00DF: 18           	clc
+   294 00:00E0: 67 01        	adc	[<R0]
+   295 00:00E2: 87 01        	sta	[<R0]
+   296                        ;    }
+   297                        L10001:
+   298 00:00E4: 38           	sec
+   299 00:00E5: A0 1A 00     	ldy	#$1a
+   300 00:00E8: B7 16        	lda	[<L6+s_0],Y
+   301 00:00EA: E5 1A        	sbc	<L6+need_0
+   302 00:00EC: 70 03        	bvs	L9
+   303 00:00EE: 49 00 80     	eor	#$8000
+   304                        L9:
+   305 00:00F1: 30 03        	bmi	*+5
+   306 00:00F3: 82 4F FF     	brl	L20001
+   307                        ;
+   308                        ;    /* drop need bits and update buffer, always z
+                    ero to seven bits left */
+   309                        ;    s->bitbuf = (int)(val >> need);
+   310 00:00F6: D4 0F        	pei	<L7+val_1+2
+   311 00:00F8: D4 0D        	pei	<L7+val_1
+   312 00:00FA: A5 1A        	lda	<L6+need_0
+   313                        	xref	~~~lasr
+   314 00:00FC: 22 xx xx xx  	jsl	~~~lasr
+   315 00:0100: 86 03        	stx	<R0+2
+   316 00:0102: A0 18 00     	ldy	#$18
+  Tue Feb  8 2022 21:01                                                Page 8
+
+
+   317 00:0105: 97 16        	sta	[<L6+s_0],Y
+   318                        ;    s->bitcnt -= need;
+   319 00:0107: A9 1A 00     	lda	#$1a
+   320 00:010A: 18           	clc
+   321 00:010B: 65 16        	adc	<L6+s_0
+   322 00:010D: 85 01        	sta	<R0
+   323 00:010F: A9 00 00     	lda	#$0
+   324 00:0112: 65 18        	adc	<L6+s_0+2
+   325 00:0114: 85 03        	sta	<R0+2
+   326 00:0116: 38           	sec
+   327 00:0117: A7 01        	lda	[<R0]
+   328 00:0119: E5 1A        	sbc	<L6+need_0
+   329 00:011B: 87 01        	sta	[<R0]
+   330                        ;
+   331                        ;    /* return need bits, zeroing the bits above t
+                    hat */
+   332                        ;	ret = (int)(val & ((1L << need) - 1));
+   333 00:011D: F4 00 00     	pea	#^$1
+   334 00:0120: F4 01 00     	pea	#<$1
+   335 00:0123: A5 1A        	lda	<L6+need_0
+   336                        	xref	~~~lasl
+   337 00:0125: 22 xx xx xx  	jsl	~~~lasl
+   338 00:0129: 85 01        	sta	<R0
+   339 00:012B: 86 03        	stx	<R0+2
+   340 00:012D: A9 FF FF     	lda	#$ffff
+   341 00:0130: 18           	clc
+   342 00:0131: 65 01        	adc	<R0
+   343 00:0133: 85 05        	sta	<R1
+   344 00:0135: A9 FF FF     	lda	#$ffff
+   345 00:0138: 65 03        	adc	<R0+2
+   346 00:013A: 85 07        	sta	<R1+2
+   347 00:013C: A5 0D        	lda	<L7+val_1
+   348 00:013E: 25 05        	and	<R1
+   349 00:0140: 85 01        	sta	<R0
+   350 00:0142: A5 0F        	lda	<L7+val_1+2
+   351 00:0144: 25 07        	and	<R1+2
+   352 00:0146: 85 03        	sta	<R0+2
+   353 00:0148: A5 01        	lda	<R0
+   354 00:014A: 85 11        	sta	<L7+ret_1
+   355                        ;	
+   356                        ;    return ret;
+   357 00:014C: A8           	tay
+   358 00:014D: A5 14        	lda	<L6+2
+   359 00:014F: 85 1A        	sta	<L6+2+6
+   360 00:0151: A5 13        	lda	<L6+1
+   361 00:0153: 85 19        	sta	<L6+1+6
+   362 00:0155: 2B           	pld
+   363 00:0156: 3B           	tsc
+   364 00:0157: 18           	clc
+   365 00:0158: 69 18 00     	adc	#L6+6
+   366 00:015B: 1B           	tcs
+   367 00:015C: 98           	tya
+   368 00:015D: 6B           	rtl
+   369                        ;}
+   370             00000012   L6	equ	18
+   371             0000000D   L7	equ	13
+   372                        	ends
+   373                        	efunc
+  Tue Feb  8 2022 21:01                                                Page 9
+
+
+   374                        ;
+   375                        ;/*
+   376                        ; * Process a stored block.
+   377                        ; *
+   378                        ; * Format notes:
+   379                        ; *
+   380                        ; * - After the two-bit stored block type (00), th
+                    e stored block length and
+   381                        ; *   stored bytes are byte-aligned for fast copyi
+                    ng.  Therefore any leftover
+   382                        ; *   bits in the byte that has the last bit of th
+                    e type, as many as seven, are
+   383                        ; *   discarded.  The value of the discarded bits 
+                    are not defined and should not
+   384                        ; *   be checked against any expectation.
+   385                        ; *
+   386                        ; * - The second inverted copy of the stored block
+                     length does not have to be
+   387                        ; *   checked, but it's probably a good idea to do
+                     so anyway.
+   388                        ; *
+   389                        ; * - A stored block can have zero length.  This i
+                    s sometimes used to byte-align
+   390                        ; *   subsets of the compressed data for random ac
+                    cess or partial recovery.
+   391                        ; */
+   392                        ;local int stored(struct state *s)
+   393                        ;{
+   394                        	code
+   395                        	func
+   396                        ~~stored:
+   397                        	longa	on
+   398                        	longi	on
+   399 00:015E: 3B           	tsc
+   400 00:015F: 38           	sec
+   401 00:0160: E9 0E 00     	sbc	#L14
+   402 00:0163: 1B           	tcs
+   403 00:0164: 0B           	phd
+   404 00:0165: 5B           	tcd
+   405             00000004   s_0	set	4
+   406                        ;    unsigned len;       /* length of stored block
+                     */
+   407                        ;
+   408                        ;	printf("stored\n");
+   409             00000000   len_1	set	0
+   410 00:0166: F4 xx xx     	pea	#^L5
+   411 00:0169: F4 xx xx     	pea	#<L5
+   412 00:016C: F4 06 00     	pea	#6
+   413 00:016F: 22 xx xx xx  	jsl	~~printf
+   414                        ;	
+   415                        ;    /* discard leftover bits from current byte (a
+                    ssumes s->bitcnt < 8) */
+   416                        ;    s->bitbuf = 0;
+   417 00:0173: A9 00 00     	lda	#$0
+   418 00:0176: A0 18 00     	ldy	#$18
+   419 00:0179: 97 12        	sta	[<L14+s_0],Y
+   420                        ;    s->bitcnt = 0;
+   421 00:017B: C8           	iny
+  Tue Feb  8 2022 21:01                                                Page 10
+
+
+   422 00:017C: C8           	iny
+   423 00:017D: 97 12        	sta	[<L14+s_0],Y
+   424                        ;
+   425                        ;    /* get length and check against its one's com
+                    plement */
+   426                        ;    if (s->incnt + 4 > s->inlen)
+   427                        ;        return 2;                               /
+                    * not enough input */
+   428 00:017F: 18           	clc
+   429 00:0180: A9 04 00     	lda	#$4
+   430 00:0183: A0 14 00     	ldy	#$14
+   431 00:0186: 77 12        	adc	[<L14+s_0],Y
+   432 00:0188: 85 01        	sta	<R0
+   433 00:018A: A9 00 00     	lda	#$0
+   434 00:018D: C8           	iny
+   435 00:018E: C8           	iny
+   436 00:018F: 77 12        	adc	[<L14+s_0],Y
+   437 00:0191: 85 03        	sta	<R0+2
+   438 00:0193: A0 10 00     	ldy	#$10
+   439 00:0196: B7 12        	lda	[<L14+s_0],Y
+   440 00:0198: C5 01        	cmp	<R0
+   441 00:019A: C8           	iny
+   442 00:019B: C8           	iny
+   443 00:019C: B7 12        	lda	[<L14+s_0],Y
+   444 00:019E: E5 03        	sbc	<R0+2
+   445 00:01A0: B0 15        	bcs	L10004
+   446                        L20002:
+   447 00:01A2: A9 02 00     	lda	#$2
+   448                        L17:
+   449 00:01A5: A8           	tay
+   450 00:01A6: A5 10        	lda	<L14+2
+   451 00:01A8: 85 14        	sta	<L14+2+4
+   452 00:01AA: A5 0F        	lda	<L14+1
+   453 00:01AC: 85 13        	sta	<L14+1+4
+   454 00:01AE: 2B           	pld
+   455 00:01AF: 3B           	tsc
+   456 00:01B0: 18           	clc
+   457 00:01B1: 69 12 00     	adc	#L14+4
+   458 00:01B4: 1B           	tcs
+   459 00:01B5: 98           	tya
+   460 00:01B6: 6B           	rtl
+   461                        ;    len = s->in[s->incnt++];
+   462                        L10004:
+   463 00:01B7: A0 14 00     	ldy	#$14
+   464 00:01BA: B7 12        	lda	[<L14+s_0],Y
+   465 00:01BC: 85 01        	sta	<R0
+   466 00:01BE: C8           	iny
+   467 00:01BF: C8           	iny
+   468 00:01C0: B7 12        	lda	[<L14+s_0],Y
+   469 00:01C2: 85 03        	sta	<R0+2
+   470 00:01C4: 18           	clc
+   471 00:01C5: A0 0C 00     	ldy	#$c
+   472 00:01C8: B7 12        	lda	[<L14+s_0],Y
+   473 00:01CA: 65 01        	adc	<R0
+   474 00:01CC: 85 05        	sta	<R1
+   475 00:01CE: C8           	iny
+   476 00:01CF: C8           	iny
+   477 00:01D0: B7 12        	lda	[<L14+s_0],Y
+  Tue Feb  8 2022 21:01                                                Page 11
+
+
+   478 00:01D2: 65 03        	adc	<R0+2
+   479 00:01D4: 85 07        	sta	<R1+2
+   480 00:01D6: A7 05        	lda	[<R1]
+   481 00:01D8: 29 FF 00     	and	#$ff
+   482 00:01DB: 85 0D        	sta	<L15+len_1
+   483 00:01DD: 18           	clc
+   484 00:01DE: A9 01 00     	lda	#$1
+   485 00:01E1: A0 14 00     	ldy	#$14
+   486 00:01E4: 77 12        	adc	[<L14+s_0],Y
+   487 00:01E6: 97 12        	sta	[<L14+s_0],Y
+   488 00:01E8: A9 00 00     	lda	#$0
+   489 00:01EB: C8           	iny
+   490 00:01EC: C8           	iny
+   491 00:01ED: 77 12        	adc	[<L14+s_0],Y
+   492 00:01EF: 97 12        	sta	[<L14+s_0],Y
+   493                        ;    len |= s->in[s->incnt++] << 8;
+   494 00:01F1: 88           	dey
+   495 00:01F2: 88           	dey
+   496 00:01F3: B7 12        	lda	[<L14+s_0],Y
+   497 00:01F5: 85 05        	sta	<R1
+   498 00:01F7: C8           	iny
+   499 00:01F8: C8           	iny
+   500 00:01F9: B7 12        	lda	[<L14+s_0],Y
+   501 00:01FB: 85 07        	sta	<R1+2
+   502 00:01FD: 18           	clc
+   503 00:01FE: A0 0C 00     	ldy	#$c
+   504 00:0201: B7 12        	lda	[<L14+s_0],Y
+   505 00:0203: 65 05        	adc	<R1
+   506 00:0205: 85 09        	sta	<R2
+   507 00:0207: C8           	iny
+   508 00:0208: C8           	iny
+   509 00:0209: B7 12        	lda	[<L14+s_0],Y
+   510 00:020B: 65 07        	adc	<R1+2
+   511 00:020D: 85 0B        	sta	<R2+2
+   512 00:020F: A7 09        	lda	[<R2]
+   513 00:0211: 29 FF 00     	and	#$ff
+   514 00:0214: EB           	xba
+   515 00:0215: 29 00 FF     	and	#$ff00
+   516 00:0218: 04 0D        	tsb	<L15+len_1
+   517 00:021A: 18           	clc
+   518 00:021B: A9 01 00     	lda	#$1
+   519 00:021E: A0 14 00     	ldy	#$14
+   520 00:0221: 77 12        	adc	[<L14+s_0],Y
+   521 00:0223: 97 12        	sta	[<L14+s_0],Y
+   522 00:0225: A9 00 00     	lda	#$0
+   523 00:0228: C8           	iny
+   524 00:0229: C8           	iny
+   525 00:022A: 77 12        	adc	[<L14+s_0],Y
+   526 00:022C: 97 12        	sta	[<L14+s_0],Y
+   527                        ;    if (s->in[s->incnt++] != (~len & 0xff) ||
+   528                        ;        s->in[s->incnt++] != ((~len >> 8) & 0xff)
+                    )
+   529                        ;        return -2;                              /
+                    * didn't match complement! */
+   530 00:022E: A5 0D        	lda	<L15+len_1
+   531 00:0230: 49 FF FF     	eor	#<$ffffffff
+   532 00:0233: 29 FF 00     	and	#<$ff
+   533 00:0236: 85 01        	sta	<R0
+  Tue Feb  8 2022 21:01                                                Page 12
+
+
+   534 00:0238: 88           	dey
+   535 00:0239: 88           	dey
+   536 00:023A: B7 12        	lda	[<L14+s_0],Y
+   537 00:023C: 85 05        	sta	<R1
+   538 00:023E: C8           	iny
+   539 00:023F: C8           	iny
+   540 00:0240: B7 12        	lda	[<L14+s_0],Y
+   541 00:0242: 85 07        	sta	<R1+2
+   542 00:0244: 18           	clc
+   543 00:0245: A9 01 00     	lda	#$1
+   544 00:0248: 88           	dey
+   545 00:0249: 88           	dey
+   546 00:024A: 77 12        	adc	[<L14+s_0],Y
+   547 00:024C: 97 12        	sta	[<L14+s_0],Y
+   548 00:024E: A9 00 00     	lda	#$0
+   549 00:0251: C8           	iny
+   550 00:0252: C8           	iny
+   551 00:0253: 77 12        	adc	[<L14+s_0],Y
+   552 00:0255: 97 12        	sta	[<L14+s_0],Y
+   553 00:0257: 18           	clc
+   554 00:0258: A0 0C 00     	ldy	#$c
+   555 00:025B: B7 12        	lda	[<L14+s_0],Y
+   556 00:025D: 65 05        	adc	<R1
+   557 00:025F: 85 09        	sta	<R2
+   558 00:0261: C8           	iny
+   559 00:0262: C8           	iny
+   560 00:0263: B7 12        	lda	[<L14+s_0],Y
+   561 00:0265: 65 07        	adc	<R1+2
+   562 00:0267: 85 0B        	sta	<R2+2
+   563 00:0269: A7 09        	lda	[<R2]
+   564 00:026B: 29 FF 00     	and	#$ff
+   565 00:026E: C5 01        	cmp	<R0
+   566 00:0270: D0 49        	bne	L18
+   567 00:0272: A5 0D        	lda	<L15+len_1
+   568 00:0274: 49 FF FF     	eor	#<$ffffffff
+   569 00:0277: EB           	xba
+   570 00:0278: 29 FF 00     	and	#$00ff
+   571 00:027B: 29 FF 00     	and	#<$ff
+   572 00:027E: 85 01        	sta	<R0
+   573 00:0280: A0 14 00     	ldy	#$14
+   574 00:0283: B7 12        	lda	[<L14+s_0],Y
+   575 00:0285: 85 05        	sta	<R1
+   576 00:0287: C8           	iny
+   577 00:0288: C8           	iny
+   578 00:0289: B7 12        	lda	[<L14+s_0],Y
+   579 00:028B: 85 07        	sta	<R1+2
+   580 00:028D: 18           	clc
+   581 00:028E: A9 01 00     	lda	#$1
+   582 00:0291: 88           	dey
+   583 00:0292: 88           	dey
+   584 00:0293: 77 12        	adc	[<L14+s_0],Y
+   585 00:0295: 97 12        	sta	[<L14+s_0],Y
+   586 00:0297: A9 00 00     	lda	#$0
+   587 00:029A: C8           	iny
+   588 00:029B: C8           	iny
+   589 00:029C: 77 12        	adc	[<L14+s_0],Y
+   590 00:029E: 97 12        	sta	[<L14+s_0],Y
+   591 00:02A0: 18           	clc
+  Tue Feb  8 2022 21:01                                                Page 13
+
+
+   592 00:02A1: A0 0C 00     	ldy	#$c
+   593 00:02A4: B7 12        	lda	[<L14+s_0],Y
+   594 00:02A6: 65 05        	adc	<R1
+   595 00:02A8: 85 09        	sta	<R2
+   596 00:02AA: C8           	iny
+   597 00:02AB: C8           	iny
+   598 00:02AC: B7 12        	lda	[<L14+s_0],Y
+   599 00:02AE: 65 07        	adc	<R1+2
+   600 00:02B0: 85 0B        	sta	<R2+2
+   601 00:02B2: A7 09        	lda	[<R2]
+   602 00:02B4: 29 FF 00     	and	#$ff
+   603 00:02B7: C5 01        	cmp	<R0
+   604 00:02B9: F0 06        	beq	L10005
+   605                        L18:
+   606 00:02BB: A9 FE FF     	lda	#$fffe
+   607 00:02BE: 82 E4 FE     	brl	L17
+   608                        ;
+   609                        ;    /* copy len bytes from in to out */
+   610                        ;    if (s->incnt + len > s->inlen)
+   611                        L10005:
+   612                        ;        return 2;                               /
+                    * not enough input */
+   613 00:02C1: A5 0D        	lda	<L15+len_1
+   614 00:02C3: 85 01        	sta	<R0
+   615 00:02C5: 64 03        	stz	<R0+2
+   616 00:02C7: 18           	clc
+   617 00:02C8: A5 01        	lda	<R0
+   618 00:02CA: A0 14 00     	ldy	#$14
+   619 00:02CD: 77 12        	adc	[<L14+s_0],Y
+   620 00:02CF: 85 05        	sta	<R1
+   621 00:02D1: A5 03        	lda	<R0+2
+   622 00:02D3: C8           	iny
+   623 00:02D4: C8           	iny
+   624 00:02D5: 77 12        	adc	[<L14+s_0],Y
+   625 00:02D7: 85 07        	sta	<R1+2
+   626 00:02D9: A0 10 00     	ldy	#$10
+   627 00:02DC: B7 12        	lda	[<L14+s_0],Y
+   628 00:02DE: C5 05        	cmp	<R1
+   629 00:02E0: C8           	iny
+   630 00:02E1: C8           	iny
+   631 00:02E2: B7 12        	lda	[<L14+s_0],Y
+   632 00:02E4: E5 07        	sbc	<R1+2
+   633 00:02E6: B0 03        	bcs	*+5
+   634 00:02E8: 82 B7 FE     	brl	L20002
+   635                        ;    if (s->out != NIL) {
+   636 00:02EB: A7 12        	lda	[<L14+s_0]
+   637 00:02ED: A0 02 00     	ldy	#$2
+   638 00:02F0: 17 12        	ora	[<L14+s_0],Y
+   639 00:02F2: D0 03        	bne	*+5
+   640 00:02F4: 82 A8 00     	brl	L10007
+   641                        ;        if (s->outcnt + len > s->outlen)
+   642                        ;            return 1;                           /
+                    * not enough output space */
+   643 00:02F7: A5 0D        	lda	<L15+len_1
+   644 00:02F9: 85 01        	sta	<R0
+   645 00:02FB: 64 03        	stz	<R0+2
+   646 00:02FD: 18           	clc
+   647 00:02FE: A5 01        	lda	<R0
+  Tue Feb  8 2022 21:01                                                Page 14
+
+
+   648 00:0300: A0 08 00     	ldy	#$8
+   649 00:0303: 77 12        	adc	[<L14+s_0],Y
+   650 00:0305: 85 05        	sta	<R1
+   651 00:0307: A5 03        	lda	<R0+2
+   652 00:0309: C8           	iny
+   653 00:030A: C8           	iny
+   654 00:030B: 77 12        	adc	[<L14+s_0],Y
+   655 00:030D: 85 07        	sta	<R1+2
+   656 00:030F: A0 04 00     	ldy	#$4
+   657 00:0312: B7 12        	lda	[<L14+s_0],Y
+   658 00:0314: C5 05        	cmp	<R1
+   659 00:0316: C8           	iny
+   660 00:0317: C8           	iny
+   661 00:0318: B7 12        	lda	[<L14+s_0],Y
+   662 00:031A: E5 07        	sbc	<R1+2
+   663 00:031C: B0 06        	bcs	L10009
+   664 00:031E: A9 01 00     	lda	#$1
+   665 00:0321: 82 81 FE     	brl	L17
+   666                        ;        while (len--)
+   667                        L10009:
+   668 00:0324: A5 0D        	lda	<L15+len_1
+   669 00:0326: 85 01        	sta	<R0
+   670 00:0328: C6 0D        	dec	<L15+len_1
+   671 00:032A: A5 01        	lda	<R0
+   672 00:032C: D0 03        	bne	*+5
+   673 00:032E: 82 B5 00     	brl	L10011
+   674                        ;            s->out[s->outcnt++] = s->in[s->incnt+
+                    +];
+   675 00:0331: A0 08 00     	ldy	#$8
+   676 00:0334: B7 12        	lda	[<L14+s_0],Y
+   677 00:0336: 85 01        	sta	<R0
+   678 00:0338: C8           	iny
+   679 00:0339: C8           	iny
+   680 00:033A: B7 12        	lda	[<L14+s_0],Y
+   681 00:033C: 85 03        	sta	<R0+2
+   682 00:033E: A7 12        	lda	[<L14+s_0]
+   683 00:0340: 18           	clc
+   684 00:0341: 65 01        	adc	<R0
+   685 00:0343: 85 05        	sta	<R1
+   686 00:0345: A0 02 00     	ldy	#$2
+   687 00:0348: B7 12        	lda	[<L14+s_0],Y
+   688 00:034A: 65 03        	adc	<R0+2
+   689 00:034C: 85 07        	sta	<R1+2
+   690 00:034E: A0 14 00     	ldy	#$14
+   691 00:0351: B7 12        	lda	[<L14+s_0],Y
+   692 00:0353: 85 01        	sta	<R0
+   693 00:0355: C8           	iny
+   694 00:0356: C8           	iny
+   695 00:0357: B7 12        	lda	[<L14+s_0],Y
+   696 00:0359: 85 03        	sta	<R0+2
+   697 00:035B: 18           	clc
+   698 00:035C: A0 0C 00     	ldy	#$c
+   699 00:035F: B7 12        	lda	[<L14+s_0],Y
+   700 00:0361: 65 01        	adc	<R0
+   701 00:0363: 85 09        	sta	<R2
+   702 00:0365: C8           	iny
+   703 00:0366: C8           	iny
+   704 00:0367: B7 12        	lda	[<L14+s_0],Y
+  Tue Feb  8 2022 21:01                                                Page 15
+
+
+   705 00:0369: 65 03        	adc	<R0+2
+   706 00:036B: 85 0B        	sta	<R2+2
+   707 00:036D: E2 20        	sep	#$20
+   708                        	longa	off
+   709 00:036F: A7 09        	lda	[<R2]
+   710 00:0371: 87 05        	sta	[<R1]
+   711 00:0373: C2 20        	rep	#$20
+   712                        	longa	on
+   713 00:0375: 18           	clc
+   714 00:0376: A9 01 00     	lda	#$1
+   715 00:0379: A0 14 00     	ldy	#$14
+   716 00:037C: 77 12        	adc	[<L14+s_0],Y
+   717 00:037E: 97 12        	sta	[<L14+s_0],Y
+   718 00:0380: A9 00 00     	lda	#$0
+   719 00:0383: C8           	iny
+   720 00:0384: C8           	iny
+   721 00:0385: 77 12        	adc	[<L14+s_0],Y
+   722 00:0387: 97 12        	sta	[<L14+s_0],Y
+   723 00:0389: 18           	clc
+   724 00:038A: A9 01 00     	lda	#$1
+   725 00:038D: A0 08 00     	ldy	#$8
+   726 00:0390: 77 12        	adc	[<L14+s_0],Y
+   727 00:0392: 97 12        	sta	[<L14+s_0],Y
+   728 00:0394: A9 00 00     	lda	#$0
+   729 00:0397: C8           	iny
+   730 00:0398: C8           	iny
+   731 00:0399: 77 12        	adc	[<L14+s_0],Y
+   732 00:039B: 97 12        	sta	[<L14+s_0],Y
+   733 00:039D: 80 85        	bra	L10009
+   734                        ;    }
+   735                        ;    else {                                      /
+                    * just scanning */
+   736                        L10007:
+   737                        ;        s->outcnt += len;
+   738 00:039F: A9 08 00     	lda	#$8
+   739 00:03A2: 18           	clc
+   740 00:03A3: 65 12        	adc	<L14+s_0
+   741 00:03A5: 85 01        	sta	<R0
+   742 00:03A7: A9 00 00     	lda	#$0
+   743 00:03AA: 65 14        	adc	<L14+s_0+2
+   744 00:03AC: 85 03        	sta	<R0+2
+   745 00:03AE: A5 0D        	lda	<L15+len_1
+   746 00:03B0: 85 05        	sta	<R1
+   747 00:03B2: 64 07        	stz	<R1+2
+   748 00:03B4: A5 05        	lda	<R1
+   749 00:03B6: 18           	clc
+   750 00:03B7: 67 01        	adc	[<R0]
+   751 00:03B9: 87 01        	sta	[<R0]
+   752 00:03BB: A5 07        	lda	<R1+2
+   753 00:03BD: A0 02 00     	ldy	#$2
+   754 00:03C0: 77 01        	adc	[<R0],Y
+   755 00:03C2: 97 01        	sta	[<R0],Y
+   756                        ;        s->incnt += len;
+   757 00:03C4: A9 14 00     	lda	#$14
+   758 00:03C7: 18           	clc
+   759 00:03C8: 65 12        	adc	<L14+s_0
+   760 00:03CA: 85 01        	sta	<R0
+   761 00:03CC: A9 00 00     	lda	#$0
+  Tue Feb  8 2022 21:01                                                Page 16
+
+
+   762 00:03CF: 65 14        	adc	<L14+s_0+2
+   763 00:03D1: 85 03        	sta	<R0+2
+   764 00:03D3: A5 0D        	lda	<L15+len_1
+   765 00:03D5: 85 05        	sta	<R1
+   766 00:03D7: 64 07        	stz	<R1+2
+   767 00:03D9: A5 05        	lda	<R1
+   768 00:03DB: 18           	clc
+   769 00:03DC: 67 01        	adc	[<R0]
+   770 00:03DE: 87 01        	sta	[<R0]
+   771 00:03E0: A5 07        	lda	<R1+2
+   772 00:03E2: 77 01        	adc	[<R0],Y
+   773 00:03E4: 97 01        	sta	[<R0],Y
+   774                        ;    }
+   775                        L10011:
+   776                        ;
+   777                        ;    /* done with a valid stored block */
+   778                        ;    return 0;
+   779 00:03E6: A9 00 00     	lda	#$0
+   780 00:03E9: 82 B9 FD     	brl	L17
+   781                        ;}
+   782             0000000E   L14	equ	14
+   783             0000000D   L15	equ	13
+   784                        	ends
+   785                        	efunc
+   786                        	data
+   787                        L5:
+   788 00:0014: 73 74 6F 72  	db	$73,$74,$6F,$72,$65,$64,$0A,$00
+       00:0018: 65 64 0A 00 
+   789 00:001C:              	ends
+   790                        ;
+   791                        ;/*
+   792                        ; * Huffman code decoding tables.  count[1..MAXBIT
+                    S] is the number of symbols of
+   793                        ; * each length, which for a canonical code are st
+                    epped through in order.
+   794                        ; * symbol[] are the symbol values in canonical or
+                    der, where the number of
+   795                        ; * entries is the sum of the counts in count[].  
+                    The decoding process can be
+   796                        ; * seen in the function decode() below.
+   797                        ; */
+   798                        ;struct huffman {
+   799                        ;    short *count;       /* number of symbols of e
+                    ach length */
+   800                        ;    short *symbol;      /* canonically ordered sy
+                    mbols */
+   801                        ;};
+   802                        ;
+   803                        ;/*
+   804                        ; * Decode a code from the stream s using huffman 
+                    table h.  Return the symbol or
+   805                        ; * a negative value if there is an error.  If all
+                     of the lengths are zero, i.e.
+   806                        ; * an empty code, or if the code is incomplete an
+                    d an invalid code is received,
+   807                        ; * then -10 is returned after reading MAXBITS bit
+                    s.
+   808                        ; *
+  Tue Feb  8 2022 21:01                                                Page 17
+
+
+   809                        ; * Format notes:
+   810                        ; *
+   811                        ; * - The codes as stored in the compressed data a
+                    re bit-reversed relative to
+   812                        ; *   a simple integer ordering of codes of the sa
+                    me lengths.  Hence below the
+   813                        ; *   bits are pulled from the compressed data one
+                     at a time and used to
+   814                        ; *   build the code value reversed from what is i
+                    n the stream in order to
+   815                        ; *   permit simple integer comparisons for decodi
+                    ng.  A table-based decoding
+   816                        ; *   scheme (as used in zlib) does not need to do
+                     this reversal.
+   817                        ; *
+   818                        ; * - The first code for the shortest length is al
+                    l zeros.  Subsequent codes of
+   819                        ; *   the same length are simply integer increment
+                    s of the previous code.  When
+   820                        ; *   moving up a length, a zero bit is appended t
+                    o the code.  For a complete
+   821                        ; *   code, the last code of the longest length wi
+                    ll be all ones.
+   822                        ; *
+   823                        ; * - Incomplete codes are handled by this decoder
+                    , since they are permitted
+   824                        ; *   in the deflate format.  See the format notes
+                     for fixed() and dynamic().
+   825                        ; */
+   826                        ;#ifdef SLOW
+   827                        ;local int decode(struct state *s, const struct hu
+                    ffman *h)
+   828                        ;{
+   829                        	code
+   830                        	func
+   831                        ~~decode:
+   832                        	longa	on
+   833                        	longi	on
+   834 00:03EC: 3B           	tsc
+   835 00:03ED: 38           	sec
+   836 00:03EE: E9 16 00     	sbc	#L26
+   837 00:03F1: 1B           	tcs
+   838 00:03F2: 0B           	phd
+   839 00:03F3: 5B           	tcd
+   840             00000004   s_0	set	4
+   841             00000008   h_0	set	8
+   842                        ;    int len;            /* current number of bits
+                     in code */
+   843                        ;    int code;           /* len bits being decoded
+                     */
+   844                        ;    int first;          /* first code of length l
+                    en */
+   845                        ;    int count;          /* number of codes of len
+                    gth len */
+   846                        ;    int index;          /* index of first code of
+                     length len in symbol table */
+   847                        ;
+   848                        ;    code = first = index = 0;
+  Tue Feb  8 2022 21:01                                                Page 18
+
+
+   849             00000000   len_1	set	0
+   850             00000002   code_1	set	2
+   851             00000004   first_1	set	4
+   852             00000006   count_1	set	6
+   853             00000008   index_1	set	8
+   854 00:03F4: 64 15        	stz	<L27+index_1
+   855 00:03F6: 64 11        	stz	<L27+first_1
+   856 00:03F8: 64 0F        	stz	<L27+code_1
+   857                        ;    for (len = 1; len <= MAXBITS; len++) {
+   858 00:03FA: A9 01 00     	lda	#$1
+   859 00:03FD: 85 0D        	sta	<L27+len_1
+   860                        L10014:
+   861                        ;        code |= bits(s, 1);             /* get ne
+                    xt bit */
+   862 00:03FF: F4 01 00     	pea	#<$1
+   863 00:0402: D4 1C        	pei	<L26+s_0+2
+   864 00:0404: D4 1A        	pei	<L26+s_0
+   865 00:0406: 22 xx xx xx  	jsl	~~bits
+   866 00:040A: 04 0F        	tsb	<L27+code_1
+   867                        ;		//debugf("code: %02x ", (long)code);
+   868                        ;        count = h->count[len];
+   869 00:040C: A0 00 00     	ldy	#$0
+   870 00:040F: A5 0D        	lda	<L27+len_1
+   871 00:0411: 10 01        	bpl	L28
+   872 00:0413: 88           	dey
+   873                        L28:
+   874 00:0414: 85 05        	sta	<R1
+   875 00:0416: 84 07        	sty	<R1+2
+   876 00:0418: D4 07        	pei	<R1+2
+   877 00:041A: D4 05        	pei	<R1
+   878 00:041C: A9 01 00     	lda	#$1
+   879                        	xref	~~~lasl
+   880 00:041F: 22 xx xx xx  	jsl	~~~lasl
+   881 00:0423: 85 01        	sta	<R0
+   882 00:0425: 86 03        	stx	<R0+2
+   883 00:0427: A7 1E        	lda	[<L26+h_0]
+   884 00:0429: 18           	clc
+   885 00:042A: 65 01        	adc	<R0
+   886 00:042C: 85 09        	sta	<R2
+   887 00:042E: A0 02 00     	ldy	#$2
+   888 00:0431: B7 1E        	lda	[<L26+h_0],Y
+   889 00:0433: 65 03        	adc	<R0+2
+   890 00:0435: 85 0B        	sta	<R2+2
+   891 00:0437: A7 09        	lda	[<R2]
+   892 00:0439: 85 13        	sta	<L27+count_1
+   893                        ;        if (code - count < first) {      /* if le
+                    ngth len, return symbol */
+   894 00:043B: 38           	sec
+   895 00:043C: A5 0F        	lda	<L27+code_1
+   896 00:043E: E5 13        	sbc	<L27+count_1
+   897 00:0440: 38           	sec
+   898 00:0441: E5 11        	sbc	<L27+first_1
+   899 00:0443: 70 03        	bvs	L29
+   900 00:0445: 49 00 80     	eor	#$8000
+   901                        L29:
+   902 00:0448: 30 4B        	bmi	L10015
+   903                        ;			//debugf("c:%02x ", (long)code);
+   904                        ;            return h->symbol[index + (code - firs
+  Tue Feb  8 2022 21:01                                                Page 19
+
+
+                    t)];
+   905 00:044A: 38           	sec
+   906 00:044B: A5 0F        	lda	<L27+code_1
+   907 00:044D: E5 11        	sbc	<L27+first_1
+   908 00:044F: 18           	clc
+   909 00:0450: 65 15        	adc	<L27+index_1
+   910 00:0452: 85 09        	sta	<R2
+   911 00:0454: A0 00 00     	ldy	#$0
+   912 00:0457: A5 09        	lda	<R2
+   913 00:0459: 10 01        	bpl	L31
+   914 00:045B: 88           	dey
+   915                        L31:
+   916 00:045C: 85 05        	sta	<R1
+   917 00:045E: 84 07        	sty	<R1+2
+   918 00:0460: D4 07        	pei	<R1+2
+   919 00:0462: D4 05        	pei	<R1
+   920 00:0464: A9 01 00     	lda	#$1
+   921                        	xref	~~~lasl
+   922 00:0467: 22 xx xx xx  	jsl	~~~lasl
+   923 00:046B: 85 01        	sta	<R0
+   924 00:046D: 86 03        	stx	<R0+2
+   925 00:046F: 18           	clc
+   926 00:0470: A0 04 00     	ldy	#$4
+   927 00:0473: B7 1E        	lda	[<L26+h_0],Y
+   928 00:0475: 65 01        	adc	<R0
+   929 00:0477: 85 09        	sta	<R2
+   930 00:0479: C8           	iny
+   931 00:047A: C8           	iny
+   932 00:047B: B7 1E        	lda	[<L26+h_0],Y
+   933 00:047D: 65 03        	adc	<R0+2
+   934 00:047F: 85 0B        	sta	<R2+2
+   935 00:0481: A7 09        	lda	[<R2]
+   936                        L32:
+   937 00:0483: A8           	tay
+   938 00:0484: A5 18        	lda	<L26+2
+   939 00:0486: 85 20        	sta	<L26+2+8
+   940 00:0488: A5 17        	lda	<L26+1
+   941 00:048A: 85 1F        	sta	<L26+1+8
+   942 00:048C: 2B           	pld
+   943 00:048D: 3B           	tsc
+   944 00:048E: 18           	clc
+   945 00:048F: 69 1E 00     	adc	#L26+8
+   946 00:0492: 1B           	tcs
+   947 00:0493: 98           	tya
+   948 00:0494: 6B           	rtl
+   949                        ;		}
+   950                        ;        index += count;                 /* else u
+                    pdate for next length */
+   951                        L10015:
+   952 00:0495: A5 15        	lda	<L27+index_1
+   953 00:0497: 18           	clc
+   954 00:0498: 65 13        	adc	<L27+count_1
+   955 00:049A: 85 15        	sta	<L27+index_1
+   956                        ;        first += count;
+   957 00:049C: A5 11        	lda	<L27+first_1
+   958 00:049E: 18           	clc
+   959 00:049F: 65 13        	adc	<L27+count_1
+   960 00:04A1: 85 11        	sta	<L27+first_1
+  Tue Feb  8 2022 21:01                                                Page 20
+
+
+   961                        ;        first <<= 1;
+   962 00:04A3: 06 11        	asl	<L27+first_1
+   963                        ;        code <<= 1;
+   964 00:04A5: 06 0F        	asl	<L27+code_1
+   965                        ;    }
+   966 00:04A7: E6 0D        	inc	<L27+len_1
+   967 00:04A9: 38           	sec
+   968 00:04AA: A9 0F 00     	lda	#$f
+   969 00:04AD: E5 0D        	sbc	<L27+len_1
+   970 00:04AF: 70 03        	bvs	L33
+   971 00:04B1: 49 00 80     	eor	#$8000
+   972                        L33:
+   973 00:04B4: 10 03        	bpl	*+5
+   974 00:04B6: 82 46 FF     	brl	L10014
+   975                        ;    return -10;                         /* ran ou
+                    t of codes */
+   976 00:04B9: A9 F6 FF     	lda	#$fff6
+   977 00:04BC: 80 C5        	bra	L32
+   978                        ;}
+   979             00000016   L26	equ	22
+   980             0000000D   L27	equ	13
+   981                        	ends
+   982                        	efunc
+   983                        ;
+   984                        ;/*
+   985                        ; * A faster version of decode() for real applicat
+                    ions of this code.   It's not
+   986                        ; * as readable, but it makes puff() twice as fast
+                    .  And it only makes the code
+   987                        ; * a few percent larger.
+   988                        ; */
+   989                        ;#else /* !SLOW */
+   990                        ;local int decode(struct state *s, const struct hu
+                    ffman *h)
+   991                        ;{
+   992                        ;    int len;            /* current number of bits
+                     in code */
+   993                        ;    int code;           /* len bits being decoded
+                     */
+   994                        ;    int first;          /* first code of length l
+                    en */
+   995                        ;    int count;          /* number of codes of len
+                    gth len */
+   996                        ;    int index;          /* index of first code of
+                     length len in symbol table */
+   997                        ;    int bitbuf;         /* bits from stream */
+   998                        ;    int left;           /* bits left in next or l
+                    eft to process */
+   999                        ;    short *next;        /* next number of codes *
+                    /
+  1000                        ;
+  1001                        ;    bitbuf = s->bitbuf;
+  1002                        ;    left = s->bitcnt;
+  1003                        ;    code = first = index = 0;
+  1004                        ;    len = 1;
+  1005                        ;    next = h->count + 1;
+  1006                        ;    while (1) {
+  1007                        ;        while (left--) {
+  Tue Feb  8 2022 21:01                                                Page 21
+
+
+  1008                        ;            code |= bitbuf & 1;
+  1009                        ;            bitbuf >>= 1;
+  1010                        ;            count = *next++;
+  1011                        ;            if (code - count < first) { /* if len
+                    gth len, return symbol */
+  1012                        ;                s->bitbuf = bitbuf;
+  1013                        ;                s->bitcnt = (s->bitcnt - len) & 7
+                    ;
+  1014                        ;                return h->symbol[index + (code - 
+                    first)];
+  1015                        ;            }
+  1016                        ;            index += count;             /* else u
+                    pdate for next length */
+  1017                        ;            first += count;
+  1018                        ;            first <<= 1;
+  1019                        ;            code <<= 1;
+  1020                        ;            len++;
+  1021                        ;        }
+  1022                        ;        left = (MAXBITS+1) - len;
+  1023                        ;        if (left == 0)
+  1024                        ;            break;
+  1025                        ;        if (s->incnt == s->inlen)
+  1026                        ;            longjmp(s->env, 1);         /* out of
+                     input */
+  1027                        ;        bitbuf = s->in[s->incnt++];
+  1028                        ;		
+  1029                        ;        if (left > 8)
+  1030                        ;            left = 8;
+  1031                        ;    }
+  1032                        ;    return -10;                         /* ran ou
+                    t of codes */
+  1033                        ;}
+  1034                        ;#endif /* SLOW */
+  1035                        ;
+  1036                        ;/*
+  1037                        ; * Given the list of code lengths length[0..n-1] 
+                    representing a canonical
+  1038                        ; * Huffman code for n symbols, construct the tabl
+                    es required to decode those
+  1039                        ; * codes.  Those tables are the number of codes o
+                    f each length, and the symbols
+  1040                        ; * sorted by length, retaining their original ord
+                    er within each length.  The
+  1041                        ; * return value is zero for a complete code set, 
+                    negative for an over-
+  1042                        ; * subscribed code set, and positive for an incom
+                    plete code set.  The tables
+  1043                        ; * can be used if the return value is zero or pos
+                    itive, but they cannot be used
+  1044                        ; * if the return value is negative.  If the retur
+                    n value is zero, it is not
+  1045                        ; * possible for decode() using that table to retu
+                    rn an error--any stream of
+  1046                        ; * enough bits will resolve to a symbol.  If the 
+                    return value is positive, then
+  1047                        ; * it is possible for decode() using that table t
+                    o return an error for received
+  1048                        ; * codes past the end of the incomplete lengths.
+  Tue Feb  8 2022 21:01                                                Page 22
+
+
+  1049                        ; *
+  1050                        ; * Not used by decode(), but used for error check
+                    ing, h->count[0] is the number
+  1051                        ; * of the n symbols not in the code.  So n - h->c
+                    ount[0] is the number of
+  1052                        ; * codes.  This is useful for checking for incomp
+                    lete codes that have more than
+  1053                        ; * one symbol, which is an error in a dynamic blo
+                    ck.
+  1054                        ; *
+  1055                        ; * Assumption: for all i in 0..n-1, 0 <= length[i
+                    ] <= MAXBITS
+  1056                        ; * This is assured by the construction of the len
+                    gth arrays in dynamic() and
+  1057                        ; * fixed() and is not verified by construct().
+  1058                        ; *
+  1059                        ; * Format notes:
+  1060                        ; *
+  1061                        ; * - Permitted and expected examples of incomplet
+                    e codes are one of the fixed
+  1062                        ; *   codes and any code with a single symbol whic
+                    h in deflate is coded as one
+  1063                        ; *   bit instead of zero bits.  See the format no
+                    tes for fixed() and dynamic().
+  1064                        ; *
+  1065                        ; * - Within a given code length, the symbols are 
+                    kept in ascending order for
+  1066                        ; *   the code bits definition.
+  1067                        ; */
+  1068                        ;local int construct(struct huffman *h, const shor
+                    t *length, int n)
+  1069                        ;{
+  1070                        	code
+  1071                        	func
+  1072                        ~~construct:
+  1073                        	longa	on
+  1074                        	longi	on
+  1075 00:04BE: 3B           	tsc
+  1076 00:04BF: 38           	sec
+  1077 00:04C0: E9 4A 00     	sbc	#L35
+  1078 00:04C3: 1B           	tcs
+  1079 00:04C4: 0B           	phd
+  1080 00:04C5: 5B           	tcd
+  1081             00000004   h_0	set	4
+  1082             00000008   length_0	set	8
+  1083             0000000C   n_0	set	12
+  1084                        ;    int symbol;         /* current symbol when st
+                    epping through length[] */
+  1085                        ;    int len;            /* current length when st
+                    epping through h->count[] */
+  1086                        ;    int left;           /* number of possible cod
+                    es left of current length */
+  1087                        ;    short offs[MAXBITS+1];      /* offsets in sym
+                    bol table for each length */
+  1088                        ;
+  1089                        ;    /* count number of codes of each length */
+  1090                        ;    for (len = 0; len <= MAXBITS; len++)
+  1091             00000000   symbol_1	set	0
+  Tue Feb  8 2022 21:01                                                Page 23
+
+
+  1092             00000002   len_1	set	2
+  1093             00000004   left_1	set	4
+  1094             00000006   offs_1	set	6
+  1095 00:04C6: 64 27        	stz	<L36+len_1
+  1096                        L10018:
+  1097                        ;        h->count[len] = 0;
+  1098 00:04C8: A0 00 00     	ldy	#$0
+  1099 00:04CB: A5 27        	lda	<L36+len_1
+  1100 00:04CD: 10 01        	bpl	L37
+  1101 00:04CF: 88           	dey
+  1102                        L37:
+  1103 00:04D0: 85 05        	sta	<R1
+  1104 00:04D2: 84 07        	sty	<R1+2
+  1105 00:04D4: D4 07        	pei	<R1+2
+  1106 00:04D6: D4 05        	pei	<R1
+  1107 00:04D8: A9 01 00     	lda	#$1
+  1108                        	xref	~~~lasl
+  1109 00:04DB: 22 xx xx xx  	jsl	~~~lasl
+  1110 00:04DF: 85 01        	sta	<R0
+  1111 00:04E1: 86 03        	stx	<R0+2
+  1112 00:04E3: A7 4E        	lda	[<L35+h_0]
+  1113 00:04E5: 18           	clc
+  1114 00:04E6: 65 01        	adc	<R0
+  1115 00:04E8: 85 09        	sta	<R2
+  1116 00:04EA: A0 02 00     	ldy	#$2
+  1117 00:04ED: B7 4E        	lda	[<L35+h_0],Y
+  1118 00:04EF: 65 03        	adc	<R0+2
+  1119 00:04F1: 85 0B        	sta	<R2+2
+  1120 00:04F3: A9 00 00     	lda	#$0
+  1121 00:04F6: 87 09        	sta	[<R2]
+  1122 00:04F8: E6 27        	inc	<L36+len_1
+  1123 00:04FA: 38           	sec
+  1124 00:04FB: A9 0F 00     	lda	#$f
+  1125 00:04FE: E5 27        	sbc	<L36+len_1
+  1126 00:0500: 70 03        	bvs	L38
+  1127 00:0502: 49 00 80     	eor	#$8000
+  1128                        L38:
+  1129 00:0505: 30 C1        	bmi	L10018
+  1130                        ;    for (symbol = 0; symbol < n; symbol++)
+  1131 00:0507: 64 25        	stz	<L36+symbol_1
+  1132 00:0509: 80 5A        	bra	L10022
+  1133                        L10021:
+  1134                        ;        (h->count[length[symbol]])++;   /* assume
+                    s lengths are within bounds */
+  1135 00:050B: A0 00 00     	ldy	#$0
+  1136 00:050E: A5 25        	lda	<L36+symbol_1
+  1137 00:0510: 10 01        	bpl	L40
+  1138 00:0512: 88           	dey
+  1139                        L40:
+  1140 00:0513: 85 09        	sta	<R2
+  1141 00:0515: 84 0B        	sty	<R2+2
+  1142 00:0517: D4 0B        	pei	<R2+2
+  1143 00:0519: D4 09        	pei	<R2
+  1144 00:051B: A9 01 00     	lda	#$1
+  1145                        	xref	~~~lasl
+  1146 00:051E: 22 xx xx xx  	jsl	~~~lasl
+  1147 00:0522: 85 05        	sta	<R1
+  1148 00:0524: 86 07        	stx	<R1+2
+  Tue Feb  8 2022 21:01                                                Page 24
+
+
+  1149 00:0526: A5 52        	lda	<L35+length_0
+  1150 00:0528: 18           	clc
+  1151 00:0529: 65 05        	adc	<R1
+  1152 00:052B: 85 0D        	sta	<R3
+  1153 00:052D: A5 54        	lda	<L35+length_0+2
+  1154 00:052F: 65 07        	adc	<R1+2
+  1155 00:0531: 85 0F        	sta	<R3+2
+  1156 00:0533: A0 00 00     	ldy	#$0
+  1157 00:0536: A7 0D        	lda	[<R3]
+  1158 00:0538: 10 01        	bpl	L41
+  1159 00:053A: 88           	dey
+  1160                        L41:
+  1161 00:053B: 85 05        	sta	<R1
+  1162 00:053D: 84 07        	sty	<R1+2
+  1163 00:053F: D4 07        	pei	<R1+2
+  1164 00:0541: D4 05        	pei	<R1
+  1165 00:0543: A9 01 00     	lda	#$1
+  1166                        	xref	~~~lasl
+  1167 00:0546: 22 xx xx xx  	jsl	~~~lasl
+  1168 00:054A: 85 01        	sta	<R0
+  1169 00:054C: 86 03        	stx	<R0+2
+  1170 00:054E: A7 4E        	lda	[<L35+h_0]
+  1171 00:0550: 18           	clc
+  1172 00:0551: 65 01        	adc	<R0
+  1173 00:0553: 85 0D        	sta	<R3
+  1174 00:0555: A0 02 00     	ldy	#$2
+  1175 00:0558: B7 4E        	lda	[<L35+h_0],Y
+  1176 00:055A: 65 03        	adc	<R0+2
+  1177 00:055C: 85 0F        	sta	<R3+2
+  1178 00:055E: A7 0D        	lda	[<R3]
+  1179 00:0560: 1A           	ina
+  1180 00:0561: 87 0D        	sta	[<R3]
+  1181 00:0563: E6 25        	inc	<L36+symbol_1
+  1182                        L10022:
+  1183 00:0565: 38           	sec
+  1184 00:0566: A5 25        	lda	<L36+symbol_1
+  1185 00:0568: E5 56        	sbc	<L35+n_0
+  1186 00:056A: 70 03        	bvs	L42
+  1187 00:056C: 49 00 80     	eor	#$8000
+  1188                        L42:
+  1189 00:056F: 10 9A        	bpl	L10021
+  1190                        ;    if (h->count[0] == n)               /* no cod
+                    es! */
+  1191                        ;        return 0;                       /* comple
+                    te, but decode() will fail */
+  1192 00:0571: A7 4E        	lda	[<L35+h_0]
+  1193 00:0573: 85 01        	sta	<R0
+  1194 00:0575: A0 02 00     	ldy	#$2
+  1195 00:0578: B7 4E        	lda	[<L35+h_0],Y
+  1196 00:057A: 85 03        	sta	<R0+2
+  1197 00:057C: A7 01        	lda	[<R0]
+  1198 00:057E: C5 56        	cmp	<L35+n_0
+  1199 00:0580: D0 15        	bne	L10023
+  1200 00:0582: A9 00 00     	lda	#$0
+  1201                        L45:
+  1202 00:0585: A8           	tay
+  1203 00:0586: A5 4C        	lda	<L35+2
+  1204 00:0588: 85 56        	sta	<L35+2+10
+  Tue Feb  8 2022 21:01                                                Page 25
+
+
+  1205 00:058A: A5 4B        	lda	<L35+1
+  1206 00:058C: 85 55        	sta	<L35+1+10
+  1207 00:058E: 2B           	pld
+  1208 00:058F: 3B           	tsc
+  1209 00:0590: 18           	clc
+  1210 00:0591: 69 54 00     	adc	#L35+10
+  1211 00:0594: 1B           	tcs
+  1212 00:0595: 98           	tya
+  1213 00:0596: 6B           	rtl
+  1214                        ;	
+  1215                        ;    /* check for an over-subscribed or incomplete
+                     set of lengths */
+  1216                        ;    left = 1;                           /* one po
+                    ssible code of zero length */
+  1217                        L10023:
+  1218 00:0597: A9 01 00     	lda	#$1
+  1219 00:059A: 85 29        	sta	<L36+left_1
+  1220                        ;    for (len = 1; len <= MAXBITS; len++) {
+  1221 00:059C: 85 27        	sta	<L36+len_1
+  1222                        L10026:
+  1223                        ;        left <<= 1;                     /* one mo
+                    re bit, double codes left */
+  1224 00:059E: 06 29        	asl	<L36+left_1
+  1225                        ;        left -= h->count[len];          /* deduct
+                     count from possible codes */
+  1226 00:05A0: A0 00 00     	ldy	#$0
+  1227 00:05A3: A5 27        	lda	<L36+len_1
+  1228 00:05A5: 10 01        	bpl	L46
+  1229 00:05A7: 88           	dey
+  1230                        L46:
+  1231 00:05A8: 85 05        	sta	<R1
+  1232 00:05AA: 84 07        	sty	<R1+2
+  1233 00:05AC: D4 07        	pei	<R1+2
+  1234 00:05AE: D4 05        	pei	<R1
+  1235 00:05B0: A9 01 00     	lda	#$1
+  1236                        	xref	~~~lasl
+  1237 00:05B3: 22 xx xx xx  	jsl	~~~lasl
+  1238 00:05B7: 85 01        	sta	<R0
+  1239 00:05B9: 86 03        	stx	<R0+2
+  1240 00:05BB: A7 4E        	lda	[<L35+h_0]
+  1241 00:05BD: 18           	clc
+  1242 00:05BE: 65 01        	adc	<R0
+  1243 00:05C0: 85 09        	sta	<R2
+  1244 00:05C2: A0 02 00     	ldy	#$2
+  1245 00:05C5: B7 4E        	lda	[<L35+h_0],Y
+  1246 00:05C7: 65 03        	adc	<R0+2
+  1247 00:05C9: 85 0B        	sta	<R2+2
+  1248 00:05CB: 38           	sec
+  1249 00:05CC: A5 29        	lda	<L36+left_1
+  1250 00:05CE: E7 09        	sbc	[<R2]
+  1251 00:05D0: 85 29        	sta	<L36+left_1
+  1252                        ;        if (left < 0)
+  1253                        ;            return left;                /* over-s
+                    ubscribed--return negative */
+  1254 00:05D2: A5 29        	lda	<L36+left_1
+  1255 00:05D4: 10 04        	bpl	L10024
+  1256                        L20003:
+  1257 00:05D6: A5 29        	lda	<L36+left_1
+  Tue Feb  8 2022 21:01                                                Page 26
+
+
+  1258 00:05D8: 80 AB        	bra	L45
+  1259                        ;    }                                   /* left >
+                     0 means incomplete */
+  1260                        L10024:
+  1261 00:05DA: E6 27        	inc	<L36+len_1
+  1262 00:05DC: 38           	sec
+  1263 00:05DD: A9 0F 00     	lda	#$f
+  1264 00:05E0: E5 27        	sbc	<L36+len_1
+  1265 00:05E2: 70 03        	bvs	L48
+  1266 00:05E4: 49 00 80     	eor	#$8000
+  1267                        L48:
+  1268 00:05E7: 30 B5        	bmi	L10026
+  1269                        ;
+  1270                        ;    /* generate offsets into symbol table for eac
+                    h length for sorting */
+  1271                        ;/*	
+  1272                        ;	debugf("counts:\n");
+  1273                        ;	for (len = 0; len <= MAXBITS; len++) {
+  1274                        ;		debugf("%02X ", (long)h->count[len]);
+  1275                        ;	}	
+  1276                        ;	debugf("\n");
+  1277                        ;*/
+  1278                        ;	
+  1279                        ;    offs[1] = 0;
+  1280 00:05E9: 64 2D        	stz	<L36+offs_1+2
+  1281                        ;    for (len = 1; len < MAXBITS; len++) {
+  1282 00:05EB: A9 01 00     	lda	#$1
+  1283 00:05EE: 85 27        	sta	<L36+len_1
+  1284                        L10030:
+  1285                        ;        offs[len + 1] = offs[len] + h->count[len]
+                    ;
+  1286 00:05F0: A5 27        	lda	<L36+len_1
+  1287 00:05F2: 1A           	ina
+  1288 00:05F3: 85 05        	sta	<R1
+  1289 00:05F5: A0 00 00     	ldy	#$0
+  1290 00:05F8: A5 05        	lda	<R1
+  1291 00:05FA: 10 01        	bpl	L50
+  1292 00:05FC: 88           	dey
+  1293                        L50:
+  1294 00:05FD: 85 05        	sta	<R1
+  1295 00:05FF: 84 07        	sty	<R1+2
+  1296 00:0601: D4 07        	pei	<R1+2
+  1297 00:0603: D4 05        	pei	<R1
+  1298 00:0605: A9 01 00     	lda	#$1
+  1299                        	xref	~~~lasl
+  1300 00:0608: 22 xx xx xx  	jsl	~~~lasl
+  1301 00:060C: 85 01        	sta	<R0
+  1302 00:060E: 86 03        	stx	<R0+2
+  1303 00:0610: 18           	clc
+  1304 00:0611: 7B           	tdc
+  1305 00:0612: 69 2B 00     	adc	#<L36+offs_1
+  1306 00:0615: 85 09        	sta	<R2
+  1307 00:0617: A9 00 00     	lda	#$0
+  1308 00:061A: 85 0B        	sta	<R2+2
+  1309 00:061C: A5 09        	lda	<R2
+  1310 00:061E: 18           	clc
+  1311 00:061F: 65 01        	adc	<R0
+  1312 00:0621: 85 0D        	sta	<R3
+  Tue Feb  8 2022 21:01                                                Page 27
+
+
+  1313 00:0623: A5 0B        	lda	<R2+2
+  1314 00:0625: 65 03        	adc	<R0+2
+  1315 00:0627: 85 0F        	sta	<R3+2
+  1316 00:0629: A0 00 00     	ldy	#$0
+  1317 00:062C: A5 27        	lda	<L36+len_1
+  1318 00:062E: 10 01        	bpl	L51
+  1319 00:0630: 88           	dey
+  1320                        L51:
+  1321 00:0631: 85 09        	sta	<R2
+  1322 00:0633: 84 0B        	sty	<R2+2
+  1323 00:0635: D4 0B        	pei	<R2+2
+  1324 00:0637: D4 09        	pei	<R2
+  1325 00:0639: A9 01 00     	lda	#$1
+  1326                        	xref	~~~lasl
+  1327 00:063C: 22 xx xx xx  	jsl	~~~lasl
+  1328 00:0640: 85 01        	sta	<R0
+  1329 00:0642: 86 03        	stx	<R0+2
+  1330 00:0644: A7 4E        	lda	[<L35+h_0]
+  1331 00:0646: 18           	clc
+  1332 00:0647: 65 01        	adc	<R0
+  1333 00:0649: 85 11        	sta	<17
+  1334 00:064B: A0 02 00     	ldy	#$2
+  1335 00:064E: B7 4E        	lda	[<L35+h_0],Y
+  1336 00:0650: 65 03        	adc	<R0+2
+  1337 00:0652: 85 13        	sta	<17+2
+  1338 00:0654: 88           	dey
+  1339 00:0655: 88           	dey
+  1340 00:0656: A5 27        	lda	<L36+len_1
+  1341 00:0658: 10 01        	bpl	L52
+  1342 00:065A: 88           	dey
+  1343                        L52:
+  1344 00:065B: 85 15        	sta	<21
+  1345 00:065D: 84 17        	sty	<21+2
+  1346 00:065F: D4 17        	pei	<21+2
+  1347 00:0661: D4 15        	pei	<21
+  1348 00:0663: A9 01 00     	lda	#$1
+  1349                        	xref	~~~lasl
+  1350 00:0666: 22 xx xx xx  	jsl	~~~lasl
+  1351 00:066A: 85 01        	sta	<R0
+  1352 00:066C: 86 03        	stx	<R0+2
+  1353 00:066E: 18           	clc
+  1354 00:066F: 7B           	tdc
+  1355 00:0670: 69 2B 00     	adc	#<L36+offs_1
+  1356 00:0673: 85 19        	sta	<25
+  1357 00:0675: A9 00 00     	lda	#$0
+  1358 00:0678: 85 1B        	sta	<25+2
+  1359 00:067A: A5 19        	lda	<25
+  1360 00:067C: 18           	clc
+  1361 00:067D: 65 01        	adc	<R0
+  1362 00:067F: 85 1D        	sta	<29
+  1363 00:0681: A5 1B        	lda	<25+2
+  1364 00:0683: 65 03        	adc	<R0+2
+  1365 00:0685: 85 1F        	sta	<29+2
+  1366 00:0687: A7 1D        	lda	[<29]
+  1367 00:0689: 18           	clc
+  1368 00:068A: 67 11        	adc	[<17]
+  1369 00:068C: 87 0D        	sta	[<R3]
+  1370                        ;	}
+  Tue Feb  8 2022 21:01                                                Page 28
+
+
+  1371 00:068E: E6 27        	inc	<L36+len_1
+  1372 00:0690: 38           	sec
+  1373 00:0691: A5 27        	lda	<L36+len_1
+  1374 00:0693: E9 0F 00     	sbc	#<$f
+  1375 00:0696: 70 03        	bvs	L53
+  1376 00:0698: 49 00 80     	eor	#$8000
+  1377                        L53:
+  1378 00:069B: 30 03        	bmi	*+5
+  1379 00:069D: 82 50 FF     	brl	L10030
+  1380                        ;
+  1381                        ;/*
+  1382                        ;	debugf("offsets:\n");
+  1383                        ;    for (len = 1; len <= MAXBITS; len++) {
+  1384                        ;		debugf("%02X ", (long)offs[len]);
+  1385                        ;	}
+  1386                        ;	debugf("\n");
+  1387                        ;*/	
+  1388                        ;    /*
+  1389                        ;     * put symbols in table sorted by length, by 
+                    symbol order within each
+  1390                        ;     * length
+  1391                        ;     */
+  1392                        ;    for (symbol = 0; symbol < n; symbol++)
+  1393 00:06A0: 64 25        	stz	<L36+symbol_1
+  1394 00:06A2: 82 1F 01     	brl	L10034
+  1395                        L10033:
+  1396                        ;        if (length[symbol] != 0)
+  1397                        ;            h->symbol[offs[length[symbol]]++] = s
+                    ymbol;
+  1398 00:06A5: A0 00 00     	ldy	#$0
+  1399 00:06A8: A5 25        	lda	<L36+symbol_1
+  1400 00:06AA: 10 01        	bpl	L55
+  1401 00:06AC: 88           	dey
+  1402                        L55:
+  1403 00:06AD: 85 05        	sta	<R1
+  1404 00:06AF: 84 07        	sty	<R1+2
+  1405 00:06B1: D4 07        	pei	<R1+2
+  1406 00:06B3: D4 05        	pei	<R1
+  1407 00:06B5: A9 01 00     	lda	#$1
+  1408                        	xref	~~~lasl
+  1409 00:06B8: 22 xx xx xx  	jsl	~~~lasl
+  1410 00:06BC: 85 01        	sta	<R0
+  1411 00:06BE: 86 03        	stx	<R0+2
+  1412 00:06C0: A5 52        	lda	<L35+length_0
+  1413 00:06C2: 18           	clc
+  1414 00:06C3: 65 01        	adc	<R0
+  1415 00:06C5: 85 09        	sta	<R2
+  1416 00:06C7: A5 54        	lda	<L35+length_0+2
+  1417 00:06C9: 65 03        	adc	<R0+2
+  1418 00:06CB: 85 0B        	sta	<R2+2
+  1419 00:06CD: A7 09        	lda	[<R2]
+  1420 00:06CF: D0 03        	bne	*+5
+  1421 00:06D1: 82 EE 00     	brl	L10031
+  1422 00:06D4: A0 00 00     	ldy	#$0
+  1423 00:06D7: A5 25        	lda	<L36+symbol_1
+  1424 00:06D9: 10 01        	bpl	L57
+  1425 00:06DB: 88           	dey
+  1426                        L57:
+  Tue Feb  8 2022 21:01                                                Page 29
+
+
+  1427 00:06DC: 85 0D        	sta	<R3
+  1428 00:06DE: 84 0F        	sty	<R3+2
+  1429 00:06E0: D4 0F        	pei	<R3+2
+  1430 00:06E2: D4 0D        	pei	<R3
+  1431 00:06E4: A9 01 00     	lda	#$1
+  1432                        	xref	~~~lasl
+  1433 00:06E7: 22 xx xx xx  	jsl	~~~lasl
+  1434 00:06EB: 85 09        	sta	<R2
+  1435 00:06ED: 86 0B        	stx	<R2+2
+  1436 00:06EF: A5 52        	lda	<L35+length_0
+  1437 00:06F1: 18           	clc
+  1438 00:06F2: 65 09        	adc	<R2
+  1439 00:06F4: 85 11        	sta	<17
+  1440 00:06F6: A5 54        	lda	<L35+length_0+2
+  1441 00:06F8: 65 0B        	adc	<R2+2
+  1442 00:06FA: 85 13        	sta	<17+2
+  1443 00:06FC: A0 00 00     	ldy	#$0
+  1444 00:06FF: A7 11        	lda	[<17]
+  1445 00:0701: 10 01        	bpl	L58
+  1446 00:0703: 88           	dey
+  1447                        L58:
+  1448 00:0704: 85 09        	sta	<R2
+  1449 00:0706: 84 0B        	sty	<R2+2
+  1450 00:0708: D4 0B        	pei	<R2+2
+  1451 00:070A: D4 09        	pei	<R2
+  1452 00:070C: A9 01 00     	lda	#$1
+  1453                        	xref	~~~lasl
+  1454 00:070F: 22 xx xx xx  	jsl	~~~lasl
+  1455 00:0713: 85 05        	sta	<R1
+  1456 00:0715: 86 07        	stx	<R1+2
+  1457 00:0717: 18           	clc
+  1458 00:0718: 7B           	tdc
+  1459 00:0719: 69 2B 00     	adc	#<L36+offs_1
+  1460 00:071C: 85 11        	sta	<17
+  1461 00:071E: A9 00 00     	lda	#$0
+  1462 00:0721: 85 13        	sta	<17+2
+  1463 00:0723: A5 11        	lda	<17
+  1464 00:0725: 18           	clc
+  1465 00:0726: 65 05        	adc	<R1
+  1466 00:0728: 85 15        	sta	<21
+  1467 00:072A: A5 13        	lda	<17+2
+  1468 00:072C: 65 07        	adc	<R1+2
+  1469 00:072E: 85 17        	sta	<21+2
+  1470 00:0730: A0 00 00     	ldy	#$0
+  1471 00:0733: A7 15        	lda	[<21]
+  1472 00:0735: 10 01        	bpl	L59
+  1473 00:0737: 88           	dey
+  1474                        L59:
+  1475 00:0738: 85 05        	sta	<R1
+  1476 00:073A: 84 07        	sty	<R1+2
+  1477 00:073C: D4 07        	pei	<R1+2
+  1478 00:073E: D4 05        	pei	<R1
+  1479 00:0740: A9 01 00     	lda	#$1
+  1480                        	xref	~~~lasl
+  1481 00:0743: 22 xx xx xx  	jsl	~~~lasl
+  1482 00:0747: 85 01        	sta	<R0
+  1483 00:0749: 86 03        	stx	<R0+2
+  1484 00:074B: 18           	clc
+  Tue Feb  8 2022 21:01                                                Page 30
+
+
+  1485 00:074C: A0 04 00     	ldy	#$4
+  1486 00:074F: B7 4E        	lda	[<L35+h_0],Y
+  1487 00:0751: 65 01        	adc	<R0
+  1488 00:0753: 85 11        	sta	<17
+  1489 00:0755: C8           	iny
+  1490 00:0756: C8           	iny
+  1491 00:0757: B7 4E        	lda	[<L35+h_0],Y
+  1492 00:0759: 65 03        	adc	<R0+2
+  1493 00:075B: 85 13        	sta	<17+2
+  1494 00:075D: A5 25        	lda	<L36+symbol_1
+  1495 00:075F: 87 11        	sta	[<17]
+  1496 00:0761: A0 00 00     	ldy	#$0
+  1497 00:0764: A5 25        	lda	<L36+symbol_1
+  1498 00:0766: 10 01        	bpl	L60
+  1499 00:0768: 88           	dey
+  1500                        L60:
+  1501 00:0769: 85 19        	sta	<25
+  1502 00:076B: 84 1B        	sty	<25+2
+  1503 00:076D: D4 1B        	pei	<25+2
+  1504 00:076F: D4 19        	pei	<25
+  1505 00:0771: A9 01 00     	lda	#$1
+  1506                        	xref	~~~lasl
+  1507 00:0774: 22 xx xx xx  	jsl	~~~lasl
+  1508 00:0778: 85 15        	sta	<21
+  1509 00:077A: 86 17        	stx	<21+2
+  1510 00:077C: A5 52        	lda	<L35+length_0
+  1511 00:077E: 18           	clc
+  1512 00:077F: 65 15        	adc	<21
+  1513 00:0781: 85 1D        	sta	<29
+  1514 00:0783: A5 54        	lda	<L35+length_0+2
+  1515 00:0785: 65 17        	adc	<21+2
+  1516 00:0787: 85 1F        	sta	<29+2
+  1517 00:0789: A0 00 00     	ldy	#$0
+  1518 00:078C: A7 1D        	lda	[<29]
+  1519 00:078E: 10 01        	bpl	L61
+  1520 00:0790: 88           	dey
+  1521                        L61:
+  1522 00:0791: 85 15        	sta	<21
+  1523 00:0793: 84 17        	sty	<21+2
+  1524 00:0795: D4 17        	pei	<21+2
+  1525 00:0797: D4 15        	pei	<21
+  1526 00:0799: A9 01 00     	lda	#$1
+  1527                        	xref	~~~lasl
+  1528 00:079C: 22 xx xx xx  	jsl	~~~lasl
+  1529 00:07A0: 85 01        	sta	<R0
+  1530 00:07A2: 86 03        	stx	<R0+2
+  1531 00:07A4: 18           	clc
+  1532 00:07A5: 7B           	tdc
+  1533 00:07A6: 69 2B 00     	adc	#<L36+offs_1
+  1534 00:07A9: 85 1D        	sta	<29
+  1535 00:07AB: A9 00 00     	lda	#$0
+  1536 00:07AE: 85 1F        	sta	<29+2
+  1537 00:07B0: A5 1D        	lda	<29
+  1538 00:07B2: 18           	clc
+  1539 00:07B3: 65 01        	adc	<R0
+  1540 00:07B5: 85 21        	sta	<33
+  1541 00:07B7: A5 1F        	lda	<29+2
+  1542 00:07B9: 65 03        	adc	<R0+2
+  Tue Feb  8 2022 21:01                                                Page 31
+
+
+  1543 00:07BB: 85 23        	sta	<33+2
+  1544 00:07BD: A7 21        	lda	[<33]
+  1545 00:07BF: 1A           	ina
+  1546 00:07C0: 87 21        	sta	[<33]
+  1547                        ;	
+  1548                        ;	
+  1549                        ;	//debugf("tree:\n");
+  1550                        ;    //for (symbol = 0; symbol < n; symbol++) {
+  1551                        ;	//	debugf("%d ", (unsigned long)h->symbol[s
+                    ymbol]);		
+  1552                        ;	//}
+  1553                        ;	//debugf("\n");
+  1554                        ;	
+  1555                        ;
+  1556                        ;    /* return zero for complete set, positive for
+                     incomplete set */
+  1557                        ;    return left;
+  1558                        L10031:
+  1559 00:07C2: E6 25        	inc	<L36+symbol_1
+  1560                        L10034:
+  1561 00:07C4: 38           	sec
+  1562 00:07C5: A5 25        	lda	<L36+symbol_1
+  1563 00:07C7: E5 56        	sbc	<L35+n_0
+  1564 00:07C9: 70 03        	bvs	L62
+  1565 00:07CB: 49 00 80     	eor	#$8000
+  1566                        L62:
+  1567 00:07CE: 30 03        	bmi	*+5
+  1568 00:07D0: 82 D2 FE     	brl	L10033
+  1569 00:07D3: 82 00 FE     	brl	L20003
+  1570                        ;}
+  1571             0000004A   L35	equ	74
+  1572             00000025   L36	equ	37
+  1573                        	ends
+  1574                        	efunc
+  1575                        ;
+  1576                        ;/*
+  1577                        ; * Decode literal/length and distance codes until
+                     an end-of-block code.
+  1578                        ; *
+  1579                        ; * Format notes:
+  1580                        ; *
+  1581                        ; * - Compressed data that is after the block type
+                     if fixed or after the code
+  1582                        ; *   description if dynamic is a combination of l
+                    iterals and length/distance
+  1583                        ; *   pairs terminated by and end-of-block code.  
+                    Literals are simply Huffman
+  1584                        ; *   coded bytes.  A length/distance pair is a co
+                    ded length followed by a
+  1585                        ; *   coded distance to represent a string that oc
+                    curs earlier in the
+  1586                        ; *   uncompressed data that occurs again at the c
+                    urrent location.
+  1587                        ; *
+  1588                        ; * - Literals, lengths, and the end-of-block code
+                     are combined into a single
+  1589                        ; *   code of up to 286 symbols.  They are 256 lit
+                    erals (0..255), 29 length
+  Tue Feb  8 2022 21:01                                                Page 32
+
+
+  1590                        ; *   symbols (257..285), and the end-of-block sym
+                    bol (256).
+  1591                        ; *
+  1592                        ; * - There are 256 possible lengths (3..258), and
+                     so 29 symbols are not enough
+  1593                        ; *   to represent all of those.  Lengths 3..10 an
+                    d 258 are in fact represented
+  1594                        ; *   by just a length symbol.  Lengths 11..257 ar
+                    e represented as a symbol and
+  1595                        ; *   some number of extra bits that are added as 
+                    an integer to the base length
+  1596                        ; *   of the length symbol.  The number of extra b
+                    its is determined by the base
+  1597                        ; *   length symbol.  These are in the static arra
+                    ys below, lens[] for the base
+  1598                        ; *   lengths and lext[] for the corresponding num
+                    ber of extra bits.
+  1599                        ; *
+  1600                        ; * - The reason that 258 gets its own symbol is t
+                    hat the longest length is used
+  1601                        ; *   often in highly redundant files.  Note that 
+                    258 can also be coded as the
+  1602                        ; *   base value 227 plus the maximum extra value 
+                    of 31.  While a good deflate
+  1603                        ; *   should never do this, it is not an error, an
+                    d should be decoded properly.
+  1604                        ; *
+  1605                        ; * - If a length is decoded, including its extra 
+                    bits if any, then it is
+  1606                        ; *   followed a distance code.  There are up to 3
+                    0 distance symbols.  Again
+  1607                        ; *   there are many more possible distances (1..3
+                    2768), so extra bits are added
+  1608                        ; *   to a base value represented by the symbol.  
+                    The distances 1..4 get their
+  1609                        ; *   own symbol, but the rest require extra bits.
+                      The base distances and
+  1610                        ; *   corresponding number of extra bits are below
+                     in the static arrays dist[]
+  1611                        ; *   and dext[].
+  1612                        ; *
+  1613                        ; * - Literal bytes are simply written to the outp
+                    ut.  A length/distance pair is
+  1614                        ; *   an instruction to copy previously uncompress
+                    ed bytes to the output.  The
+  1615                        ; *   copy is from distance bytes back in the outp
+                    ut stream, copying for length
+  1616                        ; *   bytes.
+  1617                        ; *
+  1618                        ; * - Distances pointing before the beginning of t
+                    he output data are not
+  1619                        ; *   permitted.
+  1620                        ; *
+  1621                        ; * - Overlapped copies, where the length is great
+                    er than the distance, are
+  1622                        ; *   allowed and common.  For example, a distance
+                     of one and a length of 258
+  1623                        ; *   simply copies the last byte 258 times.  A di
+  Tue Feb  8 2022 21:01                                                Page 33
+
+
+                    stance of four and a length of
+  1624                        ; *   twelve copies the last four bytes three time
+                    s.  A simple forward copy
+  1625                        ; *   ignoring whether the length is greater than 
+                    the distance or not implements
+  1626                        ; *   this correctly.  You should not use memcpy()
+                     since its behavior is not
+  1627                        ; *   defined for overlapped arrays.  You should n
+                    ot use memmove() or bcopy()
+  1628                        ; *   since though their behavior -is- defined for
+                     overlapping arrays, it is
+  1629                        ; *   defined to do the wrong thing in this case.
+  1630                        ; */
+  1631                        ;local int codes(struct state *s,
+  1632                        ;                const struct huffman *lencode,
+  1633                        ;                const struct huffman *distcode)
+  1634                        ;{
+  1635                        	code
+  1636                        	func
+  1637                        ~~codes:
+  1638                        	longa	on
+  1639                        	longi	on
+  1640 00:07D6: 3B           	tsc
+  1641 00:07D7: 38           	sec
+  1642 00:07D8: E9 14 00     	sbc	#L64
+  1643 00:07DB: 1B           	tcs
+  1644 00:07DC: 0B           	phd
+  1645 00:07DD: 5B           	tcd
+  1646             00000004   s_0	set	4
+  1647             00000008   lencode_0	set	8
+  1648             0000000C   distcode_0	set	12
+  1649                        ;	int i;
+  1650                        ;    int symbol;         /* decoded symbol */
+  1651                        ;    int len;            /* length for copy */
+  1652                        ;    unsigned dist;      /* distance for copy */
+  1653                        ;    static const short lens[29] = { /* Size base 
+                    for length codes 257..285 */
+  1654                        ;    static const short lext[29] = { /* Extra bits
+                     for length codes 257..285 */
+  1655                        ;    static const short dists[30] = { /* Offset ba
+                    se for distance codes 0..29 */
+  1656                        ;    static const short dext[30] = { /* Extra bits
+                     for distance codes 0..29 */
+  1657                        ;
+  1658                        ;	
+  1659                        ;    /* decode literals and length/distance pairs 
+                    */
+  1660                        ;   i = 0;
+  1661             00000000   i_1	set	0
+  1662             00000002   symbol_1	set	2
+  1663             00000004   len_1	set	4
+  1664             00000006   dist_1	set	6
+  1665 00:07DE: 64 0D        	stz	<L65+i_1
+  1666                        ;   //debugf("codes():\n");
+  1667                        ;   
+  1668                        ;   do {
+  1669                        L10038:
+  1670                        ;		
+  Tue Feb  8 2022 21:01                                                Page 34
+
+
+  1671                        ;        symbol = decode(s, lencode);
+  1672 00:07E0: D4 1E        	pei	<L64+lencode_0+2
+  1673 00:07E2: D4 1C        	pei	<L64+lencode_0
+  1674 00:07E4: D4 1A        	pei	<L64+s_0+2
+  1675 00:07E6: D4 18        	pei	<L64+s_0
+  1676 00:07E8: 22 xx xx xx  	jsl	~~decode
+  1677 00:07EC: 85 0F        	sta	<L65+symbol_1
+  1678                        ;		/*
+  1679                        ;		if (i < 256) {
+  1680                        ;			debugf("%02X ", (unsigned long)s
+                    ymbol);
+  1681                        ;			i++;
+  1682                        ;		}*/
+  1683                        ;		
+  1684                        ;        if (symbol < 0)
+  1685                        ;            return symbol;              /* invali
+                    d symbol */
+  1686 00:07EE: A5 0F        	lda	<L65+symbol_1
+  1687 00:07F0: 10 14        	bpl	L10039
+  1688                        L20004:
+  1689 00:07F2: A5 0F        	lda	<L65+symbol_1
+  1690                        L71:
+  1691 00:07F4: A8           	tay
+  1692 00:07F5: A5 16        	lda	<L64+2
+  1693 00:07F7: 85 22        	sta	<L64+2+12
+  1694 00:07F9: A5 15        	lda	<L64+1
+  1695 00:07FB: 85 21        	sta	<L64+1+12
+  1696 00:07FD: 2B           	pld
+  1697 00:07FE: 3B           	tsc
+  1698 00:07FF: 18           	clc
+  1699 00:0800: 69 20 00     	adc	#L64+12
+  1700 00:0803: 1B           	tcs
+  1701 00:0804: 98           	tya
+  1702 00:0805: 6B           	rtl
+  1703                        ;        if (symbol < 256) {             /* litera
+                    l: symbol is the byte */
+  1704                        L10039:
+  1705 00:0806: 38           	sec
+  1706 00:0807: A5 0F        	lda	<L65+symbol_1
+  1707 00:0809: E9 00 01     	sbc	#<$100
+  1708 00:080C: 70 03        	bvs	L72
+  1709 00:080E: 49 00 80     	eor	#$8000
+  1710                        L72:
+  1711 00:0811: 30 62        	bmi	L10040
+  1712                        ;            /* write out the literal */
+  1713                        ;            if (s->out != NIL) {
+  1714 00:0813: A7 18        	lda	[<L64+s_0]
+  1715 00:0815: A0 02 00     	ldy	#$2
+  1716 00:0818: 17 18        	ora	[<L64+s_0],Y
+  1717 00:081A: F0 42        	beq	L10041
+  1718                        ;                if (s->outcnt == s->outlen)
+  1719                        ;                    return 1;
+  1720 00:081C: A0 08 00     	ldy	#$8
+  1721 00:081F: B7 18        	lda	[<L64+s_0],Y
+  1722 00:0821: A0 04 00     	ldy	#$4
+  1723 00:0824: D7 18        	cmp	[<L64+s_0],Y
+  1724 00:0826: D0 0A        	bne	L75
+  1725 00:0828: A0 0A 00     	ldy	#$a
+  Tue Feb  8 2022 21:01                                                Page 35
+
+
+  1726 00:082B: B7 18        	lda	[<L64+s_0],Y
+  1727 00:082D: A0 06 00     	ldy	#$6
+  1728 00:0830: D7 18        	cmp	[<L64+s_0],Y
+  1729                        L75:
+  1730 00:0832: D0 05        	bne	L10042
+  1731                        L20005:
+  1732 00:0834: A9 01 00     	lda	#$1
+  1733 00:0837: 80 BB        	bra	L71
+  1734                        ;                s->out[s->outcnt] = symbol;
+  1735                        L10042:
+  1736 00:0839: A0 08 00     	ldy	#$8
+  1737 00:083C: B7 18        	lda	[<L64+s_0],Y
+  1738 00:083E: 85 01        	sta	<R0
+  1739 00:0840: C8           	iny
+  1740 00:0841: C8           	iny
+  1741 00:0842: B7 18        	lda	[<L64+s_0],Y
+  1742 00:0844: 85 03        	sta	<R0+2
+  1743 00:0846: A7 18        	lda	[<L64+s_0]
+  1744 00:0848: 18           	clc
+  1745 00:0849: 65 01        	adc	<R0
+  1746 00:084B: 85 05        	sta	<R1
+  1747 00:084D: A0 02 00     	ldy	#$2
+  1748 00:0850: B7 18        	lda	[<L64+s_0],Y
+  1749 00:0852: 65 03        	adc	<R0+2
+  1750 00:0854: 85 07        	sta	<R1+2
+  1751 00:0856: E2 20        	sep	#$20
+  1752                        	longa	off
+  1753 00:0858: A5 0F        	lda	<L65+symbol_1
+  1754 00:085A: 87 05        	sta	[<R1]
+  1755 00:085C: C2 20        	rep	#$20
+  1756                        	longa	on
+  1757                        ;            }
+  1758                        ;            s->outcnt++;
+  1759                        L10041:
+  1760 00:085E: 18           	clc
+  1761 00:085F: A9 01 00     	lda	#$1
+  1762 00:0862: A0 08 00     	ldy	#$8
+  1763 00:0865: 77 18        	adc	[<L64+s_0],Y
+  1764 00:0867: 97 18        	sta	[<L64+s_0],Y
+  1765 00:0869: A9 00 00     	lda	#$0
+  1766 00:086C: C8           	iny
+  1767 00:086D: C8           	iny
+  1768 00:086E: 77 18        	adc	[<L64+s_0],Y
+  1769 00:0870: 97 18        	sta	[<L64+s_0],Y
+  1770                        ;        }
+  1771                        ;        else if (symbol > 256) {        /* length
+                     */
+  1772 00:0872: 82 67 01     	brl	L10036
+  1773                        L10040:
+  1774 00:0875: 38           	sec
+  1775 00:0876: A9 00 01     	lda	#$100
+  1776 00:0879: E5 0F        	sbc	<L65+symbol_1
+  1777 00:087B: 70 03        	bvs	L77
+  1778 00:087D: 49 00 80     	eor	#$8000
+  1779                        L77:
+  1780 00:0880: 10 03        	bpl	*+5
+  1781 00:0882: 82 57 01     	brl	L10036
+  1782                        ;            /* get and compute length */
+  Tue Feb  8 2022 21:01                                                Page 36
+
+
+  1783                        ;            symbol -= 257;
+  1784 00:0885: A9 FF FE     	lda	#$feff
+  1785 00:0888: 18           	clc
+  1786 00:0889: 65 0F        	adc	<L65+symbol_1
+  1787 00:088B: 85 0F        	sta	<L65+symbol_1
+  1788                        ;            if (symbol >= 29)
+  1789                        ;                return -10;             /* invali
+                    d fixed code */
+  1790 00:088D: 38           	sec
+  1791 00:088E: E9 1D 00     	sbc	#<$1d
+  1792 00:0891: 70 03        	bvs	L79
+  1793 00:0893: 49 00 80     	eor	#$8000
+  1794                        L79:
+  1795 00:0896: 10 06        	bpl	L10045
+  1796 00:0898: A9 F6 FF     	lda	#$fff6
+  1797 00:089B: 82 56 FF     	brl	L71
+  1798                        ;            len = lens[symbol] + bits(s, lext[sym
+                    bol]);
+  1799                        L10045:
+  1800 00:089E: A5 0F        	lda	<L65+symbol_1
+  1801 00:08A0: 0A           	asl	A
+  1802 00:08A1: 85 01        	sta	<R0
+  1803 00:08A3: A5 0F        	lda	<L65+symbol_1
+  1804 00:08A5: 0A           	asl	A
+  1805 00:08A6: AA           	tax
+  1806 00:08A7: BD xx xx     	lda	|L67,X ;lext
+  1807 00:08AA: 48           	pha
+  1808 00:08AB: D4 1A        	pei	<L64+s_0+2
+  1809 00:08AD: D4 18        	pei	<L64+s_0
+  1810 00:08AF: 22 xx xx xx  	jsl	~~bits
+  1811 00:08B3: 18           	clc
+  1812 00:08B4: A6 01        	ldx	<R0
+  1813 00:08B6: 7D xx xx     	adc	|L66,X ;lens
+  1814 00:08B9: 85 11        	sta	<L65+len_1
+  1815                        ;
+  1816                        ;            /* get and check distance */
+  1817                        ;            symbol = decode(s, distcode);
+  1818 00:08BB: D4 22        	pei	<L64+distcode_0+2
+  1819 00:08BD: D4 20        	pei	<L64+distcode_0
+  1820 00:08BF: D4 1A        	pei	<L64+s_0+2
+  1821 00:08C1: D4 18        	pei	<L64+s_0
+  1822 00:08C3: 22 xx xx xx  	jsl	~~decode
+  1823 00:08C7: 85 0F        	sta	<L65+symbol_1
+  1824                        ;            if (symbol < 0)
+  1825                        ;                return symbol;          /* invali
+                    d symbol */
+  1826 00:08C9: A5 0F        	lda	<L65+symbol_1
+  1827 00:08CB: 10 03        	bpl	*+5
+  1828 00:08CD: 82 22 FF     	brl	L20004
+  1829                        ;            dist = dists[symbol] + bits(s, dext[s
+                    ymbol]);
+  1830 00:08D0: A5 0F        	lda	<L65+symbol_1
+  1831 00:08D2: 0A           	asl	A
+  1832 00:08D3: 85 01        	sta	<R0
+  1833 00:08D5: A5 0F        	lda	<L65+symbol_1
+  1834 00:08D7: 0A           	asl	A
+  1835 00:08D8: AA           	tax
+  1836 00:08D9: BD xx xx     	lda	|L69,X ;dext
+  Tue Feb  8 2022 21:01                                                Page 37
+
+
+  1837 00:08DC: 48           	pha
+  1838 00:08DD: D4 1A        	pei	<L64+s_0+2
+  1839 00:08DF: D4 18        	pei	<L64+s_0
+  1840 00:08E1: 22 xx xx xx  	jsl	~~bits
+  1841 00:08E5: 18           	clc
+  1842 00:08E6: A6 01        	ldx	<R0
+  1843 00:08E8: 7D xx xx     	adc	|L68,X ;dists
+  1844 00:08EB: 85 13        	sta	<L65+dist_1
+  1845                        ;#ifndef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARR
+                    R
+  1846                        ;            if (dist > s->outcnt)
+  1847                        ;                return -11;     /* distance too f
+                    ar back */
+  1848 00:08ED: 85 01        	sta	<R0
+  1849 00:08EF: 64 03        	stz	<R0+2
+  1850 00:08F1: A0 08 00     	ldy	#$8
+  1851 00:08F4: B7 18        	lda	[<L64+s_0],Y
+  1852 00:08F6: C5 01        	cmp	<R0
+  1853 00:08F8: C8           	iny
+  1854 00:08F9: C8           	iny
+  1855 00:08FA: B7 18        	lda	[<L64+s_0],Y
+  1856 00:08FC: E5 03        	sbc	<R0+2
+  1857 00:08FE: B0 06        	bcs	L10047
+  1858 00:0900: A9 F5 FF     	lda	#$fff5
+  1859 00:0903: 82 EE FE     	brl	L71
+  1860                        ;#endif
+  1861                        ;
+  1862                        ;            /* copy length bytes from distance by
+                    tes back */
+  1863                        ;            if (s->out != NIL) {
+  1864                        L10047:
+  1865 00:0906: A7 18        	lda	[<L64+s_0]
+  1866 00:0908: A0 02 00     	ldy	#$2
+  1867 00:090B: 17 18        	ora	[<L64+s_0],Y
+  1868 00:090D: D0 03        	bne	*+5
+  1869 00:090F: 82 9F 00     	brl	L10048
+  1870                        ;                if (s->outcnt + len > s->outlen)
+  1871                        ;                    return 1;
+  1872 00:0912: 88           	dey
+  1873 00:0913: 88           	dey
+  1874 00:0914: A5 11        	lda	<L65+len_1
+  1875 00:0916: 10 01        	bpl	L84
+  1876 00:0918: 88           	dey
+  1877                        L84:
+  1878 00:0919: 85 01        	sta	<R0
+  1879 00:091B: 84 03        	sty	<R0+2
+  1880 00:091D: 18           	clc
+  1881 00:091E: A5 01        	lda	<R0
+  1882 00:0920: A0 08 00     	ldy	#$8
+  1883 00:0923: 77 18        	adc	[<L64+s_0],Y
+  1884 00:0925: 85 05        	sta	<R1
+  1885 00:0927: A5 03        	lda	<R0+2
+  1886 00:0929: C8           	iny
+  1887 00:092A: C8           	iny
+  1888 00:092B: 77 18        	adc	[<L64+s_0],Y
+  1889 00:092D: 85 07        	sta	<R1+2
+  1890 00:092F: A0 04 00     	ldy	#$4
+  1891 00:0932: B7 18        	lda	[<L64+s_0],Y
+  Tue Feb  8 2022 21:01                                                Page 38
+
+
+  1892 00:0934: C5 05        	cmp	<R1
+  1893 00:0936: C8           	iny
+  1894 00:0937: C8           	iny
+  1895 00:0938: B7 18        	lda	[<L64+s_0],Y
+  1896 00:093A: E5 07        	sbc	<R1+2
+  1897 00:093C: B0 03        	bcs	*+5
+  1898 00:093E: 82 F3 FE     	brl	L20005
+  1899                        ;                while (len--) {
+  1900                        L10050:
+  1901 00:0941: A5 11        	lda	<L65+len_1
+  1902 00:0943: 85 01        	sta	<R0
+  1903 00:0945: C6 11        	dec	<L65+len_1
+  1904 00:0947: A5 01        	lda	<R0
+  1905 00:0949: D0 03        	bne	*+5
+  1906 00:094B: 82 8E 00     	brl	L10036
+  1907                        ;                    s->out[s->outcnt] =
+  1908                        ;#ifdef INFLATE_ALLOW_INVALID_DISTANCE_TOOFAR_ARRR
+  1909                        ;                        dist > s->outcnt ?
+  1910                        ;                            0 :
+  1911                        ;#endif
+  1912                        ;                            s->out[s->outcnt - di
+                    st];
+  1913 00:094E: A0 08 00     	ldy	#$8
+  1914 00:0951: B7 18        	lda	[<L64+s_0],Y
+  1915 00:0953: 85 01        	sta	<R0
+  1916 00:0955: C8           	iny
+  1917 00:0956: C8           	iny
+  1918 00:0957: B7 18        	lda	[<L64+s_0],Y
+  1919 00:0959: 85 03        	sta	<R0+2
+  1920 00:095B: A7 18        	lda	[<L64+s_0]
+  1921 00:095D: 18           	clc
+  1922 00:095E: 65 01        	adc	<R0
+  1923 00:0960: 85 05        	sta	<R1
+  1924 00:0962: A0 02 00     	ldy	#$2
+  1925 00:0965: B7 18        	lda	[<L64+s_0],Y
+  1926 00:0967: 65 03        	adc	<R0+2
+  1927 00:0969: 85 07        	sta	<R1+2
+  1928 00:096B: A5 13        	lda	<L65+dist_1
+  1929 00:096D: 85 01        	sta	<R0
+  1930 00:096F: 64 03        	stz	<R0+2
+  1931 00:0971: 38           	sec
+  1932 00:0972: A0 08 00     	ldy	#$8
+  1933 00:0975: B7 18        	lda	[<L64+s_0],Y
+  1934 00:0977: E5 01        	sbc	<R0
+  1935 00:0979: 85 09        	sta	<R2
+  1936 00:097B: C8           	iny
+  1937 00:097C: C8           	iny
+  1938 00:097D: B7 18        	lda	[<L64+s_0],Y
+  1939 00:097F: E5 03        	sbc	<R0+2
+  1940 00:0981: 85 0B        	sta	<R2+2
+  1941 00:0983: A7 18        	lda	[<L64+s_0]
+  1942 00:0985: 18           	clc
+  1943 00:0986: 65 09        	adc	<R2
+  1944 00:0988: 85 01        	sta	<R0
+  1945 00:098A: A0 02 00     	ldy	#$2
+  1946 00:098D: B7 18        	lda	[<L64+s_0],Y
+  1947 00:098F: 65 0B        	adc	<R2+2
+  1948 00:0991: 85 03        	sta	<R0+2
+  Tue Feb  8 2022 21:01                                                Page 39
+
+
+  1949 00:0993: E2 20        	sep	#$20
+  1950                        	longa	off
+  1951 00:0995: A7 01        	lda	[<R0]
+  1952 00:0997: 87 05        	sta	[<R1]
+  1953 00:0999: C2 20        	rep	#$20
+  1954                        	longa	on
+  1955                        ;                    s->outcnt++;
+  1956 00:099B: 18           	clc
+  1957 00:099C: A9 01 00     	lda	#$1
+  1958 00:099F: A0 08 00     	ldy	#$8
+  1959 00:09A2: 77 18        	adc	[<L64+s_0],Y
+  1960 00:09A4: 97 18        	sta	[<L64+s_0],Y
+  1961 00:09A6: A9 00 00     	lda	#$0
+  1962 00:09A9: C8           	iny
+  1963 00:09AA: C8           	iny
+  1964 00:09AB: 77 18        	adc	[<L64+s_0],Y
+  1965 00:09AD: 97 18        	sta	[<L64+s_0],Y
+  1966                        ;                }
+  1967 00:09AF: 80 90        	bra	L10050
+  1968                        ;            }
+  1969                        ;            else
+  1970                        L10048:
+  1971                        ;                s->outcnt += len;
+  1972 00:09B1: A9 08 00     	lda	#$8
+  1973 00:09B4: 18           	clc
+  1974 00:09B5: 65 18        	adc	<L64+s_0
+  1975 00:09B7: 85 01        	sta	<R0
+  1976 00:09B9: A9 00 00     	lda	#$0
+  1977 00:09BC: 65 1A        	adc	<L64+s_0+2
+  1978 00:09BE: 85 03        	sta	<R0+2
+  1979 00:09C0: A0 00 00     	ldy	#$0
+  1980 00:09C3: A5 11        	lda	<L65+len_1
+  1981 00:09C5: 10 01        	bpl	L87
+  1982 00:09C7: 88           	dey
+  1983                        L87:
+  1984 00:09C8: 85 05        	sta	<R1
+  1985 00:09CA: 84 07        	sty	<R1+2
+  1986 00:09CC: A5 05        	lda	<R1
+  1987 00:09CE: 18           	clc
+  1988 00:09CF: 67 01        	adc	[<R0]
+  1989 00:09D1: 87 01        	sta	[<R0]
+  1990 00:09D3: A5 07        	lda	<R1+2
+  1991 00:09D5: A0 02 00     	ldy	#$2
+  1992 00:09D8: 77 01        	adc	[<R0],Y
+  1993 00:09DA: 97 01        	sta	[<R0],Y
+  1994                        ;        }
+  1995                        ;    } while (symbol != 256);            /* end of
+                     block symbol */
+  1996                        L10036:
+  1997 00:09DC: A5 0F        	lda	<L65+symbol_1
+  1998 00:09DE: C9 00 01     	cmp	#<$100
+  1999 00:09E1: F0 03        	beq	*+5
+  2000 00:09E3: 82 FA FD     	brl	L10038
+  2001                        ;	
+  2002                        ;	//debugf("\n");
+  2003                        ;    /* done with a valid fixed or dynamic block *
+                    /
+  2004                        ;    return 0;
+  Tue Feb  8 2022 21:01                                                Page 40
+
+
+  2005 00:09E6: A9 00 00     	lda	#$0
+  2006 00:09E9: 82 08 FE     	brl	L71
+  2007                        ;}
+  2008             00000014   L64	equ	20
+  2009             0000000D   L65	equ	13
+  2010                        	ends
+  2011                        	efunc
+  2012                        	data
+  2013                        L66:
+  2014                        ;        3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 
+                    19, 23, 27, 31,
+  2015 00:001C: 03 00 04 00  	dw	$3,$4,$5,$6,$7,$8,$9,$A,$B,$D
+       00:0020: 05 00 06 00 
+       00:0024: 07 00 08 00 
+       00:0028: 09 00 0A 00 
+       00:002C: 0B 00 0D 00 
+  2016 00:0030: 0F 00 11 00  	dw	$F,$11,$13,$17,$1B,$1F
+       00:0034: 13 00 17 00 
+       00:0038: 1B 00 1F 00 
+  2017                        ;        35, 43, 51, 59, 67, 83, 99, 115, 131, 163
+                    , 195, 227, 258};
+  2018 00:003C: 23 00 2B 00  	dw	$23,$2B,$33,$3B,$43,$53,$63,$73,$83,$A3
+       00:0040: 33 00 3B 00 
+       00:0044: 43 00 53 00 
+       00:0048: 63 00 73 00 
+       00:004C: 83 00 A3 00 
+  2019 00:0050: C3 00 E3 00  	dw	$C3,$E3,$102
+       00:0054: 02 01 
+  2020 00:0056:              	ends
+  2021                        	data
+  2022                        L67:
+  2023                        ;        0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2,
+                     2, 2,
+  2024 00:0056: 00 00 00 00  	dw	$0,$0,$0,$0,$0,$0,$0,$0,$1,$1
+       00:005A: 00 00 00 00 
+       00:005E: 00 00 00 00 
+       00:0062: 00 00 00 00 
+       00:0066: 01 00 01 00 
+  2025 00:006A: 01 00 01 00  	dw	$1,$1,$2,$2,$2,$2
+       00:006E: 02 00 02 00 
+       00:0072: 02 00 02 00 
+  2026                        ;        3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0};
+  2027 00:0076: 03 00 03 00  	dw	$3,$3,$3,$3,$4,$4,$4,$4,$5,$5
+       00:007A: 03 00 03 00 
+       00:007E: 04 00 04 00 
+       00:0082: 04 00 04 00 
+       00:0086: 05 00 05 00 
+  2028 00:008A: 05 00 05 00  	dw	$5,$5,$0
+       00:008E: 00 00 
+  2029 00:0090:              	ends
+  2030                        	data
+  2031                        L68:
+  2032                        ;        1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 
+                    65, 97, 129, 193,
+  2033 00:0090: 01 00 02 00  	dw	$1,$2,$3,$4,$5,$7,$9,$D,$11,$19
+       00:0094: 03 00 04 00 
+       00:0098: 05 00 07 00 
+       00:009C: 09 00 0D 00 
+  Tue Feb  8 2022 21:01                                                Page 41
+
+
+       00:00A0: 11 00 19 00 
+  2034 00:00A4: 21 00 31 00  	dw	$21,$31,$41,$61,$81,$C1
+       00:00A8: 41 00 61 00 
+       00:00AC: 81 00 C1 00 
+  2035                        ;        257, 385, 513, 769, 1025, 1537, 2049, 307
+                    3, 4097, 6145,
+  2036 00:00B0: 01 01 81 01  	dw	$101,$181,$201,$301,$401,$601,$801,$C01,
+                    $1001,$1801
+       00:00B4: 01 02 01 03 
+       00:00B8: 01 04 01 06 
+       00:00BC: 01 08 01 0C 
+       00:00C0: 01 10 01 18 
+  2037                        ;        8193, 12289, 16385, 24577};
+  2038 00:00C4: 01 20 01 30  	dw	$2001,$3001,$4001,$6001
+       00:00C8: 01 40 01 60 
+  2039 00:00CC:              	ends
+  2040                        	data
+  2041                        L69:
+  2042                        ;        0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5,
+                     6, 6,
+  2043 00:00CC: 00 00 00 00  	dw	$0,$0,$0,$0,$1,$1,$2,$2,$3,$3
+       00:00D0: 00 00 00 00 
+       00:00D4: 01 00 01 00 
+       00:00D8: 02 00 02 00 
+       00:00DC: 03 00 03 00 
+  2044 00:00E0: 04 00 04 00  	dw	$4,$4,$5,$5,$6,$6
+       00:00E4: 05 00 05 00 
+       00:00E8: 06 00 06 00 
+  2045                        ;        7, 7, 8, 8, 9, 9, 10, 10, 11, 11,
+  2046 00:00EC: 07 00 07 00  	dw	$7,$7,$8,$8,$9,$9,$A,$A,$B,$B
+       00:00F0: 08 00 08 00 
+       00:00F4: 09 00 09 00 
+       00:00F8: 0A 00 0A 00 
+       00:00FC: 0B 00 0B 00 
+  2047                        ;        12, 12, 13, 13};
+  2048 00:0100: 0C 00 0C 00  	dw	$C,$C,$D,$D
+       00:0104: 0D 00 0D 00 
+  2049 00:0108:              	ends
+  2050                        ;
+  2051                        ;/*
+  2052                        ; * Process a fixed codes block.
+  2053                        ; *
+  2054                        ; * Format notes:
+  2055                        ; *
+  2056                        ; * - This block type can be useful for compressin
+                    g small amounts of data for
+  2057                        ; *   which the size of the code descriptions in a
+                     dynamic block exceeds the
+  2058                        ; *   benefit of custom codes for that block.  For
+                     fixed codes, no bits are
+  2059                        ; *   spent on code descriptions.  Instead the cod
+                    e lengths for literal/length
+  2060                        ; *   codes and distance codes are fixed.  The spe
+                    cific lengths for each symbol
+  2061                        ; *   can be seen in the "for" loops below.
+  2062                        ; *
+  2063                        ; * - The literal/length code is complete, but has
+                     two symbols that are invalid
+  Tue Feb  8 2022 21:01                                                Page 42
+
+
+  2064                        ; *   and should result in an error if received.  
+                    This cannot be implemented
+  2065                        ; *   simply as an incomplete code since those two
+                     symbols are in the "middle"
+  2066                        ; *   of the code.  They are eight bits long and t
+                    he longest literal/length\
+  2067                        ; *   code is nine bits.  Therefore the code must 
+                    be constructed with those
+  2068                        ; *   symbols, and the invalid symbols must be det
+                    ected after decoding.
+  2069                        ; *
+  2070                        ; * - The fixed distance codes also have two inval
+                    id symbols that should result
+  2071                        ; *   in an error if received.  Since all of the d
+                    istance codes are the same
+  2072                        ; *   length, this can be implemented as an incomp
+                    lete code.  Then the invalid
+  2073                        ; *   codes are detected while decoding.
+  2074                        ; */
+  2075                        ;local int fixed(struct state *s)
+  2076                        ;{
+  2077                        	code
+  2078                        	func
+  2079                        ~~fixed:
+  2080                        	longa	on
+  2081                        	longi	on
+  2082 00:09EC: 3B           	tsc
+  2083 00:09ED: 38           	sec
+  2084 00:09EE: E9 12 00     	sbc	#L89
+  2085 00:09F1: 1B           	tcs
+  2086 00:09F2: 0B           	phd
+  2087 00:09F3: 5B           	tcd
+  2088             00000004   s_0	set	4
+  2089                        ;    static int virgin = 1;
+  2090                        ;    static short lencnt[MAXBITS+1], lensym[FIXLCO
+                    DES];
+  2091                        ;    static short distcnt[MAXBITS+1], distsym[MAXD
+                    CODES];
+  2092                        ;    static struct huffman lencode, distcode;
+  2093                        ;	int symbol;
+  2094                        ;	short *lengths;
+  2095                        ;
+  2096                        ;	printf("fixed virgin: %d\n", virgin);
+  2097             00000000   symbol_1	set	0
+  2098             00000002   lengths_1	set	2
+  2099 00:09F4: AD xx xx     	lda	|L91
+  2100 00:09F7: 48           	pha
+  2101 00:09F8: F4 xx xx     	pea	#^L25
+  2102 00:09FB: F4 xx xx     	pea	#<L25
+  2103 00:09FE: F4 08 00     	pea	#8
+  2104 00:0A01: 22 xx xx xx  	jsl	~~printf
+  2105                        ;    /* build fixed huffman tables if first call (
+                    may not be thread safe) */
+  2106                        ;    if (virgin) {
+  2107 00:0A05: AD xx xx     	lda	|L91
+  2108 00:0A08: D0 03        	bne	*+5
+  2109 00:0A0A: 82 AB 01     	brl	L10059
+  2110                        ;        //int symbol;
+  Tue Feb  8 2022 21:01                                                Page 43
+
+
+  2111                        ;        //short lengths[FIXLCODES];
+  2112                        ;		lengths = malloc(FIXLCODES * sizeof(shor
+                    t));
+  2113 00:0A0D: F4 00 00     	pea	#^$240
+  2114 00:0A10: F4 40 02     	pea	#<$240
+  2115 00:0A13: 22 xx xx xx  	jsl	~~malloc
+  2116 00:0A17: 85 0F        	sta	<L90+lengths_1
+  2117 00:0A19: 86 11        	stx	<L90+lengths_1+2
+  2118                        ;
+  2119                        ;        /* construct lencode and distcode */
+  2120                        ;        lencode.count = lencnt;
+  2121 00:0A1B: A9 xx xx     	lda	#<L10053
+  2122 00:0A1E: 8D xx xx     	sta	|L10057
+  2123                        	xref	_BEG_DATA
+  2124 00:0A21: A9 xx xx     	lda	#_BEG_DATA>>16
+  2125 00:0A24: 8D xx xx     	sta	|L10057+2
+  2126                        ;        lencode.symbol = lensym;
+  2127 00:0A27: A9 xx xx     	lda	#<L10054
+  2128 00:0A2A: 8D xx xx     	sta	|L10057+4
+  2129                        	xref	_BEG_DATA
+  2130 00:0A2D: A9 xx xx     	lda	#_BEG_DATA>>16
+  2131 00:0A30: 8D xx xx     	sta	|L10057+4+2
+  2132                        ;        distcode.count = distcnt;
+  2133 00:0A33: A9 xx xx     	lda	#<L10055
+  2134 00:0A36: 8D xx xx     	sta	|L10058
+  2135                        	xref	_BEG_DATA
+  2136 00:0A39: A9 xx xx     	lda	#_BEG_DATA>>16
+  2137 00:0A3C: 8D xx xx     	sta	|L10058+2
+  2138                        ;        distcode.symbol = distsym;
+  2139 00:0A3F: A9 xx xx     	lda	#<L10056
+  2140 00:0A42: 8D xx xx     	sta	|L10058+4
+  2141                        	xref	_BEG_DATA
+  2142 00:0A45: A9 xx xx     	lda	#_BEG_DATA>>16
+  2143 00:0A48: 8D xx xx     	sta	|L10058+4+2
+  2144                        ;
+  2145                        ;        /* literal/length table */
+  2146                        ;        for (symbol = 0; symbol < 144; symbol++)
+  2147 00:0A4B: 64 0D        	stz	<L90+symbol_1
+  2148                        L10062:
+  2149                        ;            lengths[symbol] = 8;
+  2150 00:0A4D: A0 00 00     	ldy	#$0
+  2151 00:0A50: A5 0D        	lda	<L90+symbol_1
+  2152 00:0A52: 10 01        	bpl	L93
+  2153 00:0A54: 88           	dey
+  2154                        L93:
+  2155 00:0A55: 85 05        	sta	<R1
+  2156 00:0A57: 84 07        	sty	<R1+2
+  2157 00:0A59: D4 07        	pei	<R1+2
+  2158 00:0A5B: D4 05        	pei	<R1
+  2159 00:0A5D: A9 01 00     	lda	#$1
+  2160                        	xref	~~~lasl
+  2161 00:0A60: 22 xx xx xx  	jsl	~~~lasl
+  2162 00:0A64: 85 01        	sta	<R0
+  2163 00:0A66: 86 03        	stx	<R0+2
+  2164 00:0A68: A5 0F        	lda	<L90+lengths_1
+  2165 00:0A6A: 18           	clc
+  2166 00:0A6B: 65 01        	adc	<R0
+  2167 00:0A6D: 85 09        	sta	<R2
+  Tue Feb  8 2022 21:01                                                Page 44
+
+
+  2168 00:0A6F: A5 11        	lda	<L90+lengths_1+2
+  2169 00:0A71: 65 03        	adc	<R0+2
+  2170 00:0A73: 85 0B        	sta	<R2+2
+  2171 00:0A75: A9 08 00     	lda	#$8
+  2172 00:0A78: 87 09        	sta	[<R2]
+  2173 00:0A7A: E6 0D        	inc	<L90+symbol_1
+  2174 00:0A7C: 38           	sec
+  2175 00:0A7D: A5 0D        	lda	<L90+symbol_1
+  2176 00:0A7F: E9 90 00     	sbc	#<$90
+  2177 00:0A82: 70 03        	bvs	L94
+  2178 00:0A84: 49 00 80     	eor	#$8000
+  2179                        L94:
+  2180 00:0A87: 30 31        	bmi	L10066
+  2181 00:0A89: 80 C2        	bra	L10062
+  2182                        ;        for (; symbol < 256; symbol++)
+  2183                        L10065:
+  2184                        ;            lengths[symbol] = 9;
+  2185 00:0A8B: A0 00 00     	ldy	#$0
+  2186 00:0A8E: A5 0D        	lda	<L90+symbol_1
+  2187 00:0A90: 10 01        	bpl	L96
+  2188 00:0A92: 88           	dey
+  2189                        L96:
+  2190 00:0A93: 85 05        	sta	<R1
+  2191 00:0A95: 84 07        	sty	<R1+2
+  2192 00:0A97: D4 07        	pei	<R1+2
+  2193 00:0A99: D4 05        	pei	<R1
+  2194 00:0A9B: A9 01 00     	lda	#$1
+  2195                        	xref	~~~lasl
+  2196 00:0A9E: 22 xx xx xx  	jsl	~~~lasl
+  2197 00:0AA2: 85 01        	sta	<R0
+  2198 00:0AA4: 86 03        	stx	<R0+2
+  2199 00:0AA6: A5 0F        	lda	<L90+lengths_1
+  2200 00:0AA8: 18           	clc
+  2201 00:0AA9: 65 01        	adc	<R0
+  2202 00:0AAB: 85 09        	sta	<R2
+  2203 00:0AAD: A5 11        	lda	<L90+lengths_1+2
+  2204 00:0AAF: 65 03        	adc	<R0+2
+  2205 00:0AB1: 85 0B        	sta	<R2+2
+  2206 00:0AB3: A9 09 00     	lda	#$9
+  2207 00:0AB6: 87 09        	sta	[<R2]
+  2208 00:0AB8: E6 0D        	inc	<L90+symbol_1
+  2209                        L10066:
+  2210 00:0ABA: 38           	sec
+  2211 00:0ABB: A5 0D        	lda	<L90+symbol_1
+  2212 00:0ABD: E9 00 01     	sbc	#<$100
+  2213 00:0AC0: 70 03        	bvs	L97
+  2214 00:0AC2: 49 00 80     	eor	#$8000
+  2215                        L97:
+  2216 00:0AC5: 30 31        	bmi	L10070
+  2217 00:0AC7: 80 C2        	bra	L10065
+  2218                        ;        for (; symbol < 280; symbol++)
+  2219                        L10069:
+  2220                        ;            lengths[symbol] = 7;
+  2221 00:0AC9: A0 00 00     	ldy	#$0
+  2222 00:0ACC: A5 0D        	lda	<L90+symbol_1
+  2223 00:0ACE: 10 01        	bpl	L99
+  2224 00:0AD0: 88           	dey
+  2225                        L99:
+  Tue Feb  8 2022 21:01                                                Page 45
+
+
+  2226 00:0AD1: 85 05        	sta	<R1
+  2227 00:0AD3: 84 07        	sty	<R1+2
+  2228 00:0AD5: D4 07        	pei	<R1+2
+  2229 00:0AD7: D4 05        	pei	<R1
+  2230 00:0AD9: A9 01 00     	lda	#$1
+  2231                        	xref	~~~lasl
+  2232 00:0ADC: 22 xx xx xx  	jsl	~~~lasl
+  2233 00:0AE0: 85 01        	sta	<R0
+  2234 00:0AE2: 86 03        	stx	<R0+2
+  2235 00:0AE4: A5 0F        	lda	<L90+lengths_1
+  2236 00:0AE6: 18           	clc
+  2237 00:0AE7: 65 01        	adc	<R0
+  2238 00:0AE9: 85 09        	sta	<R2
+  2239 00:0AEB: A5 11        	lda	<L90+lengths_1+2
+  2240 00:0AED: 65 03        	adc	<R0+2
+  2241 00:0AEF: 85 0B        	sta	<R2+2
+  2242 00:0AF1: A9 07 00     	lda	#$7
+  2243 00:0AF4: 87 09        	sta	[<R2]
+  2244 00:0AF6: E6 0D        	inc	<L90+symbol_1
+  2245                        L10070:
+  2246 00:0AF8: 38           	sec
+  2247 00:0AF9: A5 0D        	lda	<L90+symbol_1
+  2248 00:0AFB: E9 18 01     	sbc	#<$118
+  2249 00:0AFE: 70 03        	bvs	L100
+  2250 00:0B00: 49 00 80     	eor	#$8000
+  2251                        L100:
+  2252 00:0B03: 30 31        	bmi	L10074
+  2253 00:0B05: 80 C2        	bra	L10069
+  2254                        ;        for (; symbol < FIXLCODES; symbol++)
+  2255                        L10073:
+  2256                        ;            lengths[symbol] = 8;
+  2257 00:0B07: A0 00 00     	ldy	#$0
+  2258 00:0B0A: A5 0D        	lda	<L90+symbol_1
+  2259 00:0B0C: 10 01        	bpl	L102
+  2260 00:0B0E: 88           	dey
+  2261                        L102:
+  2262 00:0B0F: 85 05        	sta	<R1
+  2263 00:0B11: 84 07        	sty	<R1+2
+  2264 00:0B13: D4 07        	pei	<R1+2
+  2265 00:0B15: D4 05        	pei	<R1
+  2266 00:0B17: A9 01 00     	lda	#$1
+  2267                        	xref	~~~lasl
+  2268 00:0B1A: 22 xx xx xx  	jsl	~~~lasl
+  2269 00:0B1E: 85 01        	sta	<R0
+  2270 00:0B20: 86 03        	stx	<R0+2
+  2271 00:0B22: A5 0F        	lda	<L90+lengths_1
+  2272 00:0B24: 18           	clc
+  2273 00:0B25: 65 01        	adc	<R0
+  2274 00:0B27: 85 09        	sta	<R2
+  2275 00:0B29: A5 11        	lda	<L90+lengths_1+2
+  2276 00:0B2B: 65 03        	adc	<R0+2
+  2277 00:0B2D: 85 0B        	sta	<R2+2
+  2278 00:0B2F: A9 08 00     	lda	#$8
+  2279 00:0B32: 87 09        	sta	[<R2]
+  2280 00:0B34: E6 0D        	inc	<L90+symbol_1
+  2281                        L10074:
+  2282 00:0B36: 38           	sec
+  2283 00:0B37: A5 0D        	lda	<L90+symbol_1
+  Tue Feb  8 2022 21:01                                                Page 46
+
+
+  2284 00:0B39: E9 20 01     	sbc	#<$120
+  2285 00:0B3C: 70 03        	bvs	L103
+  2286 00:0B3E: 49 00 80     	eor	#$8000
+  2287                        L103:
+  2288 00:0B41: 10 C4        	bpl	L10073
+  2289                        ;        construct(&lencode, lengths, FIXLCODES);
+  2290 00:0B43: F4 20 01     	pea	#<$120
+  2291 00:0B46: D4 11        	pei	<L90+lengths_1+2
+  2292 00:0B48: D4 0F        	pei	<L90+lengths_1
+  2293 00:0B4A: A9 xx xx     	lda	#<L10057
+  2294 00:0B4D: 85 01        	sta	<R0
+  2295                        	xref	_BEG_DATA
+  2296 00:0B4F: A9 xx xx     	lda	#_BEG_DATA>>16
+  2297 00:0B52: 48           	pha
+  2298 00:0B53: D4 01        	pei	<R0
+  2299 00:0B55: 22 xx xx xx  	jsl	~~construct
+  2300                        ;
+  2301                        ;        /* distance table */
+  2302                        ;        for (symbol = 0; symbol < MAXDCODES; symb
+                    ol++)
+  2303 00:0B59: 64 0D        	stz	<L90+symbol_1
+  2304                        L10077:
+  2305                        ;            lengths[symbol] = 5;
+  2306 00:0B5B: A0 00 00     	ldy	#$0
+  2307 00:0B5E: A5 0D        	lda	<L90+symbol_1
+  2308 00:0B60: 10 01        	bpl	L105
+  2309 00:0B62: 88           	dey
+  2310                        L105:
+  2311 00:0B63: 85 05        	sta	<R1
+  2312 00:0B65: 84 07        	sty	<R1+2
+  2313 00:0B67: D4 07        	pei	<R1+2
+  2314 00:0B69: D4 05        	pei	<R1
+  2315 00:0B6B: A9 01 00     	lda	#$1
+  2316                        	xref	~~~lasl
+  2317 00:0B6E: 22 xx xx xx  	jsl	~~~lasl
+  2318 00:0B72: 85 01        	sta	<R0
+  2319 00:0B74: 86 03        	stx	<R0+2
+  2320 00:0B76: A5 0F        	lda	<L90+lengths_1
+  2321 00:0B78: 18           	clc
+  2322 00:0B79: 65 01        	adc	<R0
+  2323 00:0B7B: 85 09        	sta	<R2
+  2324 00:0B7D: A5 11        	lda	<L90+lengths_1+2
+  2325 00:0B7F: 65 03        	adc	<R0+2
+  2326 00:0B81: 85 0B        	sta	<R2+2
+  2327 00:0B83: A9 05 00     	lda	#$5
+  2328 00:0B86: 87 09        	sta	[<R2]
+  2329 00:0B88: E6 0D        	inc	<L90+symbol_1
+  2330 00:0B8A: 38           	sec
+  2331 00:0B8B: A5 0D        	lda	<L90+symbol_1
+  2332 00:0B8D: E9 1E 00     	sbc	#<$1e
+  2333 00:0B90: 70 03        	bvs	L106
+  2334 00:0B92: 49 00 80     	eor	#$8000
+  2335                        L106:
+  2336 00:0B95: 10 C4        	bpl	L10077
+  2337                        ;        construct(&distcode, lengths, MAXDCODES);
+  2338 00:0B97: F4 1E 00     	pea	#<$1e
+  2339 00:0B9A: D4 11        	pei	<L90+lengths_1+2
+  2340 00:0B9C: D4 0F        	pei	<L90+lengths_1
+  Tue Feb  8 2022 21:01                                                Page 47
+
+
+  2341 00:0B9E: A9 xx xx     	lda	#<L10058
+  2342 00:0BA1: 85 01        	sta	<R0
+  2343                        	xref	_BEG_DATA
+  2344 00:0BA3: A9 xx xx     	lda	#_BEG_DATA>>16
+  2345 00:0BA6: 48           	pha
+  2346 00:0BA7: D4 01        	pei	<R0
+  2347 00:0BA9: 22 xx xx xx  	jsl	~~construct
+  2348                        ;
+  2349                        ;        /* do this just once */
+  2350                        ;        virgin = 0;
+  2351 00:0BAD: 9C xx xx     	stz	|L91
+  2352                        ;		free(lengths);
+  2353 00:0BB0: D4 11        	pei	<L90+lengths_1+2
+  2354 00:0BB2: D4 0F        	pei	<L90+lengths_1
+  2355 00:0BB4: 22 xx xx xx  	jsl	~~free
+  2356                        ;    }
+  2357                        ;
+  2358                        ;    /* decode data until end-of-block code */
+  2359                        ;    return codes(s, &lencode, &distcode);
+  2360                        L10059:
+  2361 00:0BB8: A9 xx xx     	lda	#<L10058
+  2362 00:0BBB: 85 01        	sta	<R0
+  2363                        	xref	_BEG_DATA
+  2364 00:0BBD: A9 xx xx     	lda	#_BEG_DATA>>16
+  2365 00:0BC0: 48           	pha
+  2366 00:0BC1: D4 01        	pei	<R0
+  2367 00:0BC3: A9 xx xx     	lda	#<L10057
+  2368 00:0BC6: 85 05        	sta	<R1
+  2369                        	xref	_BEG_DATA
+  2370 00:0BC8: A9 xx xx     	lda	#_BEG_DATA>>16
+  2371 00:0BCB: 48           	pha
+  2372 00:0BCC: D4 05        	pei	<R1
+  2373 00:0BCE: D4 18        	pei	<L89+s_0+2
+  2374 00:0BD0: D4 16        	pei	<L89+s_0
+  2375 00:0BD2: 22 xx xx xx  	jsl	~~codes
+  2376 00:0BD6: A8           	tay
+  2377 00:0BD7: A5 14        	lda	<L89+2
+  2378 00:0BD9: 85 18        	sta	<L89+2+4
+  2379 00:0BDB: A5 13        	lda	<L89+1
+  2380 00:0BDD: 85 17        	sta	<L89+1+4
+  2381 00:0BDF: 2B           	pld
+  2382 00:0BE0: 3B           	tsc
+  2383 00:0BE1: 18           	clc
+  2384 00:0BE2: 69 16 00     	adc	#L89+4
+  2385 00:0BE5: 1B           	tcs
+  2386 00:0BE6: 98           	tya
+  2387 00:0BE7: 6B           	rtl
+  2388                        ;}
+  2389             00000012   L89	equ	18
+  2390             0000000D   L90	equ	13
+  2391                        	ends
+  2392                        	efunc
+  2393                        	data
+  2394                        L91:
+  2395 00:0108: 01 00        	dw	$1
+  2396 00:010A:              	ends
+  2397                        	udata
+  2398                        L10053:
+  Tue Feb  8 2022 21:01                                                Page 48
+
+
+  2399 00:0000:              	ds	32
+  2400 00:0020:              	ends
+  2401                        	udata
+  2402                        L10054:
+  2403 00:0020:              	ds	576
+  2404 00:0260:              	ends
+  2405                        	udata
+  2406                        L10055:
+  2407 00:0260:              	ds	32
+  2408 00:0280:              	ends
+  2409                        	udata
+  2410                        L10056:
+  2411 00:0280:              	ds	60
+  2412 00:02BC:              	ends
+  2413                        	udata
+  2414                        L10057:
+  2415 00:02BC:              	ds	8
+  2416 00:02C4:              	ends
+  2417                        	udata
+  2418                        L10058:
+  2419 00:02C4:              	ds	8
+  2420 00:02CC:              	ends
+  2421                        	data
+  2422                        L25:
+  2423 00:010A: 66 69 78 65  	db	$66,$69,$78,$65,$64,$20,$76,$69,$72,$67,
+                    $69,$6E,$3A,$20,$25
+       00:010E: 64 20 76 69 
+       00:0112: 72 67 69 6E 
+       00:0116: 3A 20 25 
+  2424 00:0119: 64 0A 00     	db	$64,$0A,$00
+  2425 00:011C:              	ends
+  2426                        ;
+  2427                        ;/*
+  2428                        ; * Process a dynamic codes block.
+  2429                        ; *
+  2430                        ; * Format notes:
+  2431                        ; *
+  2432                        ; * - A dynamic block starts with a description of
+                     the literal/length and
+  2433                        ; *   distance codes for that block.  New dynamic 
+                    blocks allow the compressor to
+  2434                        ; *   rapidly adapt to changing data with new code
+                    s optimized for that data.
+  2435                        ; *
+  2436                        ; * - The codes used by the deflate format are "ca
+                    nonical", which means that
+  2437                        ; *   the actual bits of the codes are generated i
+                    n an unambiguous way simply
+  2438                        ; *   from the number of bits in each code.  There
+                    fore the code descriptions
+  2439                        ; *   are simply a list of code lengths for each s
+                    ymbol.
+  2440                        ; *
+  2441                        ; * - The code lengths are stored in order for the
+                     symbols, so lengths are
+  2442                        ; *   provided for each of the literal/length symb
+                    ols, and for each of the
+  2443                        ; *   distance symbols.
+  Tue Feb  8 2022 21:01                                                Page 49
+
+
+  2444                        ; *
+  2445                        ; * - If a symbol is not used in the block, this i
+                    s represented by a zero as
+  2446                        ; *   as the code length.  This does not mean a ze
+                    ro-length code, but rather
+  2447                        ; *   that no code should be created for this symb
+                    ol.  There is no way in the
+  2448                        ; *   deflate format to represent a zero-length co
+                    de.
+  2449                        ; *
+  2450                        ; * - The maximum number of bits in a code is 15, 
+                    so the possible lengths for
+  2451                        ; *   any code are 1..15.
+  2452                        ; *
+  2453                        ; * - The fact that a length of zero is not permit
+                    ted for a code has an
+  2454                        ; *   interesting consequence.  Normally if only o
+                    ne symbol is used for a given
+  2455                        ; *   code, then in fact that code could be repres
+                    ented with zero bits.  However
+  2456                        ; *   in deflate, that code has to be at least one
+                     bit.  So for example, if
+  2457                        ; *   only a single distance base symbol appears i
+                    n a block, then it will be
+  2458                        ; *   represented by a single code of length one, 
+                    in particular one 0 bit.  This
+  2459                        ; *   is an incomplete code, since if a 1 bit is r
+                    eceived, it has no meaning,
+  2460                        ; *   and should result in an error.  So incomplet
+                    e distance codes of one symbol
+  2461                        ; *   should be permitted, and the receipt of inva
+                    lid codes should be handled.
+  2462                        ; *
+  2463                        ; * - It is also possible to have a single literal
+                    /length code, but that code
+  2464                        ; *   must be the end-of-block code, since every d
+                    ynamic block has one.  This
+  2465                        ; *   is not the most efficient way to create an e
+                    mpty block (an empty fixed
+  2466                        ; *   block is fewer bits), but it is allowed by t
+                    he format.  So incomplete
+  2467                        ; *   literal/length codes of one symbol should al
+                    so be permitted.
+  2468                        ; *
+  2469                        ; * - If there are only literal codes and no lengt
+                    hs, then there are no distance
+  2470                        ; *   codes.  This is represented by one distance 
+                    code with zero bits.
+  2471                        ; *
+  2472                        ; * - The list of up to 286 length/literal lengths
+                     and up to 30 distance lengths
+  2473                        ; *   are themselves compressed using Huffman code
+                    s and run-length encoding.  In
+  2474                        ; *   the list of code lengths, a 0 symbol means n
+                    o code, a 1..15 symbol means
+  2475                        ; *   that length, and the symbols 16, 17, and 18 
+                    are run-length instructions.
+  2476                        ; *   Each of 16, 17, and 18 are follwed by extra 
+  Tue Feb  8 2022 21:01                                                Page 50
+
+
+                    bits to define the length of
+  2477                        ; *   the run.  16 copies the last length 3 to 6 t
+                    imes.  17 represents 3 to 10
+  2478                        ; *   zero lengths, and 18 represents 11 to 138 ze
+                    ro lengths.  Unused symbols
+  2479                        ; *   are common, hence the special coding for zer
+                    o lengths.
+  2480                        ; *
+  2481                        ; * - The symbols for 0..18 are Huffman coded, and
+                     so that code must be
+  2482                        ; *   described first.  This is simply a sequence 
+                    of up to 19 three-bit values
+  2483                        ; *   representing no code (0) or the code length 
+                    for that symbol (1..7).
+  2484                        ; *
+  2485                        ; * - A dynamic block starts with three fixed-size
+                     counts from which is computed
+  2486                        ; *   the number of literal/length code lengths, t
+                    he number of distance code
+  2487                        ; *   lengths, and the number of code length code 
+                    lengths (ok, you come up with
+  2488                        ; *   a better name!) in the code descriptions.  F
+                    or the literal/length and
+  2489                        ; *   distance codes, lengths after those provided
+                     are considered zero, i.e. no
+  2490                        ; *   code.  The code length code lengths are rece
+                    ived in a permuted order (see
+  2491                        ; *   the order[] array below) to make a short cod
+                    e length code length list more
+  2492                        ; *   likely.  As it turns out, very short and ver
+                    y long codes are less likely
+  2493                        ; *   to be seen in a dynamic code description, he
+                    nce what may appear initially
+  2494                        ; *   to be a peculiar ordering.
+  2495                        ; *
+  2496                        ; * - Given the number of literal/length code leng
+                    ths (nlen) and distance code
+  2497                        ; *   lengths (ndist), then they are treated as on
+                    e long list of nlen + ndist
+  2498                        ; *   code lengths.  Therefore run-length coding c
+                    an and often does cross the
+  2499                        ; *   boundary between the two sets of lengths.
+  2500                        ; *
+  2501                        ; * - So to summarize, the code description at the
+                     start of a dynamic block is
+  2502                        ; *   three counts for the number of code lengths 
+                    for the literal/length codes,
+  2503                        ; *   the distance codes, and the code length code
+                    s.  This is followed by the
+  2504                        ; *   code length code lengths, three bits each.  
+                    This is used to construct the
+  2505                        ; *   code length code which is used to read the r
+                    emainder of the lengths.  Then
+  2506                        ; *   the literal/length code lengths and distance
+                     lengths are read as a single
+  2507                        ; *   set of lengths using the code length codes. 
+                     Codes are constructed from
+  2508                        ; *   the resulting two sets of lengths, and then 
+  Tue Feb  8 2022 21:01                                                Page 51
+
+
+                    finally you can start
+  2509                        ; *   decoding actual compressed data in the block
+                    .
+  2510                        ; *
+  2511                        ; * - For reference, a "typical" size for the code
+                     description in a dynamic
+  2512                        ; *   block is around 80 bytes.
+  2513                        ; */
+  2514                        ;
+  2515                        ;local int dynamic(struct state *s)
+  2516                        ;{
+  2517                        	code
+  2518                        	func
+  2519                        ~~dynamic:
+  2520                        	longa	on
+  2521                        	longi	on
+  2522 00:0BE8: 3B           	tsc
+  2523 00:0BE9: 38           	sec
+  2524 00:0BEA: E9 7C 00     	sbc	#L110
+  2525 00:0BED: 1B           	tcs
+  2526 00:0BEE: 0B           	phd
+  2527 00:0BEF: 5B           	tcd
+  2528             00000004   s_0	set	4
+  2529                        ;    int nlen, ndist, ncode;             /* number
+                     of lengths in descriptor */
+  2530                        ;    int index;                          /* index 
+                    of lengths[] */
+  2531                        ;    int err, rc;                        /* constr
+                    uct() return value */
+  2532                        ;    short *lengths;//[MAXCODES];        /* descri
+                    ptor code lengths */
+  2533                        ;    short lencnt[MAXBITS+1], *lensym;   //lensym[
+                    MAXLCODES];         /* lencode memory */
+  2534                        ;    short distcnt[MAXBITS+1], *distsym; //distsym
+                    [MAXDCODES];       /* distcode memory */
+  2535                        ;    struct huffman lencode, distcode;   /* length
+                     and distance codes */
+  2536                        ;    static const short order[19] =      /* permut
+                    ation of code length codes */
+  2537                        ;	int len, symbol;
+  2538                        ;	
+  2539                        ;	//printf("dynamic length short: %d\n", sizeof(sh
+                    ort));
+  2540                        ;	
+  2541                        ;	/* for (index = 0; index < 19; index ++) {
+  2542                        ;		printf("order %d:%d\n", index, order[ind
+                    ex]);
+  2543                        ;	}*/
+  2544                        ;	
+  2545                        ;	lengths	= malloc(MAXCODES * sizeof(short));
+  2546             00000000   nlen_1	set	0
+  2547             00000002   ndist_1	set	2
+  2548             00000004   ncode_1	set	4
+  2549             00000006   index_1	set	6
+  2550             00000008   err_1	set	8
+  2551             0000000A   rc_1	set	10
+  2552             0000000C   lengths_1	set	12
+  2553             00000010   lencnt_1	set	16
+  Tue Feb  8 2022 21:01                                                Page 52
+
+
+  2554             00000030   lensym_1	set	48
+  2555             00000034   distcnt_1	set	52
+  2556             00000054   distsym_1	set	84
+  2557             00000058   lencode_1	set	88
+  2558             00000060   distcode_1	set	96
+  2559             00000068   len_1	set	104
+  2560             0000006A   symbol_1	set	106
+  2561 00:0BF0: F4 00 00     	pea	#^$278
+  2562 00:0BF3: F4 78 02     	pea	#<$278
+  2563 00:0BF6: 22 xx xx xx  	jsl	~~malloc
+  2564 00:0BFA: 85 1D        	sta	<L111+lengths_1
+  2565 00:0BFC: 86 1F        	stx	<L111+lengths_1+2
+  2566                        ;	lensym = malloc(MAXLCODES * sizeof(short));
+  2567 00:0BFE: F4 00 00     	pea	#^$23c
+  2568 00:0C01: F4 3C 02     	pea	#<$23c
+  2569 00:0C04: 22 xx xx xx  	jsl	~~malloc
+  2570 00:0C08: 85 41        	sta	<L111+lensym_1
+  2571 00:0C0A: 86 43        	stx	<L111+lensym_1+2
+  2572                        ;	distsym = malloc(MAXDCODES * sizeof(short));
+  2573 00:0C0C: F4 00 00     	pea	#^$3c
+  2574 00:0C0F: F4 3C 00     	pea	#<$3c
+  2575 00:0C12: 22 xx xx xx  	jsl	~~malloc
+  2576 00:0C16: 85 65        	sta	<L111+distsym_1
+  2577 00:0C18: 86 67        	stx	<L111+distsym_1+2
+  2578                        ;	
+  2579                        ;    /* construct lencode and distcode */
+  2580                        ;    lencode.count = lencnt;
+  2581 00:0C1A: 18           	clc
+  2582 00:0C1B: 7B           	tdc
+  2583 00:0C1C: 69 21 00     	adc	#<L111+lencnt_1
+  2584 00:0C1F: 85 69        	sta	<L111+lencode_1
+  2585 00:0C21: A9 00 00     	lda	#$0
+  2586 00:0C24: 85 6B        	sta	<L111+lencode_1+2
+  2587                        ;    lencode.symbol = lensym;
+  2588 00:0C26: A5 41        	lda	<L111+lensym_1
+  2589 00:0C28: 85 6D        	sta	<L111+lencode_1+4
+  2590 00:0C2A: A5 43        	lda	<L111+lensym_1+2
+  2591 00:0C2C: 85 6F        	sta	<L111+lencode_1+6
+  2592                        ;    distcode.count = distcnt;
+  2593 00:0C2E: 18           	clc
+  2594 00:0C2F: 7B           	tdc
+  2595 00:0C30: 69 45 00     	adc	#<L111+distcnt_1
+  2596 00:0C33: 85 71        	sta	<L111+distcode_1
+  2597 00:0C35: A9 00 00     	lda	#$0
+  2598 00:0C38: 85 73        	sta	<L111+distcode_1+2
+  2599                        ;    distcode.symbol = distsym;
+  2600 00:0C3A: A5 65        	lda	<L111+distsym_1
+  2601 00:0C3C: 85 75        	sta	<L111+distcode_1+4
+  2602 00:0C3E: A5 67        	lda	<L111+distsym_1+2
+  2603 00:0C40: 85 77        	sta	<L111+distcode_1+6
+  2604                        ;
+  2605                        ;    /* get number of lengths in each table, check
+                     lengths */
+  2606                        ;    nlen = bits(s, 5) + 257;
+  2607 00:0C42: F4 05 00     	pea	#<$5
+  2608 00:0C45: D4 82        	pei	<L110+s_0+2
+  2609 00:0C47: D4 80        	pei	<L110+s_0
+  2610 00:0C49: 22 xx xx xx  	jsl	~~bits
+  Tue Feb  8 2022 21:01                                                Page 53
+
+
+  2611 00:0C4D: 18           	clc
+  2612 00:0C4E: 69 01 01     	adc	#$101
+  2613 00:0C51: 85 11        	sta	<L111+nlen_1
+  2614                        ;    ndist = bits(s, 5) + 1;
+  2615 00:0C53: F4 05 00     	pea	#<$5
+  2616 00:0C56: D4 82        	pei	<L110+s_0+2
+  2617 00:0C58: D4 80        	pei	<L110+s_0
+  2618 00:0C5A: 22 xx xx xx  	jsl	~~bits
+  2619 00:0C5E: 1A           	ina
+  2620 00:0C5F: 85 13        	sta	<L111+ndist_1
+  2621                        ;    ncode = bits(s, 4) + 4;
+  2622 00:0C61: F4 04 00     	pea	#<$4
+  2623 00:0C64: D4 82        	pei	<L110+s_0+2
+  2624 00:0C66: D4 80        	pei	<L110+s_0
+  2625 00:0C68: 22 xx xx xx  	jsl	~~bits
+  2626 00:0C6C: 18           	clc
+  2627 00:0C6D: 69 04 00     	adc	#$4
+  2628 00:0C70: 85 15        	sta	<L111+ncode_1
+  2629                        ;	
+  2630                        ;	printf("nlen %d, ndist %d, ncode: %d\n", nlen, n
+                    dist, ncode);
+  2631 00:0C72: 48           	pha
+  2632 00:0C73: D4 13        	pei	<L111+ndist_1
+  2633 00:0C75: D4 11        	pei	<L111+nlen_1
+  2634 00:0C77: F4 xx xx     	pea	#^L109
+  2635 00:0C7A: F4 xx xx     	pea	#<L109
+  2636 00:0C7D: F4 0C 00     	pea	#12
+  2637 00:0C80: 22 xx xx xx  	jsl	~~printf
+  2638                        ;	
+  2639                        ;    if (nlen > MAXLCODES || ndist > MAXDCODES) {
+  2640 00:0C84: 38           	sec
+  2641 00:0C85: A9 1E 01     	lda	#$11e
+  2642 00:0C88: E5 11        	sbc	<L111+nlen_1
+  2643 00:0C8A: 70 03        	bvs	L114
+  2644 00:0C8C: 49 00 80     	eor	#$8000
+  2645                        L114:
+  2646 00:0C8F: 10 0D        	bpl	L113
+  2647 00:0C91: 38           	sec
+  2648 00:0C92: A9 1E 00     	lda	#$1e
+  2649 00:0C95: E5 13        	sbc	<L111+ndist_1
+  2650 00:0C97: 70 03        	bvs	L116
+  2651 00:0C99: 49 00 80     	eor	#$8000
+  2652                        L116:
+  2653 00:0C9C: 30 06        	bmi	L10078
+  2654                        L113:
+  2655                        ;        rc = -3;                      /* bad coun
+                    ts */
+  2656 00:0C9E: A9 FD FF     	lda	#$fffd
+  2657 00:0CA1: 82 9B 02     	brl	L20006
+  2658                        ;		goto dynamic_exit;
+  2659                        ;	}
+  2660                        ;	
+  2661                        ;    /* read code length code lengths (really), mi
+                    ssing lengths are zero */
+  2662                        ;    for (index = 0; index < ncode; index++) {
+  2663                        L10078:
+  2664 00:0CA4: 64 17        	stz	<L111+index_1
+  2665 00:0CA6: 80 3F        	bra	L10083
+  Tue Feb  8 2022 21:01                                                Page 54
+
+
+  2666                        L10082:
+  2667                        ;        lengths[order[index]] = bits(s, 3);
+  2668 00:0CA8: A5 17        	lda	<L111+index_1
+  2669 00:0CAA: 0A           	asl	A
+  2670 00:0CAB: 85 05        	sta	<R1
+  2671 00:0CAD: A0 00 00     	ldy	#$0
+  2672 00:0CB0: A6 05        	ldx	<R1
+  2673 00:0CB2: BD xx xx     	lda	|L112,X ;order
+  2674 00:0CB5: 10 01        	bpl	L118
+  2675 00:0CB7: 88           	dey
+  2676                        L118:
+  2677 00:0CB8: 85 09        	sta	<R2
+  2678 00:0CBA: 84 0B        	sty	<R2+2
+  2679 00:0CBC: D4 0B        	pei	<R2+2
+  2680 00:0CBE: D4 09        	pei	<R2
+  2681 00:0CC0: A9 01 00     	lda	#$1
+  2682                        	xref	~~~lasl
+  2683 00:0CC3: 22 xx xx xx  	jsl	~~~lasl
+  2684 00:0CC7: 85 01        	sta	<R0
+  2685 00:0CC9: 86 03        	stx	<R0+2
+  2686 00:0CCB: A5 1D        	lda	<L111+lengths_1
+  2687 00:0CCD: 18           	clc
+  2688 00:0CCE: 65 01        	adc	<R0
+  2689 00:0CD0: 85 0D        	sta	<R3
+  2690 00:0CD2: A5 1F        	lda	<L111+lengths_1+2
+  2691 00:0CD4: 65 03        	adc	<R0+2
+  2692 00:0CD6: 85 0F        	sta	<R3+2
+  2693 00:0CD8: F4 03 00     	pea	#<$3
+  2694 00:0CDB: D4 82        	pei	<L110+s_0+2
+  2695 00:0CDD: D4 80        	pei	<L110+s_0
+  2696 00:0CDF: 22 xx xx xx  	jsl	~~bits
+  2697 00:0CE3: 87 0D        	sta	[<R3]
+  2698                        ;		//printf("%02X\n", lengths[order[index]]
+                    );
+  2699                        ;	}
+  2700 00:0CE5: E6 17        	inc	<L111+index_1
+  2701                        L10083:
+  2702 00:0CE7: 38           	sec
+  2703 00:0CE8: A5 17        	lda	<L111+index_1
+  2704 00:0CEA: E5 15        	sbc	<L111+ncode_1
+  2705 00:0CEC: 70 03        	bvs	L119
+  2706 00:0CEE: 49 00 80     	eor	#$8000
+  2707                        L119:
+  2708 00:0CF1: 30 39        	bmi	L10087
+  2709 00:0CF3: 80 B3        	bra	L10082
+  2710                        ;	
+  2711                        ;    for (; index < 19; index++)
+  2712                        L10086:
+  2713                        ;        lengths[order[index]] = 0;
+  2714 00:0CF5: A5 17        	lda	<L111+index_1
+  2715 00:0CF7: 0A           	asl	A
+  2716 00:0CF8: 85 05        	sta	<R1
+  2717 00:0CFA: A0 00 00     	ldy	#$0
+  2718 00:0CFD: A6 05        	ldx	<R1
+  2719 00:0CFF: BD xx xx     	lda	|L112,X ;order
+  2720 00:0D02: 10 01        	bpl	L121
+  2721 00:0D04: 88           	dey
+  2722                        L121:
+  Tue Feb  8 2022 21:01                                                Page 55
+
+
+  2723 00:0D05: 85 09        	sta	<R2
+  2724 00:0D07: 84 0B        	sty	<R2+2
+  2725 00:0D09: D4 0B        	pei	<R2+2
+  2726 00:0D0B: D4 09        	pei	<R2
+  2727 00:0D0D: A9 01 00     	lda	#$1
+  2728                        	xref	~~~lasl
+  2729 00:0D10: 22 xx xx xx  	jsl	~~~lasl
+  2730 00:0D14: 85 01        	sta	<R0
+  2731 00:0D16: 86 03        	stx	<R0+2
+  2732 00:0D18: A5 1D        	lda	<L111+lengths_1
+  2733 00:0D1A: 18           	clc
+  2734 00:0D1B: 65 01        	adc	<R0
+  2735 00:0D1D: 85 0D        	sta	<R3
+  2736 00:0D1F: A5 1F        	lda	<L111+lengths_1+2
+  2737 00:0D21: 65 03        	adc	<R0+2
+  2738 00:0D23: 85 0F        	sta	<R3+2
+  2739 00:0D25: A9 00 00     	lda	#$0
+  2740 00:0D28: 87 0D        	sta	[<R3]
+  2741 00:0D2A: E6 17        	inc	<L111+index_1
+  2742                        L10087:
+  2743 00:0D2C: 38           	sec
+  2744 00:0D2D: A5 17        	lda	<L111+index_1
+  2745 00:0D2F: E9 13 00     	sbc	#<$13
+  2746 00:0D32: 70 03        	bvs	L122
+  2747 00:0D34: 49 00 80     	eor	#$8000
+  2748                        L122:
+  2749 00:0D37: 10 BC        	bpl	L10086
+  2750                        ;
+  2751                        ;	//debugf("length codes\n");
+  2752                        ;	//for (index = 0; index < 19; index++) {
+  2753                        ;	//	debugf("%02X ", (long)lengths[index]);
+  2754                        ;	//}
+  2755                        ;	//debugf("\n");
+  2756                        ;	
+  2757                        ;    /* build huffman table for code lengths codes
+                     (use lencode temporarily) */
+  2758                        ;    err = construct(&lencode, lengths, 19);
+  2759 00:0D39: F4 13 00     	pea	#<$13
+  2760 00:0D3C: D4 1F        	pei	<L111+lengths_1+2
+  2761 00:0D3E: D4 1D        	pei	<L111+lengths_1
+  2762 00:0D40: F4 00 00     	pea	#0
+  2763 00:0D43: 18           	clc
+  2764 00:0D44: 7B           	tdc
+  2765 00:0D45: 69 69 00     	adc	#<L111+lencode_1
+  2766 00:0D48: 48           	pha
+  2767 00:0D49: 22 xx xx xx  	jsl	~~construct
+  2768 00:0D4D: 85 19        	sta	<L111+err_1
+  2769                        ;    if (err != 0) {               /* require comp
+                    lete code set here */
+  2770 00:0D4F: A5 19        	lda	<L111+err_1
+  2771 00:0D51: F0 06        	beq	L10088
+  2772                        ;        rc = -4;
+  2773 00:0D53: A9 FC FF     	lda	#$fffc
+  2774 00:0D56: 82 E6 01     	brl	L20006
+  2775                        ;		goto dynamic_exit;
+  2776                        ;	}
+  2777                        ;
+  2778                        ;    /* read length/literal and distance code leng
+  Tue Feb  8 2022 21:01                                                Page 56
+
+
+                    th tables */
+  2779                        ;    index = 0;
+  2780                        L10088:
+  2781 00:0D59: 64 17        	stz	<L111+index_1
+  2782                        ;	
+  2783                        ;	//debugf("read length/literal and distance code 
+                    length tables\n");
+  2784                        ;	
+  2785                        ;    while (index < nlen + ndist) {
+  2786                        ;    }
+  2787                        L10089:
+  2788 00:0D5B: A5 11        	lda	<L111+nlen_1
+  2789 00:0D5D: 18           	clc
+  2790 00:0D5E: 65 13        	adc	<L111+ndist_1
+  2791 00:0D60: 85 01        	sta	<R0
+  2792 00:0D62: 38           	sec
+  2793 00:0D63: A5 17        	lda	<L111+index_1
+  2794 00:0D65: E5 01        	sbc	<R0
+  2795 00:0D67: 70 03        	bvs	L125
+  2796 00:0D69: 49 00 80     	eor	#$8000
+  2797                        L125:
+  2798 00:0D6C: 10 10        	bpl	L20008
+  2799                        ;	//debugf("\n");
+  2800                        ;
+  2801                        ;	
+  2802                        ;	//debugf("length:\n");
+  2803                        ;	//for(index = 0; index < nlen + ndist; index++) 
+                    {
+  2804                        ;	//	debugf("%02X ", (unsigned long)lengths[i
+                    ndex]);
+  2805                        ;	//}
+  2806                        ;	//debugf("\n");
+  2807                        ;	
+  2808                        ;
+  2809                        ;    /* check for end-of-block code -- there bette
+                    r be one! */
+  2810                        ;    if (lengths[256] == 0) {
+  2811 00:0D6E: A0 00 02     	ldy	#$200
+  2812 00:0D71: B7 1D        	lda	[<L111+lengths_1],Y
+  2813 00:0D73: F0 03        	beq	*+5
+  2814 00:0D75: 82 2C 01     	brl	L10101
+  2815                        ;        rc = -9;
+  2816 00:0D78: A9 F7 FF     	lda	#$fff7
+  2817 00:0D7B: 82 C1 01     	brl	L20006
+  2818                        L20008:
+  2819                        ;        //int symbol;             /* decoded valu
+                    e */
+  2820                        ;        //int len;                /* last length 
+                    to repeat */
+  2821                        ;
+  2822                        ;        symbol = decode(s, &lencode);
+  2823 00:0D7E: F4 00 00     	pea	#0
+  2824 00:0D81: 18           	clc
+  2825 00:0D82: 7B           	tdc
+  2826 00:0D83: 69 69 00     	adc	#<L111+lencode_1
+  2827 00:0D86: 48           	pha
+  2828 00:0D87: D4 82        	pei	<L110+s_0+2
+  2829 00:0D89: D4 80        	pei	<L110+s_0
+  Tue Feb  8 2022 21:01                                                Page 57
+
+
+  2830 00:0D8B: 22 xx xx xx  	jsl	~~decode
+  2831 00:0D8F: 85 7B        	sta	<L111+symbol_1
+  2832                        ;		//debugf("%02X ", (unsigned long)symbol)
+                    ;
+  2833                        ;		
+  2834                        ;        if (symbol < 16)                /* length
+                     in 0..15 */
+  2835                        ;            lengths[index++] = symbol;
+  2836 00:0D91: 38           	sec
+  2837 00:0D92: E9 10 00     	sbc	#<$10
+  2838 00:0D95: 70 03        	bvs	L127
+  2839 00:0D97: 49 00 80     	eor	#$8000
+  2840                        L127:
+  2841 00:0D9A: 30 30        	bmi	L10091
+  2842 00:0D9C: A0 00 00     	ldy	#$0
+  2843 00:0D9F: A5 17        	lda	<L111+index_1
+  2844 00:0DA1: 10 01        	bpl	L129
+  2845 00:0DA3: 88           	dey
+  2846                        L129:
+  2847 00:0DA4: 85 05        	sta	<R1
+  2848 00:0DA6: 84 07        	sty	<R1+2
+  2849 00:0DA8: D4 07        	pei	<R1+2
+  2850 00:0DAA: D4 05        	pei	<R1
+  2851 00:0DAC: A9 01 00     	lda	#$1
+  2852                        	xref	~~~lasl
+  2853 00:0DAF: 22 xx xx xx  	jsl	~~~lasl
+  2854 00:0DB3: 85 01        	sta	<R0
+  2855 00:0DB5: 86 03        	stx	<R0+2
+  2856 00:0DB7: A5 1D        	lda	<L111+lengths_1
+  2857 00:0DB9: 18           	clc
+  2858 00:0DBA: 65 01        	adc	<R0
+  2859 00:0DBC: 85 09        	sta	<R2
+  2860 00:0DBE: A5 1F        	lda	<L111+lengths_1+2
+  2861 00:0DC0: 65 03        	adc	<R0+2
+  2862 00:0DC2: 85 0B        	sta	<R2+2
+  2863 00:0DC4: A5 7B        	lda	<L111+symbol_1
+  2864 00:0DC6: 87 09        	sta	[<R2]
+  2865 00:0DC8: E6 17        	inc	<L111+index_1
+  2866                        ;        else {                          /* repeat
+                     instruction */
+  2867 00:0DCA: 80 8F        	bra	L10089
+  2868                        L10091:
+  2869                        ;            len = 0;                    /* assume
+                     repeating zeros */
+  2870 00:0DCC: 64 79        	stz	<L111+len_1
+  2871                        ;            if (symbol == 16) {         /* repeat
+                     last length 3..6 times */
+  2872 00:0DCE: A5 7B        	lda	<L111+symbol_1
+  2873 00:0DD0: C9 10 00     	cmp	#<$10
+  2874 00:0DD3: D0 56        	bne	L10093
+  2875                        ;                if (index == 0) {
+  2876 00:0DD5: A5 17        	lda	<L111+index_1
+  2877 00:0DD7: D0 06        	bne	L10094
+  2878                        ;                    rc = -5;          /* no last 
+                    length! */
+  2879 00:0DD9: A9 FB FF     	lda	#$fffb
+  2880 00:0DDC: 82 60 01     	brl	L20006
+  2881                        ;					goto dynamic_exi
+  Tue Feb  8 2022 21:01                                                Page 58
+
+
+                    t;
+  2882                        ;				}
+  2883                        ;                len = lengths[index - 1];       /
+                    * last length */
+  2884                        L10094:
+  2885 00:0DDF: A9 FF FF     	lda	#$ffff
+  2886 00:0DE2: 18           	clc
+  2887 00:0DE3: 65 17        	adc	<L111+index_1
+  2888 00:0DE5: 85 05        	sta	<R1
+  2889 00:0DE7: A0 00 00     	ldy	#$0
+  2890 00:0DEA: A5 05        	lda	<R1
+  2891 00:0DEC: 10 01        	bpl	L132
+  2892 00:0DEE: 88           	dey
+  2893                        L132:
+  2894 00:0DEF: 85 05        	sta	<R1
+  2895 00:0DF1: 84 07        	sty	<R1+2
+  2896 00:0DF3: D4 07        	pei	<R1+2
+  2897 00:0DF5: D4 05        	pei	<R1
+  2898 00:0DF7: A9 01 00     	lda	#$1
+  2899                        	xref	~~~lasl
+  2900 00:0DFA: 22 xx xx xx  	jsl	~~~lasl
+  2901 00:0DFE: 85 01        	sta	<R0
+  2902 00:0E00: 86 03        	stx	<R0+2
+  2903 00:0E02: A5 1D        	lda	<L111+lengths_1
+  2904 00:0E04: 18           	clc
+  2905 00:0E05: 65 01        	adc	<R0
+  2906 00:0E07: 85 09        	sta	<R2
+  2907 00:0E09: A5 1F        	lda	<L111+lengths_1+2
+  2908 00:0E0B: 65 03        	adc	<R0+2
+  2909 00:0E0D: 85 0B        	sta	<R2+2
+  2910 00:0E0F: A7 09        	lda	[<R2]
+  2911 00:0E11: 85 79        	sta	<L111+len_1
+  2912                        ;                symbol = 3 + bits(s, 2);
+  2913 00:0E13: F4 02 00     	pea	#<$2
+  2914 00:0E16: 80 03        	bra	L20015
+  2915                        L20017:
+  2916 00:0E18: F4 03 00     	pea	#<$3
+  2917                        L20015:
+  2918 00:0E1B: D4 82        	pei	<L110+s_0+2
+  2919 00:0E1D: D4 80        	pei	<L110+s_0
+  2920 00:0E1F: 22 xx xx xx  	jsl	~~bits
+  2921 00:0E23: 85 01        	sta	<R0
+  2922 00:0E25: 18           	clc
+  2923 00:0E26: A9 03 00     	lda	#$3
+  2924 00:0E29: 80 18        	bra	L20009
+  2925                        ;            }
+  2926                        ;            else if (symbol == 17)      /* repeat
+                     zero 3..10 times */
+  2927                        L10093:
+  2928                        ;                symbol = 3 + bits(s, 3);
+  2929 00:0E2B: A5 7B        	lda	<L111+symbol_1
+  2930 00:0E2D: C9 11 00     	cmp	#<$11
+  2931 00:0E30: F0 E6        	beq	L20017
+  2932                        ;            else                        /* == 18,
+                     repeat zero 11..138 times */
+  2933                        ;                symbol = 11 + bits(s, 7);
+  2934 00:0E32: F4 07 00     	pea	#<$7
+  2935 00:0E35: D4 82        	pei	<L110+s_0+2
+  Tue Feb  8 2022 21:01                                                Page 59
+
+
+  2936 00:0E37: D4 80        	pei	<L110+s_0
+  2937 00:0E39: 22 xx xx xx  	jsl	~~bits
+  2938 00:0E3D: 85 01        	sta	<R0
+  2939 00:0E3F: 18           	clc
+  2940 00:0E40: A9 0B 00     	lda	#$b
+  2941                        L20009:
+  2942 00:0E43: 65 01        	adc	<R0
+  2943 00:0E45: 85 7B        	sta	<L111+symbol_1
+  2944                        ;            if (index + symbol > nlen + ndist) {
+  2945 00:0E47: A5 11        	lda	<L111+nlen_1
+  2946 00:0E49: 18           	clc
+  2947 00:0E4A: 65 13        	adc	<L111+ndist_1
+  2948 00:0E4C: 85 01        	sta	<R0
+  2949 00:0E4E: A5 17        	lda	<L111+index_1
+  2950 00:0E50: 18           	clc
+  2951 00:0E51: 65 7B        	adc	<L111+symbol_1
+  2952 00:0E53: 85 05        	sta	<R1
+  2953 00:0E55: 38           	sec
+  2954 00:0E56: A5 01        	lda	<R0
+  2955 00:0E58: E5 05        	sbc	<R1
+  2956 00:0E5A: 70 03        	bvs	L134
+  2957 00:0E5C: 49 00 80     	eor	#$8000
+  2958                        L134:
+  2959 00:0E5F: 30 06        	bmi	L10099
+  2960                        ;                rc = -6;              /* too many
+                     lengths! */
+  2961 00:0E61: A9 FA FF     	lda	#$fffa
+  2962 00:0E64: 82 D8 00     	brl	L20006
+  2963                        ;				goto dynamic_exit;
+  2964                        ;			}
+  2965                        ;            while (symbol--)            /* repeat
+                     last or zero symbol times */
+  2966                        L10099:
+  2967 00:0E67: A5 7B        	lda	<L111+symbol_1
+  2968 00:0E69: 85 01        	sta	<R0
+  2969 00:0E6B: C6 7B        	dec	<L111+symbol_1
+  2970 00:0E6D: A5 01        	lda	<R0
+  2971 00:0E6F: D0 03        	bne	*+5
+  2972 00:0E71: 82 E7 FE     	brl	L10089
+  2973                        ;                lengths[index++] = len;
+  2974 00:0E74: A0 00 00     	ldy	#$0
+  2975 00:0E77: A5 17        	lda	<L111+index_1
+  2976 00:0E79: 10 01        	bpl	L137
+  2977 00:0E7B: 88           	dey
+  2978                        L137:
+  2979 00:0E7C: 85 05        	sta	<R1
+  2980 00:0E7E: 84 07        	sty	<R1+2
+  2981 00:0E80: D4 07        	pei	<R1+2
+  2982 00:0E82: D4 05        	pei	<R1
+  2983 00:0E84: A9 01 00     	lda	#$1
+  2984                        	xref	~~~lasl
+  2985 00:0E87: 22 xx xx xx  	jsl	~~~lasl
+  2986 00:0E8B: 85 01        	sta	<R0
+  2987 00:0E8D: 86 03        	stx	<R0+2
+  2988 00:0E8F: A5 1D        	lda	<L111+lengths_1
+  2989 00:0E91: 18           	clc
+  2990 00:0E92: 65 01        	adc	<R0
+  2991 00:0E94: 85 09        	sta	<R2
+  Tue Feb  8 2022 21:01                                                Page 60
+
+
+  2992 00:0E96: A5 1F        	lda	<L111+lengths_1+2
+  2993 00:0E98: 65 03        	adc	<R0+2
+  2994 00:0E9A: 85 0B        	sta	<R2+2
+  2995 00:0E9C: A5 79        	lda	<L111+len_1
+  2996 00:0E9E: 87 09        	sta	[<R2]
+  2997 00:0EA0: E6 17        	inc	<L111+index_1
+  2998 00:0EA2: 80 C3        	bra	L10099
+  2999                        ;        }
+  3000                        ;		goto dynamic_exit;
+  3001                        ;	}
+  3002                        ;	
+  3003                        ;	
+  3004                        ;    /* build huffman table for literal/length cod
+                    es */
+  3005                        ;    err = construct(&lencode, lengths, nlen);
+  3006                        L10101:
+  3007 00:0EA4: D4 11        	pei	<L111+nlen_1
+  3008 00:0EA6: D4 1F        	pei	<L111+lengths_1+2
+  3009 00:0EA8: D4 1D        	pei	<L111+lengths_1
+  3010 00:0EAA: F4 00 00     	pea	#0
+  3011 00:0EAD: 18           	clc
+  3012 00:0EAE: 7B           	tdc
+  3013 00:0EAF: 69 69 00     	adc	#<L111+lencode_1
+  3014 00:0EB2: 48           	pha
+  3015 00:0EB3: 22 xx xx xx  	jsl	~~construct
+  3016 00:0EB7: 85 19        	sta	<L111+err_1
+  3017                        ;    if (err && (err < 0 || nlen != lencode.count[
+                    0] + lencode.count[1])) {
+  3018 00:0EB9: A5 19        	lda	<L111+err_1
+  3019 00:0EBB: F0 15        	beq	L10102
+  3020 00:0EBD: A5 19        	lda	<L111+err_1
+  3021 00:0EBF: 30 0C        	bmi	L140
+  3022 00:0EC1: 18           	clc
+  3023 00:0EC2: A7 69        	lda	[<L111+lencode_1]
+  3024 00:0EC4: A0 02 00     	ldy	#$2
+  3025 00:0EC7: 77 69        	adc	[<L111+lencode_1],Y
+  3026 00:0EC9: C5 11        	cmp	<L111+nlen_1
+  3027 00:0ECB: F0 05        	beq	L10102
+  3028                        L140:
+  3029                        ;        rc = -7;      /* incomplete code ok only 
+                    for single length 1 code */
+  3030 00:0ECD: A9 F9 FF     	lda	#$fff9
+  3031 00:0ED0: 80 6D        	bra	L20006
+  3032                        ;		goto dynamic_exit;
+  3033                        ;	}	
+  3034                        ;
+  3035                        ;	/*
+  3036                        ;	debugf("sym/len tree:\n");
+  3037                        ;	for(index = 0; index < nlen; index++) {
+  3038                        ;		debugf("%X ", (unsigned long)lencode.sym
+                    bol[index]);
+  3039                        ;	}
+  3040                        ;	debugf("\n\n"); */
+  3041                        ;	
+  3042                        ;    /* build huffman table for distance codes */
+  3043                        ;    err = construct(&distcode, lengths + nlen, nd
+                    ist);
+  3044                        L10102:
+  Tue Feb  8 2022 21:01                                                Page 61
+
+
+  3045 00:0ED2: D4 13        	pei	<L111+ndist_1
+  3046 00:0ED4: A0 00 00     	ldy	#$0
+  3047 00:0ED7: A5 11        	lda	<L111+nlen_1
+  3048 00:0ED9: 10 01        	bpl	L143
+  3049 00:0EDB: 88           	dey
+  3050                        L143:
+  3051 00:0EDC: 85 05        	sta	<R1
+  3052 00:0EDE: 84 07        	sty	<R1+2
+  3053 00:0EE0: D4 07        	pei	<R1+2
+  3054 00:0EE2: D4 05        	pei	<R1
+  3055 00:0EE4: A9 01 00     	lda	#$1
+  3056                        	xref	~~~lasl
+  3057 00:0EE7: 22 xx xx xx  	jsl	~~~lasl
+  3058 00:0EEB: 85 01        	sta	<R0
+  3059 00:0EED: 86 03        	stx	<R0+2
+  3060 00:0EEF: A5 1D        	lda	<L111+lengths_1
+  3061 00:0EF1: 18           	clc
+  3062 00:0EF2: 65 01        	adc	<R0
+  3063 00:0EF4: 85 09        	sta	<R2
+  3064 00:0EF6: A5 1F        	lda	<L111+lengths_1+2
+  3065 00:0EF8: 65 03        	adc	<R0+2
+  3066 00:0EFA: 48           	pha
+  3067 00:0EFB: D4 09        	pei	<R2
+  3068 00:0EFD: F4 00 00     	pea	#0
+  3069 00:0F00: 18           	clc
+  3070 00:0F01: 7B           	tdc
+  3071 00:0F02: 69 71 00     	adc	#<L111+distcode_1
+  3072 00:0F05: 48           	pha
+  3073 00:0F06: 22 xx xx xx  	jsl	~~construct
+  3074 00:0F0A: 85 19        	sta	<L111+err_1
+  3075                        ;    if (err && (err < 0 || ndist != distcode.coun
+                    t[0] + distcode.count[1])) {
+  3076 00:0F0C: A5 19        	lda	<L111+err_1
+  3077 00:0F0E: F0 15        	beq	L10103
+  3078 00:0F10: A5 19        	lda	<L111+err_1
+  3079 00:0F12: 30 0C        	bmi	L145
+  3080 00:0F14: 18           	clc
+  3081 00:0F15: A7 71        	lda	[<L111+distcode_1]
+  3082 00:0F17: A0 02 00     	ldy	#$2
+  3083 00:0F1A: 77 71        	adc	[<L111+distcode_1],Y
+  3084 00:0F1C: C5 13        	cmp	<L111+ndist_1
+  3085 00:0F1E: F0 05        	beq	L10103
+  3086                        L145:
+  3087                        ;        rc = -8;      /* incomplete code ok only 
+                    for single length 1 code */
+  3088 00:0F20: A9 F8 FF     	lda	#$fff8
+  3089 00:0F23: 80 1A        	bra	L20006
+  3090                        ;		goto dynamic_exit;
+  3091                        ;	}
+  3092                        ;	
+  3093                        ;	/*
+  3094                        ;	debugf("distance tree:\n");
+  3095                        ;	for(index = 0; index < ndist; index++) {
+  3096                        ;		debugf("%X ", (unsigned long)distcode.sy
+                    mbol[index]);
+  3097                        ;	}
+  3098                        ;	debugf("\n\n");*/
+  3099                        ;
+  Tue Feb  8 2022 21:01                                                Page 62
+
+
+  3100                        ;    /* decode data until end-of-block code */
+  3101                        ;    rc = codes(s, &lencode, &distcode);
+  3102                        L10103:
+  3103 00:0F25: F4 00 00     	pea	#0
+  3104 00:0F28: 18           	clc
+  3105 00:0F29: 7B           	tdc
+  3106 00:0F2A: 69 71 00     	adc	#<L111+distcode_1
+  3107 00:0F2D: 48           	pha
+  3108 00:0F2E: F4 00 00     	pea	#0
+  3109 00:0F31: 18           	clc
+  3110 00:0F32: 7B           	tdc
+  3111 00:0F33: 69 69 00     	adc	#<L111+lencode_1
+  3112 00:0F36: 48           	pha
+  3113 00:0F37: D4 82        	pei	<L110+s_0+2
+  3114 00:0F39: D4 80        	pei	<L110+s_0
+  3115 00:0F3B: 22 xx xx xx  	jsl	~~codes
+  3116                        L20006:
+  3117 00:0F3F: 85 1B        	sta	<L111+rc_1
+  3118                        ;	
+  3119                        ;dynamic_exit:
+  3120                        ;	free(lengths);
+  3121 00:0F41: D4 1F        	pei	<L111+lengths_1+2
+  3122 00:0F43: D4 1D        	pei	<L111+lengths_1
+  3123 00:0F45: 22 xx xx xx  	jsl	~~free
+  3124                        ;	free(lensym); 
+  3125 00:0F49: D4 43        	pei	<L111+lensym_1+2
+  3126 00:0F4B: D4 41        	pei	<L111+lensym_1
+  3127 00:0F4D: 22 xx xx xx  	jsl	~~free
+  3128                        ;	free(distsym);
+  3129 00:0F51: D4 67        	pei	<L111+distsym_1+2
+  3130 00:0F53: D4 65        	pei	<L111+distsym_1
+  3131 00:0F55: 22 xx xx xx  	jsl	~~free
+  3132                        ;
+  3133                        ;	return rc;
+  3134 00:0F59: A5 1B        	lda	<L111+rc_1
+  3135 00:0F5B: A8           	tay
+  3136 00:0F5C: A5 7E        	lda	<L110+2
+  3137 00:0F5E: 85 82        	sta	<L110+2+4
+  3138 00:0F60: A5 7D        	lda	<L110+1
+  3139 00:0F62: 85 81        	sta	<L110+1+4
+  3140 00:0F64: 2B           	pld
+  3141 00:0F65: 3B           	tsc
+  3142 00:0F66: 18           	clc
+  3143 00:0F67: 69 80 00     	adc	#L110+4
+  3144 00:0F6A: 1B           	tcs
+  3145 00:0F6B: 98           	tya
+  3146 00:0F6C: 6B           	rtl
+  3147                        ;}
+  3148             0000007C   L110	equ	124
+  3149             00000011   L111	equ	17
+  3150                        	ends
+  3151                        	efunc
+  3152                        	data
+  3153                        L112:
+  3154                        ;        {16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4,
+                     12, 3, 13, 2, 14, 1, 15};
+  3155 00:011C: 10 00 11 00  	dw	$10,$11,$12,$0,$8,$7,$9,$6,$A,$5
+       00:0120: 12 00 00 00 
+  Tue Feb  8 2022 21:01                                                Page 63
+
+
+       00:0124: 08 00 07 00 
+       00:0128: 09 00 06 00 
+       00:012C: 0A 00 05 00 
+  3156 00:0130: 0B 00 04 00  	dw	$B,$4,$C,$3,$D,$2,$E,$1,$F
+       00:0134: 0C 00 03 00 
+       00:0138: 0D 00 02 00 
+       00:013C: 0E 00 01 00 
+       00:0140: 0F 00 
+  3157 00:0142:              	ends
+  3158                        	data
+  3159                        L109:
+  3160 00:0142: 6E 6C 65 6E  	db	$6E,$6C,$65,$6E,$20,$25,$64,$2C,$20,$6E,
+                    $64,$69,$73,$74,$20
+       00:0146: 20 25 64 2C 
+       00:014A: 20 6E 64 69 
+       00:014E: 73 74 20 
+  3161 00:0151: 25 64 2C 20  	db	$25,$64,$2C,$20,$6E,$63,$6F,$64,$65,$3A,
+                    $20,$25,$64,$0A,$00
+       00:0155: 6E 63 6F 64 
+       00:0159: 65 3A 20 25 
+       00:015D: 64 0A 00 
+  3162 00:0160:              	ends
+  3163                        ;
+  3164                        ;/*
+  3165                        ; * Inflate source to dest.  On return, destlen an
+                    d sourcelen are updated to the
+  3166                        ; * size of the uncompressed data and the size of 
+                    the deflate data respectively.
+  3167                        ; * On success, the return value of puff() is zero
+                    .  If there is an error in the
+  3168                        ; * source data, i.e. it is not in the deflate for
+                    mat, then a negative value is
+  3169                        ; * returned.  If there is not enough input availa
+                    ble or there is not enough
+  3170                        ; * output space, then a positive error is returne
+                    d.  In that case, destlen and
+  3171                        ; * sourcelen are not updated to facilitate retryi
+                    ng from the beginning with the
+  3172                        ; * provision of more input data or more output sp
+                    ace.  In the case of invalid
+  3173                        ; * inflate data (a negative error), the dest and 
+                    source pointers are updated to
+  3174                        ; * facilitate the debugging of deflators.
+  3175                        ; *
+  3176                        ; * puff() also has a mode to determine the size o
+                    f the uncompressed output with
+  3177                        ; * no output written.  For this dest must be (uns
+                    igned char *)0.  In this case,
+  3178                        ; * the input value of *destlen is ignored, and on
+                     return *destlen is set to the
+  3179                        ; * size of the uncompressed output.
+  3180                        ; *
+  3181                        ; * The return codes are:
+  3182                        ; *
+  3183                        ; *   2:  available inflate data did not terminate
+  3184                        ; *   1:  output space exhausted before completing
+                     inflate
+  3185                        ; *   0:  successful inflate
+  Tue Feb  8 2022 21:01                                                Page 64
+
+
+  3186                        ; *  -1:  invalid block type (type == 3)
+  3187                        ; *  -2:  stored block length did not match one's 
+                    complement
+  3188                        ; *  -3:  dynamic block code description: too many
+                     length or distance codes
+  3189                        ; *  -4:  dynamic block code description: code len
+                    gths codes incomplete
+  3190                        ; *  -5:  dynamic block code description: repeat l
+                    engths with no first length
+  3191                        ; *  -6:  dynamic block code description: repeat m
+                    ore than specified lengths
+  3192                        ; *  -7:  dynamic block code description: invalid 
+                    literal/length code lengths
+  3193                        ; *  -8:  dynamic block code description: invalid 
+                    distance code lengths
+  3194                        ; *  -9:  dynamic block code description: missing 
+                    end-of-block code
+  3195                        ; * -10:  invalid literal/length or distance code 
+                    in fixed or dynamic block
+  3196                        ; * -11:  distance is too far back in fixed or dyn
+                    amic block
+  3197                        ; *
+  3198                        ; * Format notes:
+  3199                        ; *
+  3200                        ; * - Three bits are read for each block to determ
+                    ine the kind of block and
+  3201                        ; *   whether or not it is the last block.  Then t
+                    he block is decoded and the
+  3202                        ; *   process repeated if it was not the last bloc
+                    k.
+  3203                        ; *
+  3204                        ; * - The leftover bits in the last byte of the de
+                    flate data after the last
+  3205                        ; *   block (if it was a fixed or dynamic block) a
+                    re undefined and have no
+  3206                        ; *   expected values to check.
+  3207                        ; */
+  3208                        ;int puff(unsigned char *dest,           /* pointe
+                    r to destination pointer */
+  3209                        ;         unsigned long *destlen,        /* amount
+                     of output space */
+  3210                        ;         const unsigned char *source,   /* pointe
+                    r to source data pointer */
+  3211                        ;         unsigned long *sourcelen)      /* amount
+                     of input available */
+  3212                        ;{
+  3213                        	code
+  3214                        	xdef	~~puff
+  3215                        	func
+  3216                        ~~puff:
+  3217                        	longa	on
+  3218                        	longi	on
+  3219 00:0F6D: 3B           	tsc
+  3220 00:0F6E: 38           	sec
+  3221 00:0F6F: E9 BC 00     	sbc	#L150
+  3222 00:0F72: 1B           	tcs
+  3223 00:0F73: 0B           	phd
+  3224 00:0F74: 5B           	tcd
+  Tue Feb  8 2022 21:01                                                Page 65
+
+
+  3225             00000004   dest_0	set	4
+  3226             00000008   destlen_0	set	8
+  3227             0000000C   source_0	set	12
+  3228             00000010   sourcelen_0	set	16
+  3229                        ;    struct state s;             /* input/output s
+                    tate */
+  3230                        ;    int last, type;             /* block informat
+                    ion */
+  3231                        ;    int err;                    /* return value *
+                    /
+  3232                        ;
+  3233                        ;    /* initialize output state */
+  3234                        ;    s.out = dest;
+  3235             00000000   s_1	set	0
+  3236             000000B6   last_1	set	182
+  3237             000000B8   type_1	set	184
+  3238             000000BA   err_1	set	186
+  3239 00:0F75: A5 C0        	lda	<L150+dest_0
+  3240 00:0F77: 85 01        	sta	<L151+s_1
+  3241 00:0F79: A5 C2        	lda	<L150+dest_0+2
+  3242 00:0F7B: 85 03        	sta	<L151+s_1+2
+  3243                        ;    s.outlen = *destlen;                /* ignore
+                    d if dest is NIL */
+  3244 00:0F7D: A7 C4        	lda	[<L150+destlen_0]
+  3245 00:0F7F: 85 05        	sta	<L151+s_1+4
+  3246 00:0F81: A0 02 00     	ldy	#$2
+  3247 00:0F84: B7 C4        	lda	[<L150+destlen_0],Y
+  3248 00:0F86: 85 07        	sta	<L151+s_1+6
+  3249                        ;    s.outcnt = 0;
+  3250 00:0F88: 64 09        	stz	<L151+s_1+8
+  3251 00:0F8A: 64 0B        	stz	<L151+s_1+10
+  3252                        ;
+  3253                        ;    /* initialize input state */
+  3254                        ;    s.in = source;
+  3255 00:0F8C: A5 C8        	lda	<L150+source_0
+  3256 00:0F8E: 85 0D        	sta	<L151+s_1+12
+  3257 00:0F90: A5 CA        	lda	<L150+source_0+2
+  3258 00:0F92: 85 0F        	sta	<L151+s_1+14
+  3259                        ;    s.inlen = *sourcelen;
+  3260 00:0F94: A7 CC        	lda	[<L150+sourcelen_0]
+  3261 00:0F96: 85 11        	sta	<L151+s_1+16
+  3262 00:0F98: B7 CC        	lda	[<L150+sourcelen_0],Y
+  3263 00:0F9A: 85 13        	sta	<L151+s_1+18
+  3264                        ;    s.incnt = 0;
+  3265 00:0F9C: 64 15        	stz	<L151+s_1+20
+  3266 00:0F9E: 64 17        	stz	<L151+s_1+22
+  3267                        ;    s.bitbuf = 0;
+  3268 00:0FA0: 64 19        	stz	<L151+s_1+24
+  3269                        ;    s.bitcnt = 0;
+  3270 00:0FA2: 64 1B        	stz	<L151+s_1+26
+  3271                        ;	
+  3272                        ;    /* return if bits() or decode() tries to read
+                     past available input */
+  3273                        ;    if (0 /*setjmp(s.env) != 0*/)             /* 
+                    if came back here via longjmp() */
+  3274                        ;        err = 2;                        /* then s
+                    kip do-loop, return error */
+  3275                        ;    else {
+  Tue Feb  8 2022 21:01                                                Page 66
+
+
+  3276                        ;        /* process blocks until last block or err
+                    or */
+  3277                        ;        do {
+  3278                        ;			//printf("do\n");
+  3279                        ;            last = bits(&s, 1);         /* one if
+                     last block */
+  3280 00:0FA4: F4 01 00     	pea	#<$1
+  3281 00:0FA7: F4 00 00     	pea	#0
+  3282 00:0FAA: 18           	clc
+  3283 00:0FAB: 7B           	tdc
+  3284 00:0FAC: 69 01 00     	adc	#<L151+s_1
+  3285 00:0FAF: 48           	pha
+  3286 00:0FB0: 22 xx xx xx  	jsl	~~bits
+  3287 00:0FB4: 85 B7        	sta	<L151+last_1
+  3288                        ;            type = bits(&s, 2);         /* block 
+                    type 0..3 */
+  3289 00:0FB6: F4 02 00     	pea	#<$2
+  3290 00:0FB9: F4 00 00     	pea	#0
+  3291 00:0FBC: 18           	clc
+  3292 00:0FBD: 7B           	tdc
+  3293 00:0FBE: 69 01 00     	adc	#<L151+s_1
+  3294 00:0FC1: 48           	pha
+  3295 00:0FC2: 22 xx xx xx  	jsl	~~bits
+  3296 00:0FC6: 85 B9        	sta	<L151+type_1
+  3297                        ;			printf("block type %d\n", type);
+  3298 00:0FC8: 48           	pha
+  3299 00:0FC9: F4 xx xx     	pea	#^L149
+  3300 00:0FCC: F4 xx xx     	pea	#<L149
+  3301 00:0FCF: F4 08 00     	pea	#8
+  3302 00:0FD2: 22 xx xx xx  	jsl	~~printf
+  3303                        ;			
+  3304                        ;            err = type == 0 ?
+  3305                        ;                    stored(&s) :
+  3306                        ;                    (type == 1 ?
+  3307                        ;                        fixed(&s) :
+  3308                        ;                        (type == 2 ?
+  3309                        ;                            dynamic(&s) :
+  3310                        ;                            -1));       /* type =
+                    = 3, invalid */
+  3311 00:0FD6: A5 B9        	lda	<L151+type_1
+  3312 00:0FD8: D0 0F        	bne	L152
+  3313 00:0FDA: F4 00 00     	pea	#0
+  3314 00:0FDD: 18           	clc
+  3315 00:0FDE: 7B           	tdc
+  3316 00:0FDF: 69 01 00     	adc	#<L151+s_1
+  3317 00:0FE2: 48           	pha
+  3318 00:0FE3: 22 xx xx xx  	jsl	~~stored
+  3319 00:0FE7: 80 2F        	bra	L154
+  3320                        L152:
+  3321 00:0FE9: A5 B9        	lda	<L151+type_1
+  3322 00:0FEB: C9 01 00     	cmp	#<$1
+  3323 00:0FEE: D0 0F        	bne	L155
+  3324 00:0FF0: F4 00 00     	pea	#0
+  3325 00:0FF3: 18           	clc
+  3326 00:0FF4: 7B           	tdc
+  3327 00:0FF5: 69 01 00     	adc	#<L151+s_1
+  3328 00:0FF8: 48           	pha
+  3329 00:0FF9: 22 xx xx xx  	jsl	~~fixed
+  Tue Feb  8 2022 21:01                                                Page 67
+
+
+  3330 00:0FFD: 80 19        	bra	L154
+  3331                        L155:
+  3332 00:0FFF: A5 B9        	lda	<L151+type_1
+  3333 00:1001: C9 02 00     	cmp	#<$2
+  3334 00:1004: D0 0F        	bne	L158
+  3335 00:1006: F4 00 00     	pea	#0
+  3336 00:1009: 18           	clc
+  3337 00:100A: 7B           	tdc
+  3338 00:100B: 69 01 00     	adc	#<L151+s_1
+  3339 00:100E: 48           	pha
+  3340 00:100F: 22 xx xx xx  	jsl	~~dynamic
+  3341 00:1013: 80 03        	bra	L154
+  3342                        L158:
+  3343 00:1015: A9 FF FF     	lda	#$ffff
+  3344                        L154:
+  3345 00:1018: 85 BB        	sta	<L151+err_1
+  3346                        ;            //if (err != 0)
+  3347                        ;                break;                  /* return
+                     with error */
+  3348                        ;        } while (!last);
+  3349                        ;    }
+  3350                        ;
+  3351                        ;    /* update the lengths and return */
+  3352                        ;    if (err <= 0) {
+  3353 00:101A: 38           	sec
+  3354 00:101B: A9 00 00     	lda	#$0
+  3355 00:101E: E5 BB        	sbc	<L151+err_1
+  3356 00:1020: 70 03        	bvs	L162
+  3357 00:1022: 49 00 80     	eor	#$8000
+  3358                        L162:
+  3359 00:1025: 10 13        	bpl	L10109
+  3360                        ;        *destlen = s.outcnt;
+  3361 00:1027: A5 09        	lda	<L151+s_1+8
+  3362 00:1029: 87 C4        	sta	[<L150+destlen_0]
+  3363 00:102B: A5 0B        	lda	<L151+s_1+10
+  3364 00:102D: A0 02 00     	ldy	#$2
+  3365 00:1030: 97 C4        	sta	[<L150+destlen_0],Y
+  3366                        ;        *sourcelen = s.incnt;
+  3367 00:1032: A5 15        	lda	<L151+s_1+20
+  3368 00:1034: 87 CC        	sta	[<L150+sourcelen_0]
+  3369 00:1036: A5 17        	lda	<L151+s_1+22
+  3370 00:1038: 97 CC        	sta	[<L150+sourcelen_0],Y
+  3371                        ;    }
+  3372                        ;	
+  3373                        ;    return err;
+  3374                        L10109:
+  3375 00:103A: A5 BB        	lda	<L151+err_1
+  3376 00:103C: A8           	tay
+  3377 00:103D: A5 BE        	lda	<L150+2
+  3378 00:103F: 85 CE        	sta	<L150+2+16
+  3379 00:1041: A5 BD        	lda	<L150+1
+  3380 00:1043: 85 CD        	sta	<L150+1+16
+  3381 00:1045: 2B           	pld
+  3382 00:1046: 3B           	tsc
+  3383 00:1047: 18           	clc
+  3384 00:1048: 69 CC 00     	adc	#L150+16
+  3385 00:104B: 1B           	tcs
+  3386 00:104C: 98           	tya
+  Tue Feb  8 2022 21:01                                                Page 68
+
+
+  3387 00:104D: 6B           	rtl
+  3388                        ;}
+  3389             000000BC   L150	equ	188
+  3390             00000001   L151	equ	1
+  3391                        	ends
+  3392                        	efunc
+  3393                        	data
+  3394                        L149:
+  3395 00:0160: 62 6C 6F 63  	db	$62,$6C,$6F,$63,$6B,$20,$74,$79,$70,$65,
+                    $20,$25,$64,$0A,$00
+       00:0164: 6B 20 74 79 
+       00:0168: 70 65 20 25 
+       00:016C: 64 0A 00 
+  3396 00:016F:              	ends
+  3397                        ;
+  3398                        	xref	~~free
+  3399                        	xref	~~malloc
+  3400                        	xref	~~printf
+
+
+      Lines assembled: 3400
+      Errors: 0

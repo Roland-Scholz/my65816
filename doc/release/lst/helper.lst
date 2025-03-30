@@ -1,0 +1,879 @@
+  Wed Jan 19 2022 14:41                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2                        	module	input
+     3                        	code
+     4                        	xdef	~~input
+     5                        	func
+     6                        ~~input:
+     7                        	longa	on
+     8                        	longi	on
+     9 00:0000: 3B           	tsc
+    10 00:0001: 38           	sec
+    11 00:0002: E9 08 00     	sbc	#L2
+    12 00:0005: 1B           	tcs
+    13 00:0006: 0B           	phd
+    14 00:0007: 5B           	tcd
+    15             00000004   s_0	set	4
+    16             00000008   maxlen_0	set	8
+    17             00000000   c_1	set	0
+    18             00000002   cnt_1	set	2
+    19 00:0008: 64 07        	stz	<L3+cnt_1
+    20 00:000A: C6 10        	dec	<L2+maxlen_0
+    21                        L10001:
+    22 00:000C: AD xx xx     	lda	|~~stdin+2
+    23 00:000F: 48           	pha
+    24 00:0010: AD xx xx     	lda	|~~stdin
+    25 00:0013: 48           	pha
+    26 00:0014: 22 xx xx xx  	jsl	~~fgetc
+    27 00:0018: 85 05        	sta	<L3+c_1
+    28 00:001A: 38           	sec
+    29 00:001B: E9 20 00     	sbc	#<$20
+    30 00:001E: 70 03        	bvs	L4
+    31 00:0020: 49 00 80     	eor	#$8000
+    32                        L4:
+    33 00:0023: 10 3F        	bpl	L10003
+    34 00:0025: 38           	sec
+    35 00:0026: A5 05        	lda	<L3+c_1
+    36 00:0028: E9 7F 00     	sbc	#<$7f
+    37 00:002B: 70 03        	bvs	L6
+    38 00:002D: 49 00 80     	eor	#$8000
+    39                        L6:
+    40 00:0030: 30 32        	bmi	L10003
+    41 00:0032: 38           	sec
+    42 00:0033: A5 07        	lda	<L3+cnt_1
+    43 00:0035: E5 10        	sbc	<L2+maxlen_0
+    44 00:0037: 70 03        	bvs	L8
+    45 00:0039: 49 00 80     	eor	#$8000
+    46                        L8:
+    47 00:003C: 30 26        	bmi	L10003
+    48 00:003E: AD xx xx     	lda	|~~stdout+2
+    49 00:0041: 48           	pha
+    50 00:0042: AD xx xx     	lda	|~~stdout
+    51 00:0045: 48           	pha
+    52 00:0046: D4 05        	pei	<L3+c_1
+  Wed Jan 19 2022 14:41                                                Page 2
+
+
+    53 00:0048: 22 xx xx xx  	jsl	~~fputc
+    54 00:004C: AD xx xx     	lda	|~~stdout+2
+    55 00:004F: 48           	pha
+    56 00:0050: AD xx xx     	lda	|~~stdout
+    57 00:0053: 48           	pha
+    58 00:0054: 22 xx xx xx  	jsl	~~fflush
+    59 00:0058: E2 20        	sep	#$20
+    60                        	longa	off
+    61 00:005A: A5 05        	lda	<L3+c_1
+    62 00:005C: A4 07        	ldy	<L3+cnt_1
+    63 00:005E: 97 0C        	sta	[<L2+s_0],Y
+    64 00:0060: C2 20        	rep	#$20
+    65                        	longa	on
+    66 00:0062: E6 07        	inc	<L3+cnt_1
+    67                        L10003:
+    68 00:0064: A5 05        	lda	<L3+c_1
+    69 00:0066: C9 08 00     	cmp	#<$8
+    70 00:0069: D0 29        	bne	L10005
+    71 00:006B: 38           	sec
+    72 00:006C: A9 00 00     	lda	#$0
+    73 00:006F: E5 07        	sbc	<L3+cnt_1
+    74 00:0071: 70 03        	bvs	L11
+    75 00:0073: 49 00 80     	eor	#$8000
+    76                        L11:
+    77 00:0076: 30 1C        	bmi	L10005
+    78 00:0078: AD xx xx     	lda	|~~stdout+2
+    79 00:007B: 48           	pha
+    80 00:007C: AD xx xx     	lda	|~~stdout
+    81 00:007F: 48           	pha
+    82 00:0080: D4 05        	pei	<L3+c_1
+    83 00:0082: 22 xx xx xx  	jsl	~~fputc
+    84 00:0086: AD xx xx     	lda	|~~stdout+2
+    85 00:0089: 48           	pha
+    86 00:008A: AD xx xx     	lda	|~~stdout
+    87 00:008D: 48           	pha
+    88 00:008E: 22 xx xx xx  	jsl	~~fflush
+    89 00:0092: C6 07        	dec	<L3+cnt_1
+    90                        L10005:
+    91 00:0094: A5 05        	lda	<L3+c_1
+    92 00:0096: C9 0A 00     	cmp	#<$a
+    93 00:0099: F0 03        	beq	*+5
+    94 00:009B: 82 6E FF     	brl	L10001
+    95 00:009E: E2 20        	sep	#$20
+    96                        	longa	off
+    97 00:00A0: A9 00        	lda	#$0
+    98 00:00A2: A4 07        	ldy	<L3+cnt_1
+    99 00:00A4: 97 0C        	sta	[<L2+s_0],Y
+   100 00:00A6: C2 20        	rep	#$20
+   101                        	longa	on
+   102 00:00A8: D4 0E        	pei	<L2+s_0+2
+   103 00:00AA: D4 0C        	pei	<L2+s_0
+   104 00:00AC: 22 xx xx xx  	jsl	~~strlen
+   105 00:00B0: 85 01        	sta	<1
+   106 00:00B2: 86 03        	stx	<1+2
+   107 00:00B4: A8           	tay
+   108 00:00B5: A5 0A        	lda	<L2+2
+   109 00:00B7: 85 10        	sta	<L2+2+6
+   110 00:00B9: A5 09        	lda	<L2+1
+  Wed Jan 19 2022 14:41                                                Page 3
+
+
+   111 00:00BB: 85 0F        	sta	<L2+1+6
+   112 00:00BD: 2B           	pld
+   113 00:00BE: 3B           	tsc
+   114 00:00BF: 18           	clc
+   115 00:00C0: 69 0E 00     	adc	#L2+6
+   116 00:00C3: 1B           	tcs
+   117 00:00C4: 98           	tya
+   118 00:00C5: 6B           	rtl
+   119             00000008   L2	equ	8
+   120             00000005   L3	equ	5
+   121                        	xref	~~strlen
+   122                        	xref	~~fflush
+   123                        	xref	~~fputc
+   124                        	xref	~~fgetc
+   125                        	xref	~~stdout
+   126                        	xref	~~stdin
+   127                        	ends
+   128                        	efunc
+   129                        	endmod
+   130                        	module	int2hex
+   131                        	code
+   132                        	xdef	~~int2hex
+   133                        	func
+   134                        ~~int2hex:
+   135                        	longa	on
+   136                        	longi	on
+   137 00:0000: 3B           	tsc
+   138 00:0001: 38           	sec
+   139 00:0002: E9 04 00     	sbc	#L15
+   140 00:0005: 1B           	tcs
+   141 00:0006: 0B           	phd
+   142 00:0007: 5B           	tcd
+   143             00000004   c_0	set	4
+   144 00:0008: 38           	sec
+   145 00:0009: A5 08        	lda	<L15+c_0
+   146 00:000B: E9 0A 00     	sbc	#<$a
+   147 00:000E: 70 03        	bvs	L17
+   148 00:0010: 49 00 80     	eor	#$8000
+   149                        L17:
+   150 00:0013: 30 1D        	bmi	L10008
+   151 00:0015: 18           	clc
+   152 00:0016: A9 30 00     	lda	#$30
+   153                        L20003:
+   154 00:0019: 65 08        	adc	<L15+c_0
+   155 00:001B: 85 01        	sta	<1
+   156 00:001D: 29 FF 00     	and	#$ff
+   157 00:0020: A8           	tay
+   158 00:0021: A5 06        	lda	<L15+2
+   159 00:0023: 85 08        	sta	<L15+2+2
+   160 00:0025: A5 05        	lda	<L15+1
+   161 00:0027: 85 07        	sta	<L15+1+2
+   162 00:0029: 2B           	pld
+   163 00:002A: 3B           	tsc
+   164 00:002B: 18           	clc
+   165 00:002C: 69 06 00     	adc	#L15+2
+   166 00:002F: 1B           	tcs
+   167 00:0030: 98           	tya
+   168 00:0031: 6B           	rtl
+  Wed Jan 19 2022 14:41                                                Page 4
+
+
+   169                        L10008:
+   170 00:0032: 18           	clc
+   171 00:0033: A9 37 00     	lda	#$37
+   172 00:0036: 80 E1        	bra	L20003
+   173             00000004   L15	equ	4
+   174             00000005   L16	equ	5
+   175                        	ends
+   176                        	efunc
+   177                        	endmod
+   178                        	module	printhex
+   179                        	code
+   180                        	xdef	~~printhex
+   181                        	func
+   182                        ~~printhex:
+   183                        	longa	on
+   184                        	longi	on
+   185 00:0000: 3B           	tsc
+   186 00:0001: 38           	sec
+   187 00:0002: E9 00 00     	sbc	#L20
+   188 00:0005: 1B           	tcs
+   189 00:0006: 0B           	phd
+   190 00:0007: 5B           	tcd
+   191             00000004   c_0	set	4
+   192 00:0008: A5 04        	lda	<L20+c_0
+   193 00:000A: 29 FF 00     	and	#$ff
+   194 00:000D: A2 04 00     	ldx	#<$4
+   195                        	xref	~~~asr
+   196 00:0010: 22 xx xx xx  	jsl	~~~asr
+   197 00:0014: 48           	pha
+   198 00:0015: 22 xx xx xx  	jsl	~~int2hex
+   199 00:0019: 48           	pha
+   200 00:001A: 22 xx xx xx  	jsl	~~printchar
+   201 00:001E: A5 04        	lda	<L20+c_0
+   202 00:0020: 29 0F 00     	and	#<$f
+   203 00:0023: 48           	pha
+   204 00:0024: 22 xx xx xx  	jsl	~~int2hex
+   205 00:0028: 48           	pha
+   206 00:0029: 22 xx xx xx  	jsl	~~printchar
+   207 00:002D: A5 02        	lda	<L20+2
+   208 00:002F: 85 04        	sta	<L20+2+2
+   209 00:0031: A5 01        	lda	<L20+1
+   210 00:0033: 85 03        	sta	<L20+1+2
+   211 00:0035: 2B           	pld
+   212 00:0036: 3B           	tsc
+   213 00:0037: 18           	clc
+   214 00:0038: 69 02 00     	adc	#L20+2
+   215 00:003B: 1B           	tcs
+   216 00:003C: 6B           	rtl
+   217             00000000   L20	equ	0
+   218             00000001   L21	equ	1
+   219                        	xref	~~int2hex
+   220                        	xref	~~printchar
+   221                        	ends
+   222                        	efunc
+   223                        	endmod
+   224                        	module	printchar
+   225                        	code
+   226                        	xdef	~~printchar
+  Wed Jan 19 2022 14:41                                                Page 5
+
+
+   227                        	func
+   228                        ~~printchar:
+   229                        	longa	on
+   230                        	longi	on
+   231 00:0000: 3B           	tsc
+   232 00:0001: 38           	sec
+   233 00:0002: E9 00 00     	sbc	#L23
+   234 00:0005: 1B           	tcs
+   235 00:0006: 0B           	phd
+   236 00:0007: 5B           	tcd
+   237             00000004   c_0	set	4
+   238                        L10009:
+   239 00:0008: E2 20        	sep	#$20
+   240                        	longa	off
+   241 00:000A: AF E5 FF FF  	lda	>16777189
+   242 00:000E: 29 40        	and	#<$40
+   243 00:0010: C2 20        	rep	#$20
+   244                        	longa	on
+   245 00:0012: F0 F4        	beq	L10009
+   246 00:0014: E2 20        	sep	#$20
+   247                        	longa	off
+   248 00:0016: A5 04        	lda	<L23+c_0
+   249 00:0018: 8F E0 FF FF  	sta	>16777184
+   250 00:001C: C2 20        	rep	#$20
+   251                        	longa	on
+   252 00:001E: A5 02        	lda	<L23+2
+   253 00:0020: 85 04        	sta	<L23+2+2
+   254 00:0022: A5 01        	lda	<L23+1
+   255 00:0024: 85 03        	sta	<L23+1+2
+   256 00:0026: 2B           	pld
+   257 00:0027: 3B           	tsc
+   258 00:0028: 18           	clc
+   259 00:0029: 69 02 00     	adc	#L23+2
+   260 00:002C: 1B           	tcs
+   261 00:002D: 6B           	rtl
+   262             00000000   L23	equ	0
+   263             00000001   L24	equ	1
+   264                        	ends
+   265                        	efunc
+   266                        	endmod
+   267                        	module	strupper
+   268                        	code
+   269                        	xdef	~~strupper
+   270                        	func
+   271                        ~~strupper:
+   272                        	longa	on
+   273                        	longi	on
+   274 00:0000: 3B           	tsc
+   275 00:0001: 38           	sec
+   276 00:0002: E9 00 00     	sbc	#L27
+   277 00:0005: 1B           	tcs
+   278 00:0006: 0B           	phd
+   279 00:0007: 5B           	tcd
+   280             00000004   str_0	set	4
+   281 00:0008: 80 16        	bra	L10011
+   282                        L20005:
+   283 00:000A: A7 04        	lda	[<L27+str_0]
+   284 00:000C: 29 FF 00     	and	#$ff
+  Wed Jan 19 2022 14:41                                                Page 6
+
+
+   285 00:000F: 48           	pha
+   286 00:0010: 22 xx xx xx  	jsl	~~toupper
+   287 00:0014: E2 20        	sep	#$20
+   288                        	longa	off
+   289 00:0016: 87 04        	sta	[<L27+str_0]
+   290 00:0018: C2 20        	rep	#$20
+   291                        	longa	on
+   292 00:001A: E6 04        	inc	<L27+str_0
+   293 00:001C: D0 02        	bne	L10011
+   294 00:001E: E6 06        	inc	<L27+str_0+2
+   295                        L10011:
+   296 00:0020: A7 04        	lda	[<L27+str_0]
+   297 00:0022: 29 FF 00     	and	#$ff
+   298 00:0025: D0 E3        	bne	L20005
+   299 00:0027: A5 02        	lda	<L27+2
+   300 00:0029: 85 06        	sta	<L27+2+4
+   301 00:002B: A5 01        	lda	<L27+1
+   302 00:002D: 85 05        	sta	<L27+1+4
+   303 00:002F: 2B           	pld
+   304 00:0030: 3B           	tsc
+   305 00:0031: 18           	clc
+   306 00:0032: 69 04 00     	adc	#L27+4
+   307 00:0035: 1B           	tcs
+   308 00:0036: 6B           	rtl
+   309             00000000   L27	equ	0
+   310             00000001   L28	equ	1
+   311                        	xref	~~toupper
+   312                        	ends
+   313                        	efunc
+   314                        	endmod
+   315                        	module	adjustFilename
+   316                        	code
+   317                        	xdef	~~adjustFilename
+   318                        	func
+   319                        ~~adjustFilename:
+   320                        	longa	on
+   321                        	longi	on
+   322 00:0000: 3B           	tsc
+   323 00:0001: 38           	sec
+   324 00:0002: E9 12 00     	sbc	#L32
+   325 00:0005: 1B           	tcs
+   326 00:0006: 0B           	phd
+   327 00:0007: 5B           	tcd
+   328             00000004   s_0	set	4
+   329             00000008   exe_0	set	8
+   330             00000000   p_1	set	0
+   331             00000004   out_1	set	4
+   332             00000008   len_1	set	8
+   333 00:0008: D4 18        	pei	<L32+s_0+2
+   334 00:000A: D4 16        	pei	<L32+s_0
+   335 00:000C: 22 xx xx xx  	jsl	~~strlen
+   336 00:0010: 85 11        	sta	<L33+len_1
+   337 00:0012: 18           	clc
+   338 00:0013: 69 0A 00     	adc	#$a
+   339 00:0016: 85 01        	sta	<1
+   340 00:0018: 64 03        	stz	<1+2
+   341 00:001A: D4 03        	pei	<1+2
+   342 00:001C: D4 01        	pei	<1
+  Wed Jan 19 2022 14:41                                                Page 7
+
+
+   343 00:001E: 22 xx xx xx  	jsl	~~malloc
+   344 00:0022: 85 0D        	sta	<L33+out_1
+   345 00:0024: 86 0F        	stx	<L33+out_1+2
+   346 00:0026: D4 18        	pei	<L32+s_0+2
+   347 00:0028: D4 16        	pei	<L32+s_0
+   348 00:002A: D4 0F        	pei	<L33+out_1+2
+   349 00:002C: D4 0D        	pei	<L33+out_1
+   350 00:002E: 22 xx xx xx  	jsl	~~strcpy
+   351 00:0032: D4 0F        	pei	<L33+out_1+2
+   352 00:0034: D4 0D        	pei	<L33+out_1
+   353 00:0036: 22 xx xx xx  	jsl	~~strupper
+   354 00:003A: E2 20        	sep	#$20
+   355                        	longa	off
+   356 00:003C: A7 0D        	lda	[<L33+out_1]
+   357 00:003E: C9 44        	cmp	#<$44
+   358 00:0040: C2 20        	rep	#$20
+   359                        	longa	on
+   360 00:0042: D0 0D        	bne	L34
+   361 00:0044: E2 20        	sep	#$20
+   362                        	longa	off
+   363 00:0046: A0 01 00     	ldy	#$1
+   364 00:0049: B7 0D        	lda	[<L33+out_1],Y
+   365 00:004B: C9 3A        	cmp	#<$3a
+   366 00:004D: C2 20        	rep	#$20
+   367                        	longa	on
+   368 00:004F: F0 47        	beq	L10013
+   369                        L34:
+   370 00:0051: D4 0F        	pei	<L33+out_1+2
+   371 00:0053: D4 0D        	pei	<L33+out_1
+   372 00:0055: 22 xx xx xx  	jsl	~~strlen
+   373 00:0059: 85 01        	sta	<1
+   374 00:005B: 86 03        	stx	<1+2
+   375 00:005D: A9 01 00     	lda	#$1
+   376 00:0060: 18           	clc
+   377 00:0061: 65 01        	adc	<1
+   378 00:0063: 85 05        	sta	<5
+   379 00:0065: A9 00 00     	lda	#$0
+   380 00:0068: 65 03        	adc	<1+2
+   381 00:006A: 85 07        	sta	<5+2
+   382 00:006C: 48           	pha
+   383 00:006D: D4 05        	pei	<5
+   384 00:006F: D4 0F        	pei	<L33+out_1+2
+   385 00:0071: D4 0D        	pei	<L33+out_1
+   386 00:0073: A9 02 00     	lda	#$2
+   387 00:0076: 18           	clc
+   388 00:0077: 65 0D        	adc	<L33+out_1
+   389 00:0079: 85 01        	sta	<1
+   390 00:007B: A9 00 00     	lda	#$0
+   391 00:007E: 65 0F        	adc	<L33+out_1+2
+   392 00:0080: 85 03        	sta	<1+2
+   393 00:0082: 48           	pha
+   394 00:0083: D4 01        	pei	<1
+   395 00:0085: 22 xx xx xx  	jsl	~~memmove
+   396 00:0089: E2 20        	sep	#$20
+   397                        	longa	off
+   398 00:008B: A9 44        	lda	#$44
+   399 00:008D: 87 0D        	sta	[<L33+out_1]
+   400 00:008F: A9 3A        	lda	#$3a
+  Wed Jan 19 2022 14:41                                                Page 8
+
+
+   401 00:0091: A0 01 00     	ldy	#$1
+   402 00:0094: 97 0D        	sta	[<L33+out_1],Y
+   403 00:0096: C2 20        	rep	#$20
+   404                        	longa	on
+   405                        L10013:
+   406 00:0098: A6 0F        	ldx	<L33+out_1+2
+   407 00:009A: A5 0D        	lda	<L33+out_1
+   408 00:009C: A8           	tay
+   409 00:009D: A5 14        	lda	<L32+2
+   410 00:009F: 85 1A        	sta	<L32+2+6
+   411 00:00A1: A5 13        	lda	<L32+1
+   412 00:00A3: 85 19        	sta	<L32+1+6
+   413 00:00A5: 2B           	pld
+   414 00:00A6: 3B           	tsc
+   415 00:00A7: 18           	clc
+   416 00:00A8: 69 18 00     	adc	#L32+6
+   417 00:00AB: 1B           	tcs
+   418 00:00AC: 98           	tya
+   419 00:00AD: 6B           	rtl
+   420             00000012   L32	equ	18
+   421             00000009   L33	equ	9
+   422                        	xref	~~strupper
+   423                        	xref	~~strlen
+   424                        	xref	~~memmove
+   425                        	xref	~~strcpy
+   426                        	xref	~~malloc
+   427                        	ends
+   428                        	efunc
+   429                        	endmod
+   430                        	module	hex2int
+   431                        	code
+   432                        	xdef	~~hex2int
+   433                        	func
+   434                        ~~hex2int:
+   435                        	longa	on
+   436                        	longi	on
+   437 00:0000: 3B           	tsc
+   438 00:0001: 38           	sec
+   439 00:0002: E9 06 00     	sbc	#L38
+   440 00:0005: 1B           	tcs
+   441 00:0006: 0B           	phd
+   442 00:0007: 5B           	tcd
+   443             00000004   c_0	set	4
+   444             00000000   val_1	set	0
+   445 00:0008: A9 FF FF     	lda	#$ffff
+   446 00:000B: 85 05        	sta	<L39+val_1
+   447 00:000D: A5 0A        	lda	<L38+c_0
+   448 00:000F: 29 FF 00     	and	#$ff
+   449 00:0012: 48           	pha
+   450 00:0013: 22 xx xx xx  	jsl	~~toupper
+   451 00:0017: E2 20        	sep	#$20
+   452                        	longa	off
+   453 00:0019: 85 0A        	sta	<L38+c_0
+   454 00:001B: C9 30        	cmp	#<$30
+   455 00:001D: C2 20        	rep	#$20
+   456                        	longa	on
+   457 00:001F: 90 17        	bcc	L10014
+   458 00:0021: E2 20        	sep	#$20
+  Wed Jan 19 2022 14:41                                                Page 9
+
+
+   459                        	longa	off
+   460 00:0023: A9 39        	lda	#$39
+   461 00:0025: C5 0A        	cmp	<L38+c_0
+   462 00:0027: C2 20        	rep	#$20
+   463                        	longa	on
+   464 00:0029: 90 0D        	bcc	L10014
+   465 00:002B: A5 0A        	lda	<L38+c_0
+   466 00:002D: 29 FF 00     	and	#$ff
+   467 00:0030: 85 01        	sta	<1
+   468 00:0032: 18           	clc
+   469 00:0033: 69 D0 FF     	adc	#$ffd0
+   470 00:0036: 85 05        	sta	<L39+val_1
+   471                        L10014:
+   472 00:0038: E2 20        	sep	#$20
+   473                        	longa	off
+   474 00:003A: A5 0A        	lda	<L38+c_0
+   475 00:003C: C9 41        	cmp	#<$41
+   476 00:003E: C2 20        	rep	#$20
+   477                        	longa	on
+   478 00:0040: 90 17        	bcc	L10015
+   479 00:0042: E2 20        	sep	#$20
+   480                        	longa	off
+   481 00:0044: A9 46        	lda	#$46
+   482 00:0046: C5 0A        	cmp	<L38+c_0
+   483 00:0048: C2 20        	rep	#$20
+   484                        	longa	on
+   485 00:004A: 90 0D        	bcc	L10015
+   486 00:004C: A5 0A        	lda	<L38+c_0
+   487 00:004E: 29 FF 00     	and	#$ff
+   488 00:0051: 85 01        	sta	<1
+   489 00:0053: 18           	clc
+   490 00:0054: 69 C9 FF     	adc	#$ffc9
+   491 00:0057: 85 05        	sta	<L39+val_1
+   492                        L10015:
+   493 00:0059: A5 05        	lda	<L39+val_1
+   494 00:005B: A8           	tay
+   495 00:005C: A5 08        	lda	<L38+2
+   496 00:005E: 85 0A        	sta	<L38+2+2
+   497 00:0060: A5 07        	lda	<L38+1
+   498 00:0062: 85 09        	sta	<L38+1+2
+   499 00:0064: 2B           	pld
+   500 00:0065: 3B           	tsc
+   501 00:0066: 18           	clc
+   502 00:0067: 69 08 00     	adc	#L38+2
+   503 00:006A: 1B           	tcs
+   504 00:006B: 98           	tya
+   505 00:006C: 6B           	rtl
+   506             00000006   L38	equ	6
+   507             00000005   L39	equ	5
+   508                        	xref	~~toupper
+   509                        	ends
+   510                        	efunc
+   511                        	endmod
+   512                        	module	getHex8
+   513                        	code
+   514                        	xdef	~~getHex8
+   515                        	func
+   516                        ~~getHex8:
+  Wed Jan 19 2022 14:41                                                Page 10
+
+
+   517                        	longa	on
+   518                        	longi	on
+   519 00:0000: 3B           	tsc
+   520 00:0001: 38           	sec
+   521 00:0002: E9 0E 00     	sbc	#L45
+   522 00:0005: 1B           	tcs
+   523 00:0006: 0B           	phd
+   524 00:0007: 5B           	tcd
+   525             00000000   val_1	set	0
+   526             00000004   c_1	set	4
+   527             00000006   cnt_1	set	6
+   528             00000008   i_1	set	8
+   529 00:0008: 64 05        	stz	<L46+val_1
+   530 00:000A: 64 07        	stz	<L46+val_1+2
+   531 00:000C: 64 0B        	stz	<L46+cnt_1
+   532 00:000E: 80 47        	bra	L10018
+   533                        L20007:
+   534 00:0010: D4 09        	pei	<L46+c_1
+   535 00:0012: F4 xx xx     	pea	#^L1
+   536 00:0015: F4 xx xx     	pea	#<L1
+   537 00:0018: F4 08 00     	pea	#8
+   538 00:001B: 22 xx xx xx  	jsl	~~printf
+   539 00:001F: 06 05        	asl	<L46+val_1
+   540 00:0021: 26 07        	rol	<L46+val_1+2
+   541 00:0023: 06 05        	asl	<L46+val_1
+   542 00:0025: 26 07        	rol	<L46+val_1+2
+   543 00:0027: 06 05        	asl	<L46+val_1
+   544 00:0029: 26 07        	rol	<L46+val_1+2
+   545 00:002B: 06 05        	asl	<L46+val_1
+   546 00:002D: 26 07        	rol	<L46+val_1+2
+   547 00:002F: A0 00 00     	ldy	#$0
+   548 00:0032: A5 0D        	lda	<L46+i_1
+   549 00:0034: 10 01        	bpl	L48
+   550 00:0036: 88           	dey
+   551                        L48:
+   552 00:0037: 85 01        	sta	<1
+   553 00:0039: 84 03        	sty	<1+2
+   554 00:003B: A5 01        	lda	<1
+   555 00:003D: 18           	clc
+   556 00:003E: 65 05        	adc	<L46+val_1
+   557 00:0040: 85 05        	sta	<L46+val_1
+   558 00:0042: A5 03        	lda	<1+2
+   559 00:0044: 65 07        	adc	<L46+val_1+2
+   560 00:0046: 85 07        	sta	<L46+val_1+2
+   561 00:0048: E6 0B        	inc	<L46+cnt_1
+   562                        L10016:
+   563 00:004A: 38           	sec
+   564 00:004B: A5 0B        	lda	<L46+cnt_1
+   565 00:004D: E9 08 00     	sbc	#<$8
+   566 00:0050: 70 03        	bvs	L53
+   567 00:0052: 49 00 80     	eor	#$8000
+   568                        L53:
+   569 00:0055: 30 55        	bmi	L10017
+   570                        L10018:
+   571 00:0057: AD xx xx     	lda	|~~stdin+2
+   572 00:005A: 48           	pha
+   573 00:005B: AD xx xx     	lda	|~~stdin
+   574 00:005E: 48           	pha
+  Wed Jan 19 2022 14:41                                                Page 11
+
+
+   575 00:005F: 22 xx xx xx  	jsl	~~fgetc
+   576 00:0063: 85 09        	sta	<L46+c_1
+   577 00:0065: 48           	pha
+   578 00:0066: 22 xx xx xx  	jsl	~~hex2int
+   579 00:006A: 85 0D        	sta	<L46+i_1
+   580 00:006C: A5 0D        	lda	<L46+i_1
+   581 00:006E: 10 A0        	bpl	L20007
+   582 00:0070: A5 09        	lda	<L46+c_1
+   583 00:0072: C9 08 00     	cmp	#<$8
+   584 00:0075: D0 2E        	bne	L10020
+   585 00:0077: 38           	sec
+   586 00:0078: A9 00 00     	lda	#$0
+   587 00:007B: E5 0B        	sbc	<L46+cnt_1
+   588 00:007D: 70 03        	bvs	L50
+   589 00:007F: 49 00 80     	eor	#$8000
+   590                        L50:
+   591 00:0082: 30 21        	bmi	L10020
+   592 00:0084: D4 09        	pei	<L46+c_1
+   593 00:0086: F4 xx xx     	pea	#^L1+3
+   594 00:0089: F4 xx xx     	pea	#<L1+3
+   595 00:008C: F4 08 00     	pea	#8
+   596 00:008F: 22 xx xx xx  	jsl	~~printf
+   597 00:0093: 46 07        	lsr	<L46+val_1+2
+   598 00:0095: 66 05        	ror	<L46+val_1
+   599 00:0097: 46 07        	lsr	<L46+val_1+2
+   600 00:0099: 66 05        	ror	<L46+val_1
+   601 00:009B: 46 07        	lsr	<L46+val_1+2
+   602 00:009D: 66 05        	ror	<L46+val_1
+   603 00:009F: 46 07        	lsr	<L46+val_1+2
+   604 00:00A1: 66 05        	ror	<L46+val_1
+   605 00:00A3: C6 0B        	dec	<L46+cnt_1
+   606                        L10020:
+   607 00:00A5: A5 09        	lda	<L46+c_1
+   608 00:00A7: C9 0A 00     	cmp	#<$a
+   609 00:00AA: D0 9E        	bne	L10016
+   610                        L10017:
+   611 00:00AC: A6 07        	ldx	<L46+val_1+2
+   612 00:00AE: A5 05        	lda	<L46+val_1
+   613 00:00B0: A8           	tay
+   614 00:00B1: 2B           	pld
+   615 00:00B2: 3B           	tsc
+   616 00:00B3: 18           	clc
+   617 00:00B4: 69 0E 00     	adc	#L45
+   618 00:00B7: 1B           	tcs
+   619 00:00B8: 98           	tya
+   620 00:00B9: 6B           	rtl
+   621             0000000E   L45	equ	14
+   622             00000005   L46	equ	5
+   623                        	xref	~~hex2int
+   624                        	xref	~~fgetc
+   625                        	xref	~~printf
+   626                        	xref	~~stdin
+   627                        	ends
+   628                        	efunc
+   629                        	data
+   630                        L1:
+   631 00:0000: 25 63 00 25  	db	$25,$63,$00,$25,$63,$00
+       00:0004: 63 00 
+  Wed Jan 19 2022 14:41                                                Page 12
+
+
+   632 00:0006:              	ends
+   633                        	endmod
+   634                        	module	str2hex
+   635                        	code
+   636                        	xdef	~~str2hex
+   637                        	func
+   638                        ~~str2hex:
+   639                        	longa	on
+   640                        	longi	on
+   641 00:0000: 3B           	tsc
+   642 00:0001: 38           	sec
+   643 00:0002: E9 0A 00     	sbc	#L57
+   644 00:0005: 1B           	tcs
+   645 00:0006: 0B           	phd
+   646 00:0007: 5B           	tcd
+   647             00000004   s_0	set	4
+   648             00000000   val_1	set	0
+   649             00000004   i_1	set	4
+   650 00:0008: 64 05        	stz	<L58+val_1
+   651 00:000A: 64 07        	stz	<L58+val_1+2
+   652 00:000C: 80 3C        	bra	L10022
+   653                        L20009:
+   654 00:000E: A7 0E        	lda	[<L57+s_0]
+   655 00:0010: 48           	pha
+   656 00:0011: 22 xx xx xx  	jsl	~~hex2int
+   657 00:0015: 85 09        	sta	<L58+i_1
+   658 00:0017: A5 09        	lda	<L58+i_1
+   659 00:0019: 30 29        	bmi	L10024
+   660 00:001B: 06 05        	asl	<L58+val_1
+   661 00:001D: 26 07        	rol	<L58+val_1+2
+   662 00:001F: 06 05        	asl	<L58+val_1
+   663 00:0021: 26 07        	rol	<L58+val_1+2
+   664 00:0023: 06 05        	asl	<L58+val_1
+   665 00:0025: 26 07        	rol	<L58+val_1+2
+   666 00:0027: 06 05        	asl	<L58+val_1
+   667 00:0029: 26 07        	rol	<L58+val_1+2
+   668 00:002B: A0 00 00     	ldy	#$0
+   669 00:002E: A5 09        	lda	<L58+i_1
+   670 00:0030: 10 01        	bpl	L61
+   671 00:0032: 88           	dey
+   672                        L61:
+   673 00:0033: 85 01        	sta	<1
+   674 00:0035: 84 03        	sty	<1+2
+   675 00:0037: A5 01        	lda	<1
+   676 00:0039: 18           	clc
+   677 00:003A: 65 05        	adc	<L58+val_1
+   678 00:003C: 85 05        	sta	<L58+val_1
+   679 00:003E: A5 03        	lda	<1+2
+   680 00:0040: 65 07        	adc	<L58+val_1+2
+   681 00:0042: 85 07        	sta	<L58+val_1+2
+   682                        L10024:
+   683 00:0044: E6 0E        	inc	<L57+s_0
+   684 00:0046: D0 02        	bne	L10022
+   685 00:0048: E6 10        	inc	<L57+s_0+2
+   686                        L10022:
+   687 00:004A: A7 0E        	lda	[<L57+s_0]
+   688 00:004C: 29 FF 00     	and	#$ff
+   689 00:004F: D0 BD        	bne	L20009
+  Wed Jan 19 2022 14:41                                                Page 13
+
+
+   690 00:0051: A6 07        	ldx	<L58+val_1+2
+   691 00:0053: A5 05        	lda	<L58+val_1
+   692 00:0055: A8           	tay
+   693 00:0056: A5 0C        	lda	<L57+2
+   694 00:0058: 85 10        	sta	<L57+2+4
+   695 00:005A: A5 0B        	lda	<L57+1
+   696 00:005C: 85 0F        	sta	<L57+1+4
+   697 00:005E: 2B           	pld
+   698 00:005F: 3B           	tsc
+   699 00:0060: 18           	clc
+   700 00:0061: 69 0E 00     	adc	#L57+4
+   701 00:0064: 1B           	tcs
+   702 00:0065: 98           	tya
+   703 00:0066: 6B           	rtl
+   704             0000000A   L57	equ	10
+   705             00000005   L58	equ	5
+   706                        	xref	~~hex2int
+   707                        	ends
+   708                        	efunc
+   709                        	endmod
+   710                        	module	task
+   711                        	code
+   712                        	xdef	~~task
+   713                        	func
+   714                        ~~task:
+   715                        	longa	on
+   716                        	longi	on
+   717 00:0000: 3B           	tsc
+   718 00:0001: 38           	sec
+   719 00:0002: E9 00 00     	sbc	#L64
+   720 00:0005: 1B           	tcs
+   721 00:0006: 0B           	phd
+   722 00:0007: 5B           	tcd
+   723             00000004   tc_0	set	4
+   724 00:0008: D4 06        	pei	<L64+tc_0+2
+   725 00:000A: D4 04        	pei	<L64+tc_0
+   726 00:000C: F4 00 00     	pea	#^$0
+   727 00:000F: F4 00 00     	pea	#<$0
+   728 00:0012: 22 xx xx xx  	jsl	~~vTaskSetApplicationTaskTag
+   729 00:0016: 22 xx xx xx  	jsl	~~getStdin
+   730 00:001A: 8D xx xx     	sta	|~~stdin
+   731 00:001D: 8E xx xx     	stx	|~~stdin+2
+   732 00:0020: 22 xx xx xx  	jsl	~~getStdout
+   733 00:0024: 8D xx xx     	sta	|~~stdout
+   734 00:0027: 8E xx xx     	stx	|~~stdout+2
+   735 00:002A: 22 xx xx xx  	jsl	~~getStderr
+   736 00:002E: 8D xx xx     	sta	|~~stderr
+   737 00:0031: 8E xx xx     	stx	|~~stderr+2
+   738 00:0034: A0 08 00     	ldy	#$8
+   739 00:0037: B7 04        	lda	[<L64+tc_0],Y
+   740 00:0039: 48           	pha
+   741 00:003A: 88           	dey
+   742 00:003B: 88           	dey
+   743 00:003C: B7 04        	lda	[<L64+tc_0],Y
+   744 00:003E: 48           	pha
+   745 00:003F: 88           	dey
+   746 00:0040: 88           	dey
+   747 00:0041: B7 04        	lda	[<L64+tc_0],Y
+  Wed Jan 19 2022 14:41                                                Page 14
+
+
+   748 00:0043: 48           	pha
+   749 00:0044: 22 xx xx xx  	jsl	~~main
+   750 00:0048: A0 1E 00     	ldy	#$1e
+   751 00:004B: 97 04        	sta	[<L64+tc_0],Y
+   752 00:004D: A0 2C 00     	ldy	#$2c
+   753 00:0050: B7 04        	lda	[<L64+tc_0],Y
+   754 00:0052: D0 20        	bne	L10025
+   755 00:0054: F4 00 00     	pea	#^$0
+   756 00:0057: F4 00 00     	pea	#<$0
+   757 00:005A: F4 02 00     	pea	#<$2
+   758 00:005D: F4 00 00     	pea	#^$0
+   759 00:0060: F4 00 00     	pea	#<$0
+   760 00:0063: A0 0C 00     	ldy	#$c
+   761 00:0066: B7 04        	lda	[<L64+tc_0],Y
+   762 00:0068: 48           	pha
+   763 00:0069: 88           	dey
+   764 00:006A: 88           	dey
+   765 00:006B: B7 04        	lda	[<L64+tc_0],Y
+   766 00:006D: 48           	pha
+   767 00:006E: 22 xx xx xx  	jsl	~~xTaskGenericNotify
+   768 00:0072: 80 08        	bra	L10026
+   769                        L10025:
+   770 00:0074: D4 06        	pei	<L64+tc_0+2
+   771 00:0076: D4 04        	pei	<L64+tc_0
+   772 00:0078: 22 xx xx xx  	jsl	~~vTaskRemove
+   773                        L10026:
+   774 00:007C: F4 00 00     	pea	#^$0
+   775 00:007F: F4 00 00     	pea	#<$0
+   776 00:0082: 22 xx xx xx  	jsl	~~vTaskSuspend
+   777 00:0086: A5 02        	lda	<L64+2
+   778 00:0088: 85 06        	sta	<L64+2+4
+   779 00:008A: A5 01        	lda	<L64+1
+   780 00:008C: 85 05        	sta	<L64+1+4
+   781 00:008E: 2B           	pld
+   782 00:008F: 3B           	tsc
+   783 00:0090: 18           	clc
+   784 00:0091: 69 04 00     	adc	#L64+4
+   785 00:0094: 1B           	tcs
+   786 00:0095: 6B           	rtl
+   787             00000000   L64	equ	0
+   788             00000001   L65	equ	1
+   789                        	xref	~~main
+   790                        	xref	~~getStderr
+   791                        	xref	~~getStdout
+   792                        	xref	~~getStdin
+   793                        	xref	~~vTaskRemove
+   794                        	xref	~~xTaskGenericNotify
+   795                        	xref	~~vTaskSetApplicationTaskTag
+   796                        	xref	~~vTaskSuspend
+   797                        	xref	~~stderr
+   798                        	xref	~~stdout
+   799                        	xref	~~stdin
+   800                        	ends
+   801                        	efunc
+   802                        	endmod
+   803                        	module	stderr
+   804                        	udata
+   805                        	xdef	~~stderr
+  Wed Jan 19 2022 14:41                                                Page 15
+
+
+   806                        ~~stderr
+   807 00:0000:              	ds	4
+   808 00:0004:              	ends
+   809                        	endmod
+   810                        	module	stdout
+   811                        	udata
+   812                        	xdef	~~stdout
+   813                        ~~stdout
+   814 00:0000:              	ds	4
+   815 00:0004:              	ends
+   816                        	endmod
+   817                        	module	stdin
+   818                        	udata
+   819                        	xdef	~~stdin
+   820                        ~~stdin
+   821 00:0000:              	ds	4
+   822 00:0004:              	ends
+   823                        	endmod
+
+
+      Lines assembled: 823
+      Errors: 0

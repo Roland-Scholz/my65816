@@ -1,0 +1,1602 @@
+  Fri Dec 11 2020 12:53                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        	code
+     7                        	xdef	~~swapLong
+     8                        	func
+     9                        ~~swapLong:
+    10                        	longa	on
+    11                        	longi	on
+    12 00:0000: 3B           	tsc
+    13 00:0001: 38           	sec
+    14 00:0002: E9 0C 00     	sbc	#L2
+    15 00:0005: 1B           	tcs
+    16 00:0006: 0B           	phd
+    17 00:0007: 5B           	tcd
+    18             00000004   in_0	set	4
+    19             00000000   out_1	set	0
+    20             00000004   s_1	set	4
+    21             00000008   d_1	set	8
+    22 00:0008: 18           	clc
+    23 00:0009: 7B           	tdc
+    24 00:000A: 69 10 00     	adc	#<L2+in_0
+    25 00:000D: 85 05        	sta	<L3+s_1
+    26 00:000F: A9 00 00     	lda	#$0
+    27 00:0012: 85 07        	sta	<L3+s_1+2
+    28 00:0014: 18           	clc
+    29 00:0015: 7B           	tdc
+    30 00:0016: 69 01 00     	adc	#<L3+out_1
+    31 00:0019: 85 09        	sta	<L3+d_1
+    32 00:001B: A9 00 00     	lda	#$0
+    33 00:001E: 85 0B        	sta	<L3+d_1+2
+    34 00:0020: E2 20        	sep	#$20
+    35                        	longa	off
+    36 00:0022: A0 03 00     	ldy	#$3
+    37 00:0025: B7 05        	lda	[<L3+s_1],Y
+    38 00:0027: 87 09        	sta	[<L3+d_1]
+    39 00:0029: 88           	dey
+    40 00:002A: B7 05        	lda	[<L3+s_1],Y
+    41 00:002C: 88           	dey
+    42 00:002D: 97 09        	sta	[<L3+d_1],Y
+    43 00:002F: B7 05        	lda	[<L3+s_1],Y
+    44 00:0031: C8           	iny
+    45 00:0032: 97 09        	sta	[<L3+d_1],Y
+    46 00:0034: A7 05        	lda	[<L3+s_1]
+    47 00:0036: C8           	iny
+    48 00:0037: 97 09        	sta	[<L3+d_1],Y
+    49 00:0039: C2 20        	rep	#$20
+    50                        	longa	on
+    51 00:003B: A6 03        	ldx	<L3+out_1+2
+    52 00:003D: A5 01        	lda	<L3+out_1
+  Fri Dec 11 2020 12:53                                                Page 2
+
+
+    53 00:003F: A8           	tay
+    54 00:0040: A5 0E        	lda	<L2+2
+    55 00:0042: 85 12        	sta	<L2+2+4
+    56 00:0044: A5 0D        	lda	<L2+1
+    57 00:0046: 85 11        	sta	<L2+1+4
+    58 00:0048: 2B           	pld
+    59 00:0049: 3B           	tsc
+    60 00:004A: 18           	clc
+    61 00:004B: 69 10 00     	adc	#L2+4
+    62 00:004E: 1B           	tcs
+    63 00:004F: 98           	tya
+    64 00:0050: 6B           	rtl
+    65             0000000C   L2	equ	12
+    66             00000001   L3	equ	1
+    67                        	ends
+    68                        	efunc
+    69                        	code
+    70                        	xdef	~~computeBytesPerScanline
+    71                        	func
+    72                        ~~computeBytesPerScanline:
+    73                        	longa	on
+    74                        	longi	on
+    75 00:0051: 3B           	tsc
+    76 00:0052: 38           	sec
+    77 00:0053: E9 02 00     	sbc	#L5
+    78 00:0056: 1B           	tcs
+    79 00:0057: 0B           	phd
+    80 00:0058: 5B           	tcd
+    81             00000004   bytesPerPixel_0	set	4
+    82             00000006   imageWidth_0	set	6
+    83             00000000   bytesPerScanline_1	set	0
+    84 00:0059: A5 08        	lda	<L5+imageWidth_0
+    85 00:005B: A6 06        	ldx	<L5+bytesPerPixel_0
+    86                        	xref	~~~mul
+    87 00:005D: 22 xx xx xx  	jsl	~~~mul
+    88 00:0061: 85 01        	sta	<L6+bytesPerScanline_1
+    89 00:0063: AD xx xx     	lda	|~~image+268
+    90                        	xref	~~~swt
+    91 00:0066: 22 xx xx xx  	jsl	~~~swt
+    92 00:006A: 04 00        	dw	4
+    93 00:006C: 01 00        	dw	1
+    94 00:006E: xx xx        	dw	L10003-1
+    95 00:0070: 02 00        	dw	2
+    96 00:0072: xx xx        	dw	L10004-1
+    97 00:0074: 04 00        	dw	4
+    98 00:0076: xx xx        	dw	L10005-1
+    99 00:0078: 10 00        	dw	16
+   100 00:007A: xx xx        	dw	L10007-1
+   101 00:007C: xx xx        	dw	L10002-1
+   102                        L10003:
+   103 00:007E: A5 01        	lda	<L6+bytesPerScanline_1
+   104 00:0080: 4A           	lsr	A
+   105 00:0081: 4A           	lsr	A
+   106 00:0082: 4A           	lsr	A
+   107 00:0083: 85 01        	sta	<L6+bytesPerScanline_1
+   108                        L10002:
+   109 00:0085: A5 01        	lda	<L6+bytesPerScanline_1
+   110 00:0087: A8           	tay
+  Fri Dec 11 2020 12:53                                                Page 3
+
+
+   111 00:0088: A5 04        	lda	<L5+2
+   112 00:008A: 85 08        	sta	<L5+2+4
+   113 00:008C: A5 03        	lda	<L5+1
+   114 00:008E: 85 07        	sta	<L5+1+4
+   115 00:0090: 2B           	pld
+   116 00:0091: 3B           	tsc
+   117 00:0092: 18           	clc
+   118 00:0093: 69 06 00     	adc	#L5+4
+   119 00:0096: 1B           	tcs
+   120 00:0097: 98           	tya
+   121 00:0098: 6B           	rtl
+   122                        L10004:
+   123 00:0099: 46 01        	lsr	<L6+bytesPerScanline_1
+   124 00:009B: 46 01        	lsr	<L6+bytesPerScanline_1
+   125 00:009D: 80 E6        	bra	L10002
+   126                        L10005:
+   127 00:009F: 46 01        	lsr	<L6+bytesPerScanline_1
+   128 00:00A1: A5 08        	lda	<L5+imageWidth_0
+   129 00:00A3: 29 01 00     	and	#<$1
+   130 00:00A6: F0 DD        	beq	L10002
+   131 00:00A8: E6 01        	inc	<L6+bytesPerScanline_1
+   132 00:00AA: 80 D9        	bra	L10002
+   133                        L10007:
+   134 00:00AC: 06 01        	asl	<L6+bytesPerScanline_1
+   135 00:00AE: 80 D5        	bra	L10002
+   136             00000002   L5	equ	2
+   137             00000001   L6	equ	1
+   138                        	ends
+   139                        	efunc
+   140                        	code
+   141                        	xdef	~~computeBytesPerPixel
+   142                        	func
+   143                        ~~computeBytesPerPixel:
+   144                        	longa	on
+   145                        	longi	on
+   146 00:00B0: 3B           	tsc
+   147 00:00B1: 38           	sec
+   148 00:00B2: E9 02 00     	sbc	#L9
+   149 00:00B5: 1B           	tcs
+   150 00:00B6: 0B           	phd
+   151 00:00B7: 5B           	tcd
+   152             00000004   colorType_0	set	4
+   153             00000000   bytesPerPixel_1	set	0
+   154 00:00B8: A9 01 00     	lda	#$1
+   155 00:00BB: 85 01        	sta	<L10+bytesPerPixel_1
+   156 00:00BD: A5 06        	lda	<L9+colorType_0
+   157                        	xref	~~~swt
+   158 00:00BF: 22 xx xx xx  	jsl	~~~swt
+   159 00:00C3: 03 00        	dw	3
+   160 00:00C5: 02 00        	dw	2
+   161 00:00C7: xx xx        	dw	L10010-1
+   162 00:00C9: 04 00        	dw	4
+   163 00:00CB: xx xx        	dw	L10011-1
+   164 00:00CD: 06 00        	dw	6
+   165 00:00CF: xx xx        	dw	L10012-1
+   166 00:00D1: xx xx        	dw	L10009-1
+   167                        L10010:
+   168 00:00D3: A9 03 00     	lda	#$3
+  Fri Dec 11 2020 12:53                                                Page 4
+
+
+   169                        L20000:
+   170 00:00D6: 85 01        	sta	<L10+bytesPerPixel_1
+   171                        L10009:
+   172 00:00D8: AD xx xx     	lda	|~~image+268
+   173 00:00DB: C9 10 00     	cmp	#<$10
+   174 00:00DE: D0 02        	bne	L10014
+   175 00:00E0: 06 01        	asl	<L10+bytesPerPixel_1
+   176                        L10014:
+   177 00:00E2: A5 01        	lda	<L10+bytesPerPixel_1
+   178 00:00E4: A8           	tay
+   179 00:00E5: A5 04        	lda	<L9+2
+   180 00:00E7: 85 06        	sta	<L9+2+2
+   181 00:00E9: A5 03        	lda	<L9+1
+   182 00:00EB: 85 05        	sta	<L9+1+2
+   183 00:00ED: 2B           	pld
+   184 00:00EE: 3B           	tsc
+   185 00:00EF: 18           	clc
+   186 00:00F0: 69 04 00     	adc	#L9+2
+   187 00:00F3: 1B           	tcs
+   188 00:00F4: 98           	tya
+   189 00:00F5: 6B           	rtl
+   190                        L10011:
+   191 00:00F6: A9 02 00     	lda	#$2
+   192 00:00F9: 80 DB        	bra	L20000
+   193                        L10012:
+   194 00:00FB: A9 04 00     	lda	#$4
+   195 00:00FE: 80 D6        	bra	L20000
+   196             00000002   L9	equ	2
+   197             00000001   L10	equ	1
+   198                        	ends
+   199                        	efunc
+   200                        	code
+   201                        	xdef	~~doPNG
+   202                        	func
+   203                        ~~doPNG:
+   204                        	longa	on
+   205                        	longi	on
+   206 00:0100: 3B           	tsc
+   207 00:0101: 38           	sec
+   208 00:0102: E9 2F 00     	sbc	#L13
+   209 00:0105: 1B           	tcs
+   210 00:0106: 0B           	phd
+   211 00:0107: 5B           	tcd
+   212             00000004   buf_0	set	4
+   213             00000008   len_0	set	8
+   214             00000000   header_1	set	0
+   215             00000004   chunk_1	set	4
+   216             00000008   idat_1	set	8
+   217             0000000C   name_1	set	12
+   218             00000011   plte_1	set	17
+   219             00000015   imageData_1	set	21
+   220             00000019   chunklen_1	set	25
+   221             0000001D   imageLen_1	set	29
+   222             00000021   x_1	set	33
+   223             00000023   y_1	set	35
+   224             00000025   rc_1	set	37
+   225 00:0108: A5 33        	lda	<L13+buf_0
+   226 00:010A: 85 09        	sta	<L14+header_1
+  Fri Dec 11 2020 12:53                                                Page 5
+
+
+   227 00:010C: A5 35        	lda	<L13+buf_0+2
+   228 00:010E: 85 0B        	sta	<L14+header_1+2
+   229 00:0110: E2 20        	sep	#$20
+   230                        	longa	off
+   231 00:0112: 64 19        	stz	<L14+name_1+4
+   232 00:0114: C2 20        	rep	#$20
+   233                        	longa	on
+   234 00:0116: 64 1E        	stz	<L14+imageData_1
+   235 00:0118: 64 20        	stz	<L14+imageData_1+2
+   236 00:011A: 64 26        	stz	<L14+imageLen_1
+   237 00:011C: 64 28        	stz	<L14+imageLen_1+2
+   238 00:011E: E2 20        	sep	#$20
+   239                        	longa	off
+   240 00:0120: A7 09        	lda	[<L14+header_1]
+   241 00:0122: C9 89        	cmp	#<$89
+   242 00:0124: C2 20        	rep	#$20
+   243                        	longa	on
+   244 00:0126: D0 23        	bne	L15
+   245 00:0128: E2 20        	sep	#$20
+   246                        	longa	off
+   247 00:012A: A0 01 00     	ldy	#$1
+   248 00:012D: B7 09        	lda	[<L14+header_1],Y
+   249 00:012F: C9 50        	cmp	#<$50
+   250 00:0131: C2 20        	rep	#$20
+   251                        	longa	on
+   252 00:0133: D0 16        	bne	L15
+   253 00:0135: E2 20        	sep	#$20
+   254                        	longa	off
+   255 00:0137: C8           	iny
+   256 00:0138: B7 09        	lda	[<L14+header_1],Y
+   257 00:013A: C9 4E        	cmp	#<$4e
+   258 00:013C: C2 20        	rep	#$20
+   259                        	longa	on
+   260 00:013E: D0 0B        	bne	L15
+   261 00:0140: E2 20        	sep	#$20
+   262                        	longa	off
+   263 00:0142: C8           	iny
+   264 00:0143: B7 09        	lda	[<L14+header_1],Y
+   265 00:0145: C9 47        	cmp	#<$47
+   266 00:0147: C2 20        	rep	#$20
+   267                        	longa	on
+   268 00:0149: F0 22        	beq	L10015
+   269                        L15:
+   270 00:014B: F4 xx xx     	pea	#^L1
+   271 00:014E: F4 xx xx     	pea	#<L1
+   272 00:0151: F4 06 00     	pea	#6
+   273 00:0154: 22 xx xx xx  	jsl	~~printf
+   274                        L20004:
+   275 00:0158: A9 FF FF     	lda	#$ffff
+   276                        L20:
+   277 00:015B: A8           	tay
+   278 00:015C: A5 31        	lda	<L13+2
+   279 00:015E: 85 39        	sta	<L13+2+8
+   280 00:0160: A5 30        	lda	<L13+1
+   281 00:0162: 85 38        	sta	<L13+1+8
+   282 00:0164: 2B           	pld
+   283 00:0165: 3B           	tsc
+   284 00:0166: 18           	clc
+  Fri Dec 11 2020 12:53                                                Page 6
+
+
+   285 00:0167: 69 37 00     	adc	#L13+8
+   286 00:016A: 1B           	tcs
+   287 00:016B: 98           	tya
+   288 00:016C: 6B           	rtl
+   289                        L10015:
+   290 00:016D: 18           	clc
+   291 00:016E: A9 08 00     	lda	#$8
+   292                        L20007:
+   293 00:0171: 65 33        	adc	<L13+buf_0
+   294 00:0173: 85 33        	sta	<L13+buf_0
+   295 00:0175: 90 02        	bcc	L10018
+   296 00:0177: E6 35        	inc	<L13+buf_0+2
+   297                        L10018:
+   298 00:0179: A5 33        	lda	<L13+buf_0
+   299 00:017B: 85 0D        	sta	<L14+chunk_1
+   300 00:017D: A5 35        	lda	<L13+buf_0+2
+   301 00:017F: 85 0F        	sta	<L14+chunk_1+2
+   302 00:0181: F4 00 00     	pea	#^$4
+   303 00:0184: F4 04 00     	pea	#<$4
+   304 00:0187: F4 xx xx     	pea	#^L1+14
+   305 00:018A: F4 xx xx     	pea	#<L1+14
+   306 00:018D: A9 04 00     	lda	#$4
+   307 00:0190: 18           	clc
+   308 00:0191: 65 0D        	adc	<L14+chunk_1
+   309 00:0193: 85 01        	sta	<R0
+   310 00:0195: A9 00 00     	lda	#$0
+   311 00:0198: 65 0F        	adc	<L14+chunk_1+2
+   312 00:019A: 48           	pha
+   313 00:019B: D4 01        	pei	<R0
+   314 00:019D: 22 xx xx xx  	jsl	~~memcmp
+   315 00:01A1: AA           	tax
+   316 00:01A2: F0 03        	beq	*+5
+   317 00:01A4: 82 8E 00     	brl	L10019
+   318 00:01A7: A5 0D        	lda	<L14+chunk_1
+   319 00:01A9: 85 11        	sta	<L14+idat_1
+   320 00:01AB: A5 0F        	lda	<L14+chunk_1+2
+   321 00:01AD: 85 13        	sta	<L14+idat_1+2
+   322 00:01AF: A0 0A 00     	ldy	#$a
+   323 00:01B2: B7 11        	lda	[<L14+idat_1],Y
+   324 00:01B4: 48           	pha
+   325 00:01B5: 88           	dey
+   326 00:01B6: 88           	dey
+   327 00:01B7: B7 11        	lda	[<L14+idat_1],Y
+   328 00:01B9: 48           	pha
+   329 00:01BA: 22 xx xx xx  	jsl	~~swapLong
+   330 00:01BE: 8D xx xx     	sta	|~~image+4
+   331 00:01C1: 8E xx xx     	stx	|~~image+4+2
+   332 00:01C4: A0 0E 00     	ldy	#$e
+   333 00:01C7: B7 11        	lda	[<L14+idat_1],Y
+   334 00:01C9: 48           	pha
+   335 00:01CA: 88           	dey
+   336 00:01CB: 88           	dey
+   337 00:01CC: B7 11        	lda	[<L14+idat_1],Y
+   338 00:01CE: 48           	pha
+   339 00:01CF: 22 xx xx xx  	jsl	~~swapLong
+   340 00:01D3: 8D xx xx     	sta	|~~image+8
+   341 00:01D6: 8E xx xx     	stx	|~~image+8+2
+   342 00:01D9: A0 10 00     	ldy	#$10
+  Fri Dec 11 2020 12:53                                                Page 7
+
+
+   343 00:01DC: B7 11        	lda	[<L14+idat_1],Y
+   344 00:01DE: 29 FF 00     	and	#$ff
+   345 00:01E1: 8D xx xx     	sta	|~~image+268
+   346 00:01E4: C8           	iny
+   347 00:01E5: B7 11        	lda	[<L14+idat_1],Y
+   348 00:01E7: 29 FF 00     	and	#$ff
+   349 00:01EA: 8D xx xx     	sta	|~~image+270
+   350 00:01ED: 48           	pha
+   351 00:01EE: 22 xx xx xx  	jsl	~~computeBytesPerPixel
+   352 00:01F2: 8D xx xx     	sta	|~~image+276
+   353 00:01F5: AD xx xx     	lda	|~~image+4
+   354 00:01F8: 48           	pha
+   355 00:01F9: AD xx xx     	lda	|~~image+276
+   356 00:01FC: 48           	pha
+   357 00:01FD: 22 xx xx xx  	jsl	~~computeBytesPerScanline
+   358 00:0201: 8D xx xx     	sta	|~~image+278
+   359 00:0204: 48           	pha
+   360 00:0205: AD xx xx     	lda	|~~image+276
+   361 00:0208: 48           	pha
+   362 00:0209: AD xx xx     	lda	|~~image+270
+   363 00:020C: 48           	pha
+   364 00:020D: AD xx xx     	lda	|~~image+268
+   365 00:0210: 48           	pha
+   366 00:0211: AD xx xx     	lda	|~~image+8+2
+   367 00:0214: 48           	pha
+   368 00:0215: AD xx xx     	lda	|~~image+8
+   369 00:0218: 48           	pha
+   370 00:0219: AD xx xx     	lda	|~~image+4+2
+   371 00:021C: 48           	pha
+   372 00:021D: AD xx xx     	lda	|~~image+4
+   373 00:0220: 48           	pha
+   374 00:0221: F4 xx xx     	pea	#^L1+19
+   375 00:0224: F4 xx xx     	pea	#<L1+19
+   376 00:0227: F4 16 00     	pea	#22
+   377 00:022A: 22 xx xx xx  	jsl	~~printf
+   378 00:022E: 18           	clc
+   379 00:022F: A9 19 00     	lda	#$19
+   380 00:0232: 82 3C FF     	brl	L20007
+   381                        L10019:
+   382 00:0235: F4 00 00     	pea	#^$4
+   383 00:0238: F4 04 00     	pea	#<$4
+   384 00:023B: A9 04 00     	lda	#$4
+   385 00:023E: 18           	clc
+   386 00:023F: 65 0D        	adc	<L14+chunk_1
+   387 00:0241: 85 01        	sta	<R0
+   388 00:0243: A9 00 00     	lda	#$0
+   389 00:0246: 65 0F        	adc	<L14+chunk_1+2
+   390 00:0248: 48           	pha
+   391 00:0249: D4 01        	pei	<R0
+   392 00:024B: F4 00 00     	pea	#0
+   393 00:024E: 18           	clc
+   394 00:024F: 7B           	tdc
+   395 00:0250: 69 15 00     	adc	#<L14+name_1
+   396 00:0253: 48           	pha
+   397 00:0254: 22 xx xx xx  	jsl	~~memcpy
+   398 00:0258: A0 02 00     	ldy	#$2
+   399 00:025B: B7 0D        	lda	[<L14+chunk_1],Y
+   400 00:025D: 48           	pha
+  Fri Dec 11 2020 12:53                                                Page 8
+
+
+   401 00:025E: A7 0D        	lda	[<L14+chunk_1]
+   402 00:0260: 48           	pha
+   403 00:0261: 22 xx xx xx  	jsl	~~swapLong
+   404 00:0265: 85 22        	sta	<L14+chunklen_1
+   405 00:0267: 86 24        	stx	<L14+chunklen_1+2
+   406 00:0269: F4 00 00     	pea	#^$4
+   407 00:026C: F4 04 00     	pea	#<$4
+   408 00:026F: F4 xx xx     	pea	#^L1+86
+   409 00:0272: F4 xx xx     	pea	#<L1+86
+   410 00:0275: A9 04 00     	lda	#$4
+   411 00:0278: 18           	clc
+   412 00:0279: 65 0D        	adc	<L14+chunk_1
+   413 00:027B: 85 01        	sta	<R0
+   414 00:027D: A9 00 00     	lda	#$0
+   415 00:0280: 65 0F        	adc	<L14+chunk_1+2
+   416 00:0282: 85 03        	sta	<R0+2
+   417 00:0284: 48           	pha
+   418 00:0285: D4 01        	pei	<R0
+   419 00:0287: 22 xx xx xx  	jsl	~~memcmp
+   420 00:028B: AA           	tax
+   421 00:028C: F0 03        	beq	*+5
+   422 00:028E: 82 D4 00     	brl	L10020
+   423 00:0291: AD xx xx     	lda	|~~image+276
+   424 00:0294: 85 01        	sta	<R0
+   425 00:0296: 64 03        	stz	<R0+2
+   426 00:0298: AD xx xx     	lda	|~~image+4+2
+   427 00:029B: 48           	pha
+   428 00:029C: AD xx xx     	lda	|~~image+4
+   429 00:029F: 48           	pha
+   430 00:02A0: D4 03        	pei	<R0+2
+   431 00:02A2: D4 01        	pei	<R0
+   432                        	xref	~~~lmul
+   433 00:02A4: 22 xx xx xx  	jsl	~~~lmul
+   434 00:02A8: 85 01        	sta	<R0
+   435 00:02AA: 86 03        	stx	<R0+2
+   436 00:02AC: A9 01 00     	lda	#$1
+   437 00:02AF: 18           	clc
+   438 00:02B0: 65 01        	adc	<R0
+   439 00:02B2: 85 05        	sta	<R1
+   440 00:02B4: A9 00 00     	lda	#$0
+   441 00:02B7: 65 03        	adc	<R0+2
+   442 00:02B9: 85 07        	sta	<R1+2
+   443 00:02BB: AD xx xx     	lda	|~~image+8+2
+   444 00:02BE: 48           	pha
+   445 00:02BF: AD xx xx     	lda	|~~image+8
+   446 00:02C2: 48           	pha
+   447 00:02C3: D4 07        	pei	<R1+2
+   448 00:02C5: D4 05        	pei	<R1
+   449                        	xref	~~~lmul
+   450 00:02C7: 22 xx xx xx  	jsl	~~~lmul
+   451 00:02CB: 8D xx xx     	sta	|~~image+272
+   452 00:02CE: 8E xx xx     	stx	|~~image+272+2
+   453 00:02D1: A5 26        	lda	<L14+imageLen_1
+   454 00:02D3: 05 28        	ora	<L14+imageLen_1+2
+   455 00:02D5: D0 38        	bne	L10021
+   456 00:02D7: A9 FE FF     	lda	#$fffe
+   457 00:02DA: 18           	clc
+   458 00:02DB: 65 22        	adc	<L14+chunklen_1
+  Fri Dec 11 2020 12:53                                                Page 9
+
+
+   459 00:02DD: 85 26        	sta	<L14+imageLen_1
+   460 00:02DF: A9 FF FF     	lda	#$ffff
+   461 00:02E2: 65 24        	adc	<L14+chunklen_1+2
+   462 00:02E4: 85 28        	sta	<L14+imageLen_1+2
+   463 00:02E6: 48           	pha
+   464 00:02E7: D4 26        	pei	<L14+imageLen_1
+   465 00:02E9: 22 xx xx xx  	jsl	~~malloc
+   466 00:02ED: 85 1E        	sta	<L14+imageData_1
+   467 00:02EF: 86 20        	stx	<L14+imageData_1+2
+   468 00:02F1: D4 28        	pei	<L14+imageLen_1+2
+   469 00:02F3: D4 26        	pei	<L14+imageLen_1
+   470 00:02F5: A9 0A 00     	lda	#$a
+   471 00:02F8: 18           	clc
+   472 00:02F9: 65 33        	adc	<L13+buf_0
+   473 00:02FB: 85 01        	sta	<R0
+   474 00:02FD: A9 00 00     	lda	#$0
+   475 00:0300: 65 35        	adc	<L13+buf_0+2
+   476 00:0302: 48           	pha
+   477 00:0303: D4 01        	pei	<R0
+   478 00:0305: D4 20        	pei	<L14+imageData_1+2
+   479 00:0307: D4 1E        	pei	<L14+imageData_1
+   480 00:0309: 22 xx xx xx  	jsl	~~memcpy
+   481 00:030D: 80 4D        	bra	L10022
+   482                        L10021:
+   483 00:030F: A5 26        	lda	<L14+imageLen_1
+   484 00:0311: 18           	clc
+   485 00:0312: 65 22        	adc	<L14+chunklen_1
+   486 00:0314: 85 01        	sta	<R0
+   487 00:0316: A5 28        	lda	<L14+imageLen_1+2
+   488 00:0318: 65 24        	adc	<L14+chunklen_1+2
+   489 00:031A: 48           	pha
+   490 00:031B: D4 01        	pei	<R0
+   491 00:031D: D4 20        	pei	<L14+imageData_1+2
+   492 00:031F: D4 1E        	pei	<L14+imageData_1
+   493 00:0321: 22 xx xx xx  	jsl	~~realloc
+   494 00:0325: 85 1E        	sta	<L14+imageData_1
+   495 00:0327: 86 20        	stx	<L14+imageData_1+2
+   496 00:0329: D4 24        	pei	<L14+chunklen_1+2
+   497 00:032B: D4 22        	pei	<L14+chunklen_1
+   498 00:032D: A9 08 00     	lda	#$8
+   499 00:0330: 18           	clc
+   500 00:0331: 65 33        	adc	<L13+buf_0
+   501 00:0333: 85 01        	sta	<R0
+   502 00:0335: A9 00 00     	lda	#$0
+   503 00:0338: 65 35        	adc	<L13+buf_0+2
+   504 00:033A: 48           	pha
+   505 00:033B: D4 01        	pei	<R0
+   506 00:033D: A5 1E        	lda	<L14+imageData_1
+   507 00:033F: 18           	clc
+   508 00:0340: 65 26        	adc	<L14+imageLen_1
+   509 00:0342: 85 05        	sta	<R1
+   510 00:0344: A5 20        	lda	<L14+imageData_1+2
+   511 00:0346: 65 28        	adc	<L14+imageLen_1+2
+   512 00:0348: 48           	pha
+   513 00:0349: D4 05        	pei	<R1
+   514 00:034B: 22 xx xx xx  	jsl	~~memcpy
+   515 00:034F: A5 26        	lda	<L14+imageLen_1
+   516 00:0351: 18           	clc
+  Fri Dec 11 2020 12:53                                                Page 10
+
+
+   517 00:0352: 65 22        	adc	<L14+chunklen_1
+   518 00:0354: 85 26        	sta	<L14+imageLen_1
+   519 00:0356: A5 28        	lda	<L14+imageLen_1+2
+   520 00:0358: 65 24        	adc	<L14+chunklen_1+2
+   521 00:035A: 85 28        	sta	<L14+imageLen_1+2
+   522                        L10022:
+   523 00:035C: A5 1E        	lda	<L14+imageData_1
+   524 00:035E: 05 20        	ora	<L14+imageData_1+2
+   525 00:0360: D0 03        	bne	*+5
+   526 00:0362: 82 F3 FD     	brl	L20004
+   527                        L10020:
+   528 00:0365: F4 00 00     	pea	#^$4
+   529 00:0368: F4 04 00     	pea	#<$4
+   530 00:036B: F4 xx xx     	pea	#^L1+91
+   531 00:036E: F4 xx xx     	pea	#<L1+91
+   532 00:0371: A9 04 00     	lda	#$4
+   533 00:0374: 18           	clc
+   534 00:0375: 65 0D        	adc	<L14+chunk_1
+   535 00:0377: 85 01        	sta	<R0
+   536 00:0379: A9 00 00     	lda	#$0
+   537 00:037C: 65 0F        	adc	<L14+chunk_1+2
+   538 00:037E: 85 03        	sta	<R0+2
+   539 00:0380: 48           	pha
+   540 00:0381: D4 01        	pei	<R0
+   541 00:0383: 22 xx xx xx  	jsl	~~memcmp
+   542 00:0387: AA           	tax
+   543 00:0388: F0 03        	beq	*+5
+   544 00:038A: 82 86 00     	brl	L10024
+   545 00:038D: F4 xx xx     	pea	#^L1+96
+   546 00:0390: F4 xx xx     	pea	#<L1+96
+   547 00:0393: F4 06 00     	pea	#6
+   548 00:0396: 22 xx xx xx  	jsl	~~printf
+   549 00:039A: A9 08 00     	lda	#$8
+   550 00:039D: 18           	clc
+   551 00:039E: 65 33        	adc	<L13+buf_0
+   552 00:03A0: 85 1A        	sta	<L14+plte_1
+   553 00:03A2: A9 00 00     	lda	#$0
+   554 00:03A5: 65 35        	adc	<L13+buf_0+2
+   555 00:03A7: 85 1C        	sta	<L14+plte_1+2
+   556 00:03A9: F4 00 00     	pea	#^$3
+   557 00:03AC: F4 03 00     	pea	#<$3
+   558 00:03AF: D4 24        	pei	<L14+chunklen_1+2
+   559 00:03B1: D4 22        	pei	<L14+chunklen_1
+   560                        	xref	~~~ludv
+   561 00:03B3: 22 xx xx xx  	jsl	~~~ludv
+   562 00:03B7: 86 03        	stx	<R0+2
+   563 00:03B9: 85 2C        	sta	<L14+y_1
+   564 00:03BB: 64 2A        	stz	<L14+x_1
+   565 00:03BD: 80 4E        	bra	L10028
+   566                        L10027:
+   567 00:03BF: E2 20        	sep	#$20
+   568                        	longa	off
+   569 00:03C1: A7 1A        	lda	[<L14+plte_1]
+   570 00:03C3: 4A           	lsr	A
+   571 00:03C4: 4A           	lsr	A
+   572 00:03C5: 4A           	lsr	A
+   573 00:03C6: 4A           	lsr	A
+   574 00:03C7: 4A           	lsr	A
+  Fri Dec 11 2020 12:53                                                Page 11
+
+
+   575 00:03C8: A6 2A        	ldx	<L14+x_1
+   576 00:03CA: 9D xx xx     	sta	|~~image+12,X
+   577 00:03CD: C2 20        	rep	#$20
+   578                        	longa	on
+   579 00:03CF: E6 1A        	inc	<L14+plte_1
+   580 00:03D1: D0 02        	bne	L28
+   581 00:03D3: E6 1C        	inc	<L14+plte_1+2
+   582                        L28:
+   583 00:03D5: A9 xx xx     	lda	#<~~image+12
+   584 00:03D8: 18           	clc
+   585 00:03D9: 65 2A        	adc	<L14+x_1
+   586 00:03DB: 85 01        	sta	<R0
+   587 00:03DD: E2 20        	sep	#$20
+   588                        	longa	off
+   589 00:03DF: A7 1A        	lda	[<L14+plte_1]
+   590 00:03E1: 4A           	lsr	A
+   591 00:03E2: 4A           	lsr	A
+   592 00:03E3: 29 38        	and	#<$38
+   593 00:03E5: 12 01        	ora	(<R0)
+   594 00:03E7: 92 01        	sta	(<R0)
+   595 00:03E9: C2 20        	rep	#$20
+   596                        	longa	on
+   597 00:03EB: E6 1A        	inc	<L14+plte_1
+   598 00:03ED: D0 02        	bne	L29
+   599 00:03EF: E6 1C        	inc	<L14+plte_1+2
+   600                        L29:
+   601 00:03F1: A9 xx xx     	lda	#<~~image+12
+   602 00:03F4: 18           	clc
+   603 00:03F5: 65 2A        	adc	<L14+x_1
+   604 00:03F7: 85 01        	sta	<R0
+   605 00:03F9: E2 20        	sep	#$20
+   606                        	longa	off
+   607 00:03FB: A7 1A        	lda	[<L14+plte_1]
+   608 00:03FD: 29 C0        	and	#<$c0
+   609 00:03FF: 12 01        	ora	(<R0)
+   610 00:0401: 92 01        	sta	(<R0)
+   611 00:0403: C2 20        	rep	#$20
+   612                        	longa	on
+   613 00:0405: E6 1A        	inc	<L14+plte_1
+   614 00:0407: D0 02        	bne	L10025
+   615 00:0409: E6 1C        	inc	<L14+plte_1+2
+   616                        L10025:
+   617 00:040B: E6 2A        	inc	<L14+x_1
+   618                        L10028:
+   619 00:040D: A5 2A        	lda	<L14+x_1
+   620 00:040F: C5 2C        	cmp	<L14+y_1
+   621 00:0411: 90 AC        	bcc	L10027
+   622                        L10024:
+   623 00:0413: F4 00 00     	pea	#^$4
+   624 00:0416: F4 04 00     	pea	#<$4
+   625 00:0419: F4 xx xx     	pea	#^L1+111
+   626 00:041C: F4 xx xx     	pea	#<L1+111
+   627 00:041F: A9 04 00     	lda	#$4
+   628 00:0422: 18           	clc
+   629 00:0423: 65 0D        	adc	<L14+chunk_1
+   630 00:0425: 85 01        	sta	<R0
+   631 00:0427: A9 00 00     	lda	#$0
+   632 00:042A: 65 0F        	adc	<L14+chunk_1+2
+  Fri Dec 11 2020 12:53                                                Page 12
+
+
+   633 00:042C: 48           	pha
+   634 00:042D: D4 01        	pei	<R0
+   635 00:042F: 22 xx xx xx  	jsl	~~memcmp
+   636 00:0433: AA           	tax
+   637 00:0434: F0 03        	beq	*+5
+   638 00:0436: 82 85 00     	brl	L10029
+   639 00:0439: AD xx xx     	lda	|~~image+272+2
+   640 00:043C: 48           	pha
+   641 00:043D: AD xx xx     	lda	|~~image+272
+   642 00:0440: 48           	pha
+   643 00:0441: 22 xx xx xx  	jsl	~~malloc
+   644 00:0445: 8D xx xx     	sta	|~~image
+   645 00:0448: 8E xx xx     	stx	|~~image+2
+   646 00:044B: AD xx xx     	lda	|~~image+272+2
+   647 00:044E: 48           	pha
+   648 00:044F: AD xx xx     	lda	|~~image+272
+   649 00:0452: 48           	pha
+   650 00:0453: AD xx xx     	lda	|~~image+2
+   651 00:0456: 48           	pha
+   652 00:0457: AD xx xx     	lda	|~~image
+   653 00:045A: 48           	pha
+   654 00:045B: F4 xx xx     	pea	#^L1+116
+   655 00:045E: F4 xx xx     	pea	#<L1+116
+   656 00:0461: F4 0E 00     	pea	#14
+   657 00:0464: 22 xx xx xx  	jsl	~~printf
+   658 00:0468: A9 FC FF     	lda	#$fffc
+   659 00:046B: 18           	clc
+   660 00:046C: 65 26        	adc	<L14+imageLen_1
+   661 00:046E: 85 26        	sta	<L14+imageLen_1
+   662 00:0470: A9 FF FF     	lda	#$ffff
+   663 00:0473: 65 28        	adc	<L14+imageLen_1+2
+   664 00:0475: 85 28        	sta	<L14+imageLen_1+2
+   665 00:0477: F4 00 00     	pea	#0
+   666 00:047A: 18           	clc
+   667 00:047B: 7B           	tdc
+   668 00:047C: 69 26 00     	adc	#<L14+imageLen_1
+   669 00:047F: 48           	pha
+   670 00:0480: D4 20        	pei	<L14+imageData_1+2
+   671 00:0482: D4 1E        	pei	<L14+imageData_1
+   672 00:0484: A9 xx xx     	lda	#<~~image+272
+   673 00:0487: 85 01        	sta	<R0
+   674                        	xref	_BEG_DATA
+   675 00:0489: A9 xx xx     	lda	#_BEG_DATA>>16
+   676 00:048C: 48           	pha
+   677 00:048D: D4 01        	pei	<R0
+   678 00:048F: AD xx xx     	lda	|~~image+2
+   679 00:0492: 48           	pha
+   680 00:0493: AD xx xx     	lda	|~~image
+   681 00:0496: 48           	pha
+   682 00:0497: 22 xx xx xx  	jsl	~~puff
+   683 00:049B: 85 2E        	sta	<L14+rc_1
+   684 00:049D: AD xx xx     	lda	|~~image+272+2
+   685 00:04A0: 48           	pha
+   686 00:04A1: AD xx xx     	lda	|~~image+272
+   687 00:04A4: 48           	pha
+   688 00:04A5: D4 2E        	pei	<L14+rc_1
+   689 00:04A7: F4 xx xx     	pea	#^L1+136
+   690 00:04AA: F4 xx xx     	pea	#<L1+136
+  Fri Dec 11 2020 12:53                                                Page 13
+
+
+   691 00:04AD: F4 0C 00     	pea	#12
+   692 00:04B0: 22 xx xx xx  	jsl	~~printf
+   693 00:04B4: A5 2E        	lda	<L14+rc_1
+   694 00:04B6: D0 03        	bne	*+5
+   695 00:04B8: 82 A0 FC     	brl	L20
+   696 00:04BB: 82 9A FC     	brl	L20004
+   697                        L10029:
+   698 00:04BE: A9 0C 00     	lda	#$c
+   699 00:04C1: 18           	clc
+   700 00:04C2: 65 22        	adc	<L14+chunklen_1
+   701 00:04C4: 85 01        	sta	<R0
+   702 00:04C6: A9 00 00     	lda	#$0
+   703 00:04C9: 65 24        	adc	<L14+chunklen_1+2
+   704 00:04CB: 85 03        	sta	<R0+2
+   705 00:04CD: A5 33        	lda	<L13+buf_0
+   706 00:04CF: 18           	clc
+   707 00:04D0: 65 01        	adc	<R0
+   708 00:04D2: 85 33        	sta	<L13+buf_0
+   709 00:04D4: A5 35        	lda	<L13+buf_0+2
+   710 00:04D6: 65 03        	adc	<R0+2
+   711 00:04D8: 85 35        	sta	<L13+buf_0+2
+   712 00:04DA: 82 9C FC     	brl	L10018
+   713             0000002F   L13	equ	47
+   714             00000009   L14	equ	9
+   715                        	ends
+   716                        	efunc
+   717                        	data
+   718                        L1:
+   719 00:0000: 6E 6F 20 50  	db	$6E,$6F,$20,$50,$4E,$47,$20,$66,$69,$6C,
+                    $65,$21,$0A,$00,$49
+       00:0004: 4E 47 20 66 
+       00:0008: 69 6C 65 21 
+       00:000C: 0A 00 49 
+   720 00:000F: 48 44 52 00  	db	$48,$44,$52,$00,$77,$69,$64,$74,$68,$3A,
+                    $20,$25,$6C,$75,$2C
+       00:0013: 77 69 64 74 
+       00:0017: 68 3A 20 25 
+       00:001B: 6C 75 2C 
+   721 00:001E: 20 68 65 69  	db	$20,$68,$65,$69,$67,$68,$74,$3A,$20,$25,
+                    $6C,$75,$2C,$20,$64
+       00:0022: 67 68 74 3A 
+       00:0026: 20 25 6C 75 
+       00:002A: 2C 20 64 
+   722 00:002D: 65 70 74 68  	db	$65,$70,$74,$68,$3A,$20,$25,$64,$2C,$20,
+                    $63,$6F,$6C,$54,$79
+       00:0031: 3A 20 25 64 
+       00:0035: 2C 20 63 6F 
+       00:0039: 6C 54 79 
+   723 00:003C: 70 65 3A 20  	db	$70,$65,$3A,$20,$25,$64,$2C,$20,$62,$70,
+                    $50,$3A,$20,$25,$64
+       00:0040: 25 64 2C 20 
+       00:0044: 62 70 50 3A 
+       00:0048: 20 25 64 
+   724 00:004B: 2C 20 62 70  	db	$2C,$20,$62,$70,$53,$3A,$20,$25,$64,$0A,
+                    $00,$49,$44,$41,$54
+       00:004F: 53 3A 20 25 
+       00:0053: 64 0A 00 49 
+       00:0057: 44 41 54 
+  Fri Dec 11 2020 12:53                                                Page 14
+
+
+   725 00:005A: 00 50 4C 54  	db	$00,$50,$4C,$54,$45,$00,$64,$6F,$69,$6E,
+                    $67,$20,$70,$61,$6C
+       00:005E: 45 00 64 6F 
+       00:0062: 69 6E 67 20 
+       00:0066: 70 61 6C 
+   726 00:0069: 65 74 74 65  	db	$65,$74,$74,$65,$0A,$00,$49,$45,$4E,$44,
+                    $00,$64,$61,$74,$61
+       00:006D: 0A 00 49 45 
+       00:0071: 4E 44 00 64 
+       00:0075: 61 74 61 
+   727 00:0078: 3A 20 25 70  	db	$3A,$20,$25,$70,$2C,$20,$6C,$65,$6E,$3A,
+                    $20,$25,$6C,$75,$0A
+       00:007C: 2C 20 6C 65 
+       00:0080: 6E 3A 20 25 
+       00:0084: 6C 75 0A 
+   728 00:0087: 00 72 63 3A  	db	$00,$72,$63,$3A,$20,$25,$64,$2C,$20,$6C,
+                    $65,$6E,$3A,$20,$25
+       00:008B: 20 25 64 2C 
+       00:008F: 20 6C 65 6E 
+       00:0093: 3A 20 25 
+   729 00:0096: 6C 75 0A 00  	db	$6C,$75,$0A,$00
+   730 00:009A:              	ends
+   731                        	code
+   732                        	xdef	~~reconcile
+   733                        	func
+   734                        ~~reconcile:
+   735                        	longa	on
+   736                        	longi	on
+   737 00:04DD: 3B           	tsc
+   738 00:04DE: 38           	sec
+   739 00:04DF: E9 20 00     	sbc	#L35
+   740 00:04E2: 1B           	tcs
+   741 00:04E3: 0B           	phd
+   742 00:04E4: 5B           	tcd
+   743             00000004   scanLine_0	set	4
+   744             00000008   scanLineOld_0	set	8
+   745             0000000C   imageData_0	set	12
+   746             00000010   bytesPerPixel_0	set	16
+   747             00000000   x0_1	set	0
+   748             00000002   a_1	set	2
+   749             00000004   b_1	set	4
+   750             00000006   c_1	set	6
+   751             00000008   r_1	set	8
+   752             0000000A   x_1	set	10
+   753             0000000C   filter_1	set	12
+   754             0000000E   p_1	set	14
+   755             00000010   xprev_1	set	16
+   756             00000012   pa_1	set	18
+   757             00000014   pb_1	set	20
+   758             00000016   pc_1	set	22
+   759 00:04E5: A7 2C        	lda	[<L35+imageData_0]
+   760 00:04E7: 29 FF 00     	and	#$ff
+   761 00:04EA: 85 15        	sta	<L36+filter_1
+   762 00:04EC: E6 2C        	inc	<L35+imageData_0
+   763 00:04EE: D0 02        	bne	L37
+   764 00:04F0: E6 2E        	inc	<L35+imageData_0+2
+   765                        L37:
+   766 00:04F2: 64 13        	stz	<L36+x_1
+  Fri Dec 11 2020 12:53                                                Page 15
+
+
+   767 00:04F4: 38           	sec
+   768 00:04F5: A9 00 00     	lda	#$0
+   769 00:04F8: E5 30        	sbc	<L35+bytesPerPixel_0
+   770 00:04FA: 85 19        	sta	<L36+xprev_1
+   771 00:04FC: 82 5A 01     	brl	L10034
+   772                        L10033:
+   773 00:04FF: A5 15        	lda	<L36+filter_1
+   774 00:0501: D0 0D        	bne	L10035
+   775 00:0503: E2 20        	sep	#$20
+   776                        	longa	off
+   777 00:0505: A4 13        	ldy	<L36+x_1
+   778 00:0507: B7 2C        	lda	[<L35+imageData_0],Y
+   779 00:0509: 97 24        	sta	[<L35+scanLine_0],Y
+   780 00:050B: C2 20        	rep	#$20
+   781                        	longa	on
+   782 00:050D: 82 45 01     	brl	L10031
+   783                        L10035:
+   784 00:0510: A5 15        	lda	<L36+filter_1
+   785 00:0512: C9 01 00     	cmp	#<$1
+   786 00:0515: D0 25        	bne	L10036
+   787 00:0517: A5 19        	lda	<L36+xprev_1
+   788 00:0519: 30 14        	bmi	L10037
+   789 00:051B: E2 20        	sep	#$20
+   790                        	longa	off
+   791 00:051D: 18           	clc
+   792 00:051E: A4 13        	ldy	<L36+x_1
+   793 00:0520: B7 2C        	lda	[<L35+imageData_0],Y
+   794 00:0522: A4 19        	ldy	<L36+xprev_1
+   795 00:0524: 77 24        	adc	[<L35+scanLine_0],Y
+   796 00:0526: A4 13        	ldy	<L36+x_1
+   797 00:0528: 97 24        	sta	[<L35+scanLine_0],Y
+   798 00:052A: C2 20        	rep	#$20
+   799                        	longa	on
+   800 00:052C: 82 26 01     	brl	L10031
+   801                        L10037:
+   802 00:052F: E2 20        	sep	#$20
+   803                        	longa	off
+   804 00:0531: A4 13        	ldy	<L36+x_1
+   805 00:0533: B7 2C        	lda	[<L35+imageData_0],Y
+   806 00:0535: 97 24        	sta	[<L35+scanLine_0],Y
+   807 00:0537: C2 20        	rep	#$20
+   808                        	longa	on
+   809 00:0539: 82 19 01     	brl	L10031
+   810                        L10036:
+   811 00:053C: A5 15        	lda	<L36+filter_1
+   812 00:053E: C9 02 00     	cmp	#<$2
+   813 00:0541: D0 10        	bne	L10039
+   814 00:0543: E2 20        	sep	#$20
+   815                        	longa	off
+   816 00:0545: 18           	clc
+   817 00:0546: A4 13        	ldy	<L36+x_1
+   818 00:0548: B7 2C        	lda	[<L35+imageData_0],Y
+   819 00:054A: 77 28        	adc	[<L35+scanLineOld_0],Y
+   820 00:054C: 97 24        	sta	[<L35+scanLine_0],Y
+   821 00:054E: C2 20        	rep	#$20
+   822                        	longa	on
+   823 00:0550: 82 02 01     	brl	L10031
+   824                        L10039:
+  Fri Dec 11 2020 12:53                                                Page 16
+
+
+   825 00:0553: A5 15        	lda	<L36+filter_1
+   826 00:0555: C9 03 00     	cmp	#<$3
+   827 00:0558: D0 2E        	bne	L10040
+   828 00:055A: A4 13        	ldy	<L36+x_1
+   829 00:055C: B7 28        	lda	[<L35+scanLineOld_0],Y
+   830 00:055E: 29 FF 00     	and	#$ff
+   831 00:0561: 85 11        	sta	<L36+r_1
+   832 00:0563: A5 19        	lda	<L36+xprev_1
+   833 00:0565: 30 0C        	bmi	L10041
+   834 00:0567: A4 19        	ldy	<L36+xprev_1
+   835 00:0569: B7 24        	lda	[<L35+scanLine_0],Y
+   836 00:056B: 29 FF 00     	and	#$ff
+   837 00:056E: 18           	clc
+   838 00:056F: 65 11        	adc	<L36+r_1
+   839 00:0571: 85 11        	sta	<L36+r_1
+   840                        L10041:
+   841 00:0573: 46 11        	lsr	<L36+r_1
+   842 00:0575: A4 13        	ldy	<L36+x_1
+   843 00:0577: B7 2C        	lda	[<L35+imageData_0],Y
+   844 00:0579: 29 FF 00     	and	#$ff
+   845 00:057C: 18           	clc
+   846 00:057D: 65 11        	adc	<L36+r_1
+   847 00:057F: E2 20        	sep	#$20
+   848                        	longa	off
+   849 00:0581: 97 24        	sta	[<L35+scanLine_0],Y
+   850 00:0583: C2 20        	rep	#$20
+   851                        	longa	on
+   852 00:0585: 82 CD 00     	brl	L10031
+   853                        L10040:
+   854 00:0588: A5 15        	lda	<L36+filter_1
+   855 00:058A: C9 04 00     	cmp	#<$4
+   856 00:058D: F0 03        	beq	*+5
+   857 00:058F: 82 C3 00     	brl	L10031
+   858 00:0592: A4 13        	ldy	<L36+x_1
+   859 00:0594: B7 28        	lda	[<L35+scanLineOld_0],Y
+   860 00:0596: 29 FF 00     	and	#$ff
+   861 00:0599: 85 17        	sta	<L36+p_1
+   862 00:059B: 85 0D        	sta	<L36+b_1
+   863 00:059D: A5 19        	lda	<L36+xprev_1
+   864 00:059F: 30 3E        	bmi	L10043
+   865 00:05A1: A4 19        	ldy	<L36+xprev_1
+   866 00:05A3: B7 24        	lda	[<L35+scanLine_0],Y
+   867 00:05A5: 29 FF 00     	and	#$ff
+   868 00:05A8: 85 0B        	sta	<L36+a_1
+   869 00:05AA: B7 28        	lda	[<L35+scanLineOld_0],Y
+   870 00:05AC: 29 FF 00     	and	#$ff
+   871 00:05AF: 85 0F        	sta	<L36+c_1
+   872 00:05B1: 38           	sec
+   873 00:05B2: A5 0B        	lda	<L36+a_1
+   874 00:05B4: E5 0F        	sbc	<L36+c_1
+   875 00:05B6: 18           	clc
+   876 00:05B7: 65 17        	adc	<L36+p_1
+   877 00:05B9: 85 17        	sta	<L36+p_1
+   878 00:05BB: 38           	sec
+   879 00:05BC: E5 0B        	sbc	<L36+a_1
+   880 00:05BE: 85 1B        	sta	<L36+pa_1
+   881 00:05C0: 38           	sec
+   882 00:05C1: A5 17        	lda	<L36+p_1
+  Fri Dec 11 2020 12:53                                                Page 17
+
+
+   883 00:05C3: E5 0F        	sbc	<L36+c_1
+   884 00:05C5: 85 1F        	sta	<L36+pc_1
+   885 00:05C7: A5 1B        	lda	<L36+pa_1
+   886 00:05C9: 10 08        	bpl	L10044
+   887 00:05CB: 38           	sec
+   888 00:05CC: A9 00 00     	lda	#$0
+   889 00:05CF: E5 1B        	sbc	<L36+pa_1
+   890 00:05D1: 85 1B        	sta	<L36+pa_1
+   891                        L10044:
+   892 00:05D3: A5 1F        	lda	<L36+pc_1
+   893 00:05D5: 10 20        	bpl	L10046
+   894 00:05D7: 38           	sec
+   895 00:05D8: A9 00 00     	lda	#$0
+   896 00:05DB: E5 1F        	sbc	<L36+pc_1
+   897 00:05DD: 80 16        	bra	L20008
+   898                        L10043:
+   899 00:05DF: 64 0F        	stz	<L36+c_1
+   900 00:05E1: 64 0B        	stz	<L36+a_1
+   901 00:05E3: A5 17        	lda	<L36+p_1
+   902 00:05E5: 85 1B        	sta	<L36+pa_1
+   903 00:05E7: A5 1B        	lda	<L36+pa_1
+   904 00:05E9: 10 08        	bpl	L10047
+   905 00:05EB: 38           	sec
+   906 00:05EC: A9 00 00     	lda	#$0
+   907 00:05EF: E5 1B        	sbc	<L36+pa_1
+   908 00:05F1: 85 1B        	sta	<L36+pa_1
+   909                        L10047:
+   910 00:05F3: A5 1B        	lda	<L36+pa_1
+   911                        L20008:
+   912 00:05F5: 85 1F        	sta	<L36+pc_1
+   913                        L10046:
+   914 00:05F7: 38           	sec
+   915 00:05F8: A5 17        	lda	<L36+p_1
+   916 00:05FA: E5 0D        	sbc	<L36+b_1
+   917 00:05FC: 85 1D        	sta	<L36+pb_1
+   918 00:05FE: A5 1D        	lda	<L36+pb_1
+   919 00:0600: 10 08        	bpl	L10048
+   920 00:0602: 38           	sec
+   921 00:0603: A9 00 00     	lda	#$0
+   922 00:0606: E5 1D        	sbc	<L36+pb_1
+   923 00:0608: 85 1D        	sta	<L36+pb_1
+   924                        L10048:
+   925 00:060A: 64 01        	stz	<R0
+   926 00:060C: A5 1D        	lda	<L36+pb_1
+   927 00:060E: C5 1B        	cmp	<L36+pa_1
+   928 00:0610: 90 02        	bcc	L50
+   929 00:0612: E6 01        	inc	<R0
+   930                        L50:
+   931 00:0614: 64 05        	stz	<R1
+   932 00:0616: A5 1F        	lda	<L36+pc_1
+   933 00:0618: C5 1B        	cmp	<L36+pa_1
+   934 00:061A: 90 02        	bcc	L52
+   935 00:061C: E6 05        	inc	<R1
+   936                        L52:
+   937 00:061E: A5 05        	lda	<R1
+   938 00:0620: 25 01        	and	<R0
+   939 00:0622: F0 0F        	beq	L10049
+   940 00:0624: E2 20        	sep	#$20
+  Fri Dec 11 2020 12:53                                                Page 18
+
+
+   941                        	longa	off
+   942 00:0626: 18           	clc
+   943 00:0627: A4 13        	ldy	<L36+x_1
+   944 00:0629: B7 2C        	lda	[<L35+imageData_0],Y
+   945 00:062B: 65 0B        	adc	<L36+a_1
+   946 00:062D: 97 24        	sta	[<L35+scanLine_0],Y
+   947 00:062F: C2 20        	rep	#$20
+   948                        	longa	on
+   949 00:0631: 80 22        	bra	L10031
+   950                        L10049:
+   951 00:0633: A5 1F        	lda	<L36+pc_1
+   952 00:0635: C5 1D        	cmp	<L36+pb_1
+   953 00:0637: 90 0F        	bcc	L10050
+   954 00:0639: E2 20        	sep	#$20
+   955                        	longa	off
+   956 00:063B: 18           	clc
+   957 00:063C: A4 13        	ldy	<L36+x_1
+   958 00:063E: B7 2C        	lda	[<L35+imageData_0],Y
+   959 00:0640: 65 0D        	adc	<L36+b_1
+   960 00:0642: 97 24        	sta	[<L35+scanLine_0],Y
+   961 00:0644: C2 20        	rep	#$20
+   962                        	longa	on
+   963 00:0646: 80 0D        	bra	L10031
+   964                        L10050:
+   965 00:0648: E2 20        	sep	#$20
+   966                        	longa	off
+   967 00:064A: 18           	clc
+   968 00:064B: A4 13        	ldy	<L36+x_1
+   969 00:064D: B7 2C        	lda	[<L35+imageData_0],Y
+   970 00:064F: 65 0F        	adc	<L36+c_1
+   971 00:0651: 97 24        	sta	[<L35+scanLine_0],Y
+   972 00:0653: C2 20        	rep	#$20
+   973                        	longa	on
+   974                        L10031:
+   975 00:0655: E6 19        	inc	<L36+xprev_1
+   976 00:0657: E6 13        	inc	<L36+x_1
+   977                        L10034:
+   978 00:0659: A5 13        	lda	<L36+x_1
+   979 00:065B: CD xx xx     	cmp	|~~image+278
+   980 00:065E: B0 03        	bcs	*+5
+   981 00:0660: 82 9C FE     	brl	L10033
+   982 00:0663: A5 22        	lda	<L35+2
+   983 00:0665: 85 30        	sta	<L35+2+14
+   984 00:0667: A5 21        	lda	<L35+1
+   985 00:0669: 85 2F        	sta	<L35+1+14
+   986 00:066B: 2B           	pld
+   987 00:066C: 3B           	tsc
+   988 00:066D: 18           	clc
+   989 00:066E: 69 2E 00     	adc	#L35+14
+   990 00:0671: 1B           	tcs
+   991 00:0672: 6B           	rtl
+   992             00000020   L35	equ	32
+   993             00000009   L36	equ	9
+   994                        	ends
+   995                        	efunc
+   996                        	code
+   997                        	xdef	~~display
+   998                        	func
+  Fri Dec 11 2020 12:53                                                Page 19
+
+
+   999                        ~~display:
+  1000                        	longa	on
+  1001                        	longi	on
+  1002 00:0673: 3B           	tsc
+  1003 00:0674: 38           	sec
+  1004 00:0675: E9 0C 00     	sbc	#L58
+  1005 00:0678: 1B           	tcs
+  1006 00:0679: 0B           	phd
+  1007 00:067A: 5B           	tcd
+  1008             00000004   scanLine_0	set	4
+  1009             00000008   y_0	set	8
+  1010             00000000   x_1	set	0
+  1011             00000002   g_1	set	2
+  1012             00000004   graph_1	set	4
+  1013 00:067B: A5 14        	lda	<L58+y_0
+  1014 00:067D: C9 C8 00     	cmp	#<$c8
+  1015 00:0680: 90 10        	bcc	L10051
+  1016                        L61:
+  1017 00:0682: A5 0E        	lda	<L58+2
+  1018 00:0684: 85 14        	sta	<L58+2+6
+  1019 00:0686: A5 0D        	lda	<L58+1
+  1020 00:0688: 85 13        	sta	<L58+1+6
+  1021 00:068A: 2B           	pld
+  1022 00:068B: 3B           	tsc
+  1023 00:068C: 18           	clc
+  1024 00:068D: 69 12 00     	adc	#L58+6
+  1025 00:0690: 1B           	tcs
+  1026 00:0691: 6B           	rtl
+  1027                        L10051:
+  1028 00:0692: A5 14        	lda	<L58+y_0
+  1029 00:0694: A2 40 01     	ldx	#<$140
+  1030                        	xref	~~~mul
+  1031 00:0697: 22 xx xx xx  	jsl	~~~mul
+  1032 00:069B: 85 01        	sta	<R0
+  1033 00:069D: 64 03        	stz	<R0+2
+  1034 00:069F: A9 00 00     	lda	#$0
+  1035 00:06A2: 18           	clc
+  1036 00:06A3: 65 01        	adc	<R0
+  1037 00:06A5: 85 09        	sta	<L59+graph_1
+  1038 00:06A7: A9 7F 00     	lda	#$7f
+  1039 00:06AA: 65 03        	adc	<R0+2
+  1040 00:06AC: 85 0B        	sta	<L59+graph_1+2
+  1041 00:06AE: 64 05        	stz	<L59+x_1
+  1042 00:06B0: 64 07        	stz	<L59+g_1
+  1043 00:06B2: 82 8F 00     	brl	L10055
+  1044                        L10060:
+  1045 00:06B5: A4 05        	ldy	<L59+x_1
+  1046 00:06B7: B7 10        	lda	[<L58+scanLine_0],Y
+  1047 00:06B9: 29 FF 00     	and	#$ff
+  1048 00:06BC: A2 04 00     	ldx	#<$4
+  1049                        	xref	~~~asr
+  1050 00:06BF: 22 xx xx xx  	jsl	~~~asr
+  1051 00:06C3: AA           	tax
+  1052 00:06C4: E2 20        	sep	#$20
+  1053                        	longa	off
+  1054 00:06C6: BD xx xx     	lda	|~~image+12,X
+  1055 00:06C9: 87 09        	sta	[<L59+graph_1]
+  1056 00:06CB: C2 20        	rep	#$20
+  Fri Dec 11 2020 12:53                                                Page 20
+
+
+  1057                        	longa	on
+  1058 00:06CD: E6 09        	inc	<L59+graph_1
+  1059 00:06CF: D0 02        	bne	L64
+  1060 00:06D1: E6 0B        	inc	<L59+graph_1+2
+  1061                        L64:
+  1062 00:06D3: A4 05        	ldy	<L59+x_1
+  1063 00:06D5: B7 10        	lda	[<L58+scanLine_0],Y
+  1064 00:06D7: 29 0F 00     	and	#<$f
+  1065 00:06DA: AA           	tax
+  1066 00:06DB: E2 20        	sep	#$20
+  1067                        	longa	off
+  1068 00:06DD: BD xx xx     	lda	|~~image+12,X
+  1069 00:06E0: 87 09        	sta	[<L59+graph_1]
+  1070 00:06E2: C2 20        	rep	#$20
+  1071                        	longa	on
+  1072 00:06E4: 80 4E        	bra	L10063
+  1073                        L10061:
+  1074 00:06E6: A4 05        	ldy	<L59+x_1
+  1075 00:06E8: B7 10        	lda	[<L58+scanLine_0],Y
+  1076 00:06EA: 29 FF 00     	and	#$ff
+  1077 00:06ED: AA           	tax
+  1078 00:06EE: E2 20        	sep	#$20
+  1079                        	longa	off
+  1080 00:06F0: BD xx xx     	lda	|~~image+12,X
+  1081 00:06F3: 87 09        	sta	[<L59+graph_1]
+  1082 00:06F5: C2 20        	rep	#$20
+  1083                        	longa	on
+  1084 00:06F7: 80 3B        	bra	L10063
+  1085                        L10057:
+  1086 00:06F9: AD xx xx     	lda	|~~image+268
+  1087 00:06FC: C9 08 00     	cmp	#<$8
+  1088 00:06FF: D0 33        	bne	L10063
+  1089 00:0701: E2 20        	sep	#$20
+  1090                        	longa	off
+  1091 00:0703: A4 05        	ldy	<L59+x_1
+  1092 00:0705: B7 10        	lda	[<L58+scanLine_0],Y
+  1093 00:0707: 4A           	lsr	A
+  1094 00:0708: 4A           	lsr	A
+  1095 00:0709: 4A           	lsr	A
+  1096 00:070A: 4A           	lsr	A
+  1097 00:070B: 4A           	lsr	A
+  1098 00:070C: 87 09        	sta	[<L59+graph_1]
+  1099 00:070E: C2 20        	rep	#$20
+  1100                        	longa	on
+  1101                        	asmstart
+  1102 00:0710: C8           	iny
+  1103                        	asmend
+  1104 00:0711: E2 20        	sep	#$20
+  1105                        	longa	off
+  1106 00:0713: B7 10        	lda	[<L58+scanLine_0],Y
+  1107 00:0715: 4A           	lsr	A
+  1108 00:0716: 4A           	lsr	A
+  1109 00:0717: 29 38        	and	#<$38
+  1110 00:0719: 85 01        	sta	<R0
+  1111 00:071B: A7 09        	lda	[<L59+graph_1]
+  1112 00:071D: 05 01        	ora	<R0
+  1113 00:071F: 87 09        	sta	[<L59+graph_1]
+  1114 00:0721: C2 20        	rep	#$20
+  Fri Dec 11 2020 12:53                                                Page 21
+
+
+  1115                        	longa	on
+  1116                        	asmstart
+  1117 00:0723: C8           	iny
+  1118                        	asmend
+  1119 00:0724: E2 20        	sep	#$20
+  1120                        	longa	off
+  1121 00:0726: B7 10        	lda	[<L58+scanLine_0],Y
+  1122 00:0728: 29 C0        	and	#<$c0
+  1123 00:072A: 85 01        	sta	<R0
+  1124 00:072C: A7 09        	lda	[<L59+graph_1]
+  1125 00:072E: 05 01        	ora	<R0
+  1126 00:0730: 87 09        	sta	[<L59+graph_1]
+  1127 00:0732: C2 20        	rep	#$20
+  1128                        	longa	on
+  1129                        L10063:
+  1130 00:0734: E6 09        	inc	<L59+graph_1
+  1131 00:0736: D0 02        	bne	L66
+  1132 00:0738: E6 0B        	inc	<L59+graph_1+2
+  1133                        L66:
+  1134 00:073A: E6 07        	inc	<L59+g_1
+  1135 00:073C: A5 05        	lda	<L59+x_1
+  1136 00:073E: 18           	clc
+  1137 00:073F: 6D xx xx     	adc	|~~image+276
+  1138 00:0742: 85 05        	sta	<L59+x_1
+  1139                        L10055:
+  1140 00:0744: A5 05        	lda	<L59+x_1
+  1141 00:0746: CD xx xx     	cmp	|~~image+278
+  1142 00:0749: 90 03        	bcc	*+5
+  1143 00:074B: 82 34 FF     	brl	L61
+  1144 00:074E: A5 07        	lda	<L59+g_1
+  1145 00:0750: C9 40 01     	cmp	#<$140
+  1146 00:0753: 90 03        	bcc	*+5
+  1147 00:0755: 82 2A FF     	brl	L61
+  1148 00:0758: AD xx xx     	lda	|~~image+276
+  1149 00:075B: C9 01 00     	cmp	#<$1
+  1150 00:075E: D0 99        	bne	L10057
+  1151 00:0760: AD xx xx     	lda	|~~image+268
+  1152                        	xref	~~~swt
+  1153 00:0763: 22 xx xx xx  	jsl	~~~swt
+  1154 00:0767: 02 00        	dw	2
+  1155 00:0769: 04 00        	dw	4
+  1156 00:076B: xx xx        	dw	L10060-1
+  1157 00:076D: 08 00        	dw	8
+  1158 00:076F: xx xx        	dw	L10061-1
+  1159 00:0771: xx xx        	dw	L10063-1
+  1160             0000000C   L58	equ	12
+  1161             00000005   L59	equ	5
+  1162                        	ends
+  1163                        	efunc
+  1164                        	code
+  1165                        	xdef	~~bitstream
+  1166                        	func
+  1167                        ~~bitstream:
+  1168                        	longa	on
+  1169                        	longi	on
+  1170 00:0773: 3B           	tsc
+  1171 00:0774: 38           	sec
+  1172 00:0775: E9 21 00     	sbc	#L68
+  Fri Dec 11 2020 12:53                                                Page 22
+
+
+  1173 00:0778: 1B           	tcs
+  1174 00:0779: 0B           	phd
+  1175 00:077A: 5B           	tcd
+  1176             00000000   rc_1	set	0
+  1177             00000004   fin_1	set	4
+  1178             00000008   y_1	set	8
+  1179             0000000A   scanLineOld_1	set	10
+  1180             0000000E   scanLine_1	set	14
+  1181             00000012   imageData_1	set	18
+  1182             00000016   graph_1	set	22
+  1183             0000001A   curr_1	set	26
+  1184             0000001B   hi_1	set	27
+  1185             0000001C   bank_1	set	28
+  1186 00:077B: AD xx xx     	lda	|~~image
+  1187 00:077E: 85 17        	sta	<L69+imageData_1
+  1188 00:0780: AD xx xx     	lda	|~~image+2
+  1189 00:0783: 85 19        	sta	<L69+imageData_1+2
+  1190 00:0785: A9 00 00     	lda	#$0
+  1191 00:0788: 85 1B        	sta	<L69+graph_1
+  1192 00:078A: A9 7F 00     	lda	#$7f
+  1193 00:078D: 85 1D        	sta	<L69+graph_1+2
+  1194 00:078F: F4 00 00     	pea	#^$f800
+  1195 00:0792: F4 00 F8     	pea	#<$f800
+  1196 00:0795: F4 00 00     	pea	#<$0
+  1197 00:0798: D4 1D        	pei	<L69+graph_1+2
+  1198 00:079A: D4 1B        	pei	<L69+graph_1
+  1199 00:079C: 22 xx xx xx  	jsl	~~memset
+  1200 00:07A0: E2 20        	sep	#$20
+  1201                        	longa	off
+  1202 00:07A2: A9 02        	lda	#$2
+  1203 00:07A4: 8F A9 BF 00  	sta	>49065
+  1204 00:07A8: AF A7 BF 00  	lda	>49063
+  1205 00:07AC: 85 20        	sta	<L69+hi_1
+  1206 00:07AE: AF A8 BF 00  	lda	>49064
+  1207 00:07B2: 85 21        	sta	<L69+bank_1
+  1208 00:07B4: A9 80        	lda	#$80
+  1209 00:07B6: 8F A7 BF 00  	sta	>49063
+  1210 00:07BA: A9 3F        	lda	#$3f
+  1211 00:07BC: 8F A8 BF 00  	sta	>49064
+  1212 00:07C0: C2 20        	rep	#$20
+  1213                        	longa	on
+  1214 00:07C2: F4 00 00     	pea	#^$1
+  1215 00:07C5: F4 01 00     	pea	#<$1
+  1216 00:07C8: AD xx xx     	lda	|~~image+278
+  1217 00:07CB: 85 01        	sta	<R0
+  1218 00:07CD: 64 03        	stz	<R0+2
+  1219 00:07CF: D4 03        	pei	<R0+2
+  1220 00:07D1: D4 01        	pei	<R0
+  1221 00:07D3: 22 xx xx xx  	jsl	~~calloc
+  1222 00:07D7: 85 13        	sta	<L69+scanLine_1
+  1223 00:07D9: 86 15        	stx	<L69+scanLine_1+2
+  1224 00:07DB: 64 0F        	stz	<L69+scanLineOld_1
+  1225 00:07DD: 64 11        	stz	<L69+scanLineOld_1+2
+  1226 00:07DF: 64 0D        	stz	<L69+y_1
+  1227 00:07E1: 80 58        	bra	L10068
+  1228                        L10067:
+  1229 00:07E3: D4 11        	pei	<L69+scanLineOld_1+2
+  1230 00:07E5: D4 0F        	pei	<L69+scanLineOld_1
+  Fri Dec 11 2020 12:53                                                Page 23
+
+
+  1231 00:07E7: 22 xx xx xx  	jsl	~~free
+  1232 00:07EB: A5 13        	lda	<L69+scanLine_1
+  1233 00:07ED: 85 0F        	sta	<L69+scanLineOld_1
+  1234 00:07EF: A5 15        	lda	<L69+scanLine_1+2
+  1235 00:07F1: 85 11        	sta	<L69+scanLineOld_1+2
+  1236 00:07F3: AD xx xx     	lda	|~~image+278
+  1237 00:07F6: 85 01        	sta	<R0
+  1238 00:07F8: 64 03        	stz	<R0+2
+  1239 00:07FA: D4 03        	pei	<R0+2
+  1240 00:07FC: D4 01        	pei	<R0
+  1241 00:07FE: 22 xx xx xx  	jsl	~~malloc
+  1242 00:0802: 85 13        	sta	<L69+scanLine_1
+  1243 00:0804: 86 15        	stx	<L69+scanLine_1+2
+  1244 00:0806: AD xx xx     	lda	|~~image+276
+  1245 00:0809: 48           	pha
+  1246 00:080A: D4 19        	pei	<L69+imageData_1+2
+  1247 00:080C: D4 17        	pei	<L69+imageData_1
+  1248 00:080E: D4 11        	pei	<L69+scanLineOld_1+2
+  1249 00:0810: D4 0F        	pei	<L69+scanLineOld_1
+  1250 00:0812: D4 15        	pei	<L69+scanLine_1+2
+  1251 00:0814: D4 13        	pei	<L69+scanLine_1
+  1252 00:0816: 22 xx xx xx  	jsl	~~reconcile
+  1253 00:081A: D4 0D        	pei	<L69+y_1
+  1254 00:081C: D4 15        	pei	<L69+scanLine_1+2
+  1255 00:081E: D4 13        	pei	<L69+scanLine_1
+  1256 00:0820: 22 xx xx xx  	jsl	~~display
+  1257 00:0824: AD xx xx     	lda	|~~image+278
+  1258 00:0827: 1A           	ina
+  1259 00:0828: 85 01        	sta	<R0
+  1260 00:082A: 64 03        	stz	<R0+2
+  1261 00:082C: A5 17        	lda	<L69+imageData_1
+  1262 00:082E: 18           	clc
+  1263 00:082F: 65 01        	adc	<R0
+  1264 00:0831: 85 17        	sta	<L69+imageData_1
+  1265 00:0833: A5 19        	lda	<L69+imageData_1+2
+  1266 00:0835: 65 03        	adc	<R0+2
+  1267 00:0837: 85 19        	sta	<L69+imageData_1+2
+  1268 00:0839: E6 0D        	inc	<L69+y_1
+  1269                        L10068:
+  1270 00:083B: A5 0D        	lda	<L69+y_1
+  1271 00:083D: 85 01        	sta	<R0
+  1272 00:083F: 64 03        	stz	<R0+2
+  1273 00:0841: A5 01        	lda	<R0
+  1274 00:0843: CD xx xx     	cmp	|~~image+8
+  1275 00:0846: A5 03        	lda	<R0+2
+  1276 00:0848: ED xx xx     	sbc	|~~image+8+2
+  1277 00:084B: 90 96        	bcc	L10067
+  1278 00:084D: AD xx xx     	lda	|~~stdin+2
+  1279 00:0850: 48           	pha
+  1280 00:0851: AD xx xx     	lda	|~~stdin
+  1281 00:0854: 48           	pha
+  1282 00:0855: 22 xx xx xx  	jsl	~~fgetc
+  1283 00:0859: E2 20        	sep	#$20
+  1284                        	longa	off
+  1285 00:085B: A9 00        	lda	#$0
+  1286 00:085D: 8F A9 BF 00  	sta	>49065
+  1287 00:0861: A5 20        	lda	<L69+hi_1
+  1288 00:0863: 8F A7 BF 00  	sta	>49063
+  Fri Dec 11 2020 12:53                                                Page 24
+
+
+  1289 00:0867: A5 21        	lda	<L69+bank_1
+  1290 00:0869: 8F A8 BF 00  	sta	>49064
+  1291 00:086D: C2 20        	rep	#$20
+  1292                        	longa	on
+  1293 00:086F: A8           	tay
+  1294 00:0870: 2B           	pld
+  1295 00:0871: 3B           	tsc
+  1296 00:0872: 18           	clc
+  1297 00:0873: 69 21 00     	adc	#L68
+  1298 00:0876: 1B           	tcs
+  1299 00:0877: 98           	tya
+  1300 00:0878: 6B           	rtl
+  1301             00000021   L68	equ	33
+  1302             00000005   L69	equ	5
+  1303                        	ends
+  1304                        	efunc
+  1305                        	code
+  1306                        	xdef	~~main
+  1307                        	func
+  1308                        ~~main:
+  1309                        	longa	on
+  1310                        	longi	on
+  1311 00:0879: 3B           	tsc
+  1312 00:087A: 38           	sec
+  1313 00:087B: E9 20 00     	sbc	#L72
+  1314 00:087E: 1B           	tcs
+  1315 00:087F: 0B           	phd
+  1316 00:0880: 5B           	tcd
+  1317             00000004   argc_0	set	4
+  1318             00000006   argv_0	set	6
+  1319             00000000   fin_1	set	0
+  1320             00000004   graph_1	set	4
+  1321             00000008   buf_1	set	8
+  1322             0000000C   vbuf_1	set	12
+  1323             00000010   fname_1	set	16
+  1324             00000014   flen_1	set	20
+  1325             00000018   fileSize_1	set	24
+  1326 00:0881: A9 00 00     	lda	#$0
+  1327 00:0884: 85 1D        	sta	<L73+fileSize_1
+  1328 00:0886: A9 04 00     	lda	#$4
+  1329 00:0889: 85 1F        	sta	<L73+fileSize_1+2
+  1330 00:088B: 48           	pha
+  1331 00:088C: D4 1D        	pei	<L73+fileSize_1
+  1332 00:088E: 22 xx xx xx  	jsl	~~malloc
+  1333 00:0892: 85 0D        	sta	<L73+buf_1
+  1334 00:0894: 86 0F        	stx	<L73+buf_1+2
+  1335 00:0896: F4 00 00     	pea	#^$400
+  1336 00:0899: F4 00 04     	pea	#<$400
+  1337 00:089C: 22 xx xx xx  	jsl	~~malloc
+  1338 00:08A0: 85 11        	sta	<L73+vbuf_1
+  1339 00:08A2: 86 13        	stx	<L73+vbuf_1+2
+  1340 00:08A4: 64 19        	stz	<L73+flen_1
+  1341 00:08A6: 64 1B        	stz	<L73+flen_1+2
+  1342 00:08A8: A5 24        	lda	<L72+argc_0
+  1343 00:08AA: 30 04        	bmi	L74
+  1344 00:08AC: 3A           	dea
+  1345 00:08AD: 3A           	dea
+  1346 00:08AE: 10 22        	bpl	L10069
+  Fri Dec 11 2020 12:53                                                Page 25
+
+
+  1347                        L74:
+  1348 00:08B0: F4 xx xx     	pea	#^L34
+  1349 00:08B3: F4 xx xx     	pea	#<L34
+  1350 00:08B6: F4 06 00     	pea	#6
+  1351                        L20010:
+  1352 00:08B9: 22 xx xx xx  	jsl	~~printf
+  1353                        L20009:
+  1354 00:08BD: A9 00 00     	lda	#$0
+  1355                        L75:
+  1356 00:08C0: A8           	tay
+  1357 00:08C1: A5 22        	lda	<L72+2
+  1358 00:08C3: 85 28        	sta	<L72+2+6
+  1359 00:08C5: A5 21        	lda	<L72+1
+  1360 00:08C7: 85 27        	sta	<L72+1+6
+  1361 00:08C9: 2B           	pld
+  1362 00:08CA: 3B           	tsc
+  1363 00:08CB: 18           	clc
+  1364 00:08CC: 69 26 00     	adc	#L72+6
+  1365 00:08CF: 1B           	tcs
+  1366 00:08D0: 98           	tya
+  1367 00:08D1: 6B           	rtl
+  1368                        L10069:
+  1369 00:08D2: F4 00 00     	pea	#<$0
+  1370 00:08D5: A0 06 00     	ldy	#$6
+  1371 00:08D8: B7 26        	lda	[<L72+argv_0],Y
+  1372 00:08DA: 48           	pha
+  1373 00:08DB: 88           	dey
+  1374 00:08DC: 88           	dey
+  1375 00:08DD: B7 26        	lda	[<L72+argv_0],Y
+  1376 00:08DF: 48           	pha
+  1377 00:08E0: 22 xx xx xx  	jsl	~~adjustFilename
+  1378 00:08E4: 85 15        	sta	<L73+fname_1
+  1379 00:08E6: 86 17        	stx	<L73+fname_1+2
+  1380 00:08E8: F4 xx xx     	pea	#^L34+22
+  1381 00:08EB: F4 xx xx     	pea	#<L34+22
+  1382 00:08EE: D4 17        	pei	<L73+fname_1+2
+  1383 00:08F0: D4 15        	pei	<L73+fname_1
+  1384 00:08F2: 22 xx xx xx  	jsl	~~fopen
+  1385 00:08F6: 85 05        	sta	<L73+fin_1
+  1386 00:08F8: 86 07        	stx	<L73+fin_1+2
+  1387 00:08FA: 05 07        	ora	<L73+fin_1+2
+  1388 00:08FC: D0 0F        	bne	L10070
+  1389 00:08FE: D4 17        	pei	<L73+fname_1+2
+  1390 00:0900: D4 15        	pei	<L73+fname_1
+  1391 00:0902: F4 xx xx     	pea	#^L34+25
+  1392 00:0905: F4 xx xx     	pea	#<L34+25
+  1393 00:0908: F4 0A 00     	pea	#10
+  1394 00:090B: 80 AC        	bra	L20010
+  1395                        L10070:
+  1396 00:090D: F4 00 00     	pea	#^$400
+  1397 00:0910: F4 00 04     	pea	#<$400
+  1398 00:0913: F4 02 00     	pea	#<$2
+  1399 00:0916: D4 13        	pei	<L73+vbuf_1+2
+  1400 00:0918: D4 11        	pei	<L73+vbuf_1
+  1401 00:091A: D4 07        	pei	<L73+fin_1+2
+  1402 00:091C: D4 05        	pei	<L73+fin_1
+  1403 00:091E: 22 xx xx xx  	jsl	~~setvbuf
+  1404 00:0922: D4 07        	pei	<L73+fin_1+2
+  Fri Dec 11 2020 12:53                                                Page 26
+
+
+  1405 00:0924: D4 05        	pei	<L73+fin_1
+  1406 00:0926: D4 1F        	pei	<L73+fileSize_1+2
+  1407 00:0928: D4 1D        	pei	<L73+fileSize_1
+  1408 00:092A: F4 00 00     	pea	#^$1
+  1409 00:092D: F4 01 00     	pea	#<$1
+  1410 00:0930: D4 0F        	pei	<L73+buf_1+2
+  1411 00:0932: D4 0D        	pei	<L73+buf_1
+  1412 00:0934: 22 xx xx xx  	jsl	~~fread
+  1413 00:0938: 85 19        	sta	<L73+flen_1
+  1414 00:093A: 86 1B        	stx	<L73+flen_1+2
+  1415 00:093C: D4 07        	pei	<L73+fin_1+2
+  1416 00:093E: D4 05        	pei	<L73+fin_1
+  1417 00:0940: 22 xx xx xx  	jsl	~~fclose
+  1418 00:0944: D4 1B        	pei	<L73+flen_1+2
+  1419 00:0946: D4 19        	pei	<L73+flen_1
+  1420 00:0948: D4 0F        	pei	<L73+buf_1+2
+  1421 00:094A: D4 0D        	pei	<L73+buf_1
+  1422 00:094C: 22 xx xx xx  	jsl	~~doPNG
+  1423 00:0950: 85 01        	sta	<R0
+  1424 00:0952: A5 01        	lda	<R0
+  1425 00:0954: 10 03        	bpl	*+5
+  1426 00:0956: 82 64 FF     	brl	L20009
+  1427 00:0959: 22 xx xx xx  	jsl	~~bitstream
+  1428 00:095D: 82 60 FF     	brl	L75
+  1429             00000020   L72	equ	32
+  1430             00000005   L73	equ	5
+  1431                        	ends
+  1432                        	efunc
+  1433                        	data
+  1434                        L34:
+  1435 00:009A: 67 72 61 70  	db	$67,$72,$61,$70,$68,$20,$3C,$66,$69,$6C,
+                    $65,$6E,$61,$6D,$65
+       00:009E: 68 20 3C 66 
+       00:00A2: 69 6C 65 6E 
+       00:00A6: 61 6D 65 
+  1436 00:00A9: 2E 70 6E 67  	db	$2E,$70,$6E,$67,$3E,$0A,$00,$72,$62,$00,
+                    $63,$61,$6E,$27,$74
+       00:00AD: 3E 0A 00 72 
+       00:00B1: 62 00 63 61 
+       00:00B5: 6E 27 74 
+  1437 00:00B8: 20 72 65 61  	db	$20,$72,$65,$61,$64,$20,$66,$69,$6C,$65,
+                    $20,$25,$73,$0A,$00
+       00:00BC: 64 20 66 69 
+       00:00C0: 6C 65 20 25 
+       00:00C4: 73 0A 00 
+  1438 00:00C7:              	ends
+  1439                        	xref	~~puff
+  1440                        	xref	~~adjustFilename
+  1441                        	xref	~~memcpy
+  1442                        	xref	~~memcmp
+  1443                        	xref	~~memset
+  1444                        	xref	~~realloc
+  1445                        	xref	~~free
+  1446                        	xref	~~malloc
+  1447                        	xref	~~calloc
+  1448                        	xref	~~setvbuf
+  1449                        	xref	~~fclose
+  1450                        	xref	~~fread
+  Fri Dec 11 2020 12:53                                                Page 27
+
+
+  1451                        	xref	~~fgetc
+  1452                        	xref	~~printf
+  1453                        	xref	~~fopen
+  1454                        	udata
+  1455                        	xdef	~~image
+  1456                        ~~image
+  1457 00:0000:              	ds	280
+  1458 00:0118:              	ends
+  1459                        	xref	~~stdin
+
+
+      Lines assembled: 1459
+      Errors: 0

@@ -1,0 +1,68 @@
+  Wed Jan 19 2022 12:58                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;STACK	EQU	$01FF			;CHANGE 
+                    THIS FOR YOUR SYSTEM
+     2                        ;FNAME	EQU 	$0380
+     3                        ;EOL	EQU	$0A
+     4                        ;ARGC	EQU	$033b			;2-byte 
+                    number of args
+     5                        ;ARGV	EQU	$033d			;8*2-byt
+                    es pointer to arg strings
+     6                        
+     7                        	module	startup
+     8                        	
+     9                        ;	include hombrewWDC.inc
+    10                        
+    11                        	code
+    12                        	xdef	__startup
+    13                        	func
+    14                        	
+    15                        	XREF	~~main
+    16                        
+    17                        __startup:	
+    18 00:0000: 08           	php				;save processor 
+                    flags (M/X)
+    19 00:0001: 8B           	phb				;save data bank
+    20 00:0002: 0B           	phd				;save direct
+    21                        	
+    22 00:0003: 4B           	phk				;save program ba
+                    nk
+    23 00:0004: AB           	plb				;get data bank =
+                     program-bank 
+    24                        	
+    25 00:0005: C2 30        	REP 	#$30			;16 bit register
+                    s
+    26                        	LONGI	ON
+    27                        	LONGA	ON
+    28                        	
+    29 00:0007: F4 00 00     	pea	#0
+    30 00:000A: F4 00 00     	pea	#0
+    31 00:000D: F4 00 00     	pea	#0
+    32 00:0010: 22 xx xx xx  	jsl	~~main			;long jump in ca
+                    se not bank 0
+    33                        		
+    34                        ENDE:
+    35 00:0014: 2B           	pld
+    36 00:0015: AB           	plb
+    37 00:0016: 28           	plp
+    38 00:0017: 6B           	rtl
+    39                        
+    40                        	ends
+    41                        	efunc
+    42                        	endmod
+    43                        	
+    44                        	data
+  Wed Jan 19 2022 12:58                                                Page 2
+
+
+
+
+      Lines assembled: 44
+      Errors: 0

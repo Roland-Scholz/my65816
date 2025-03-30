@@ -1,0 +1,152 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include <errno.h>
+    11                        ;#include <unistd.h>
+    12                        ;#include <dirent.h>
+    13                        ;
+    14                        ;#include "freeRTOS.h"
+    15                        ;#include "task.h"
+    16                        ;#include <homebrew.h>
+    17                        ;#include <sys/stat.h>    /* LINUX/UNIX     */
+    18                        ;#include <sys/types.h>   /* LINUX/UNIX     */
+    19                        ;
+    20                        ;static char buffer[32] = "D:KILO.C";
+    21                        	data
+    22                        ~~buffer:
+    23 00:0000: 44 3A 4B 49  	db	$44,$3A,$4B,$49,$4C,$4F,$2E,$43,$0
+       00:0004: 4C 4F 2E 43 
+       00:0008: 00 
+    24 00:0009:              	ds	23
+    25 00:0020:              	ends
+    26                        ;static char line[100];
+    27                        ;
+    28                        ;int main(int argc, char **argv) {
+    29                        	code
+    30                        	xdef	~~main
+    31                        	func
+    32                        ~~main:
+    33                        	longa	on
+    34                        	longi	on
+    35 00:0000: 3B           	tsc
+    36 00:0001: 38           	sec
+    37 00:0002: E9 11 00     	sbc	#L2
+    38 00:0005: 1B           	tcs
+    39 00:0006: 0B           	phd
+    40 00:0007: 5B           	tcd
+    41             00000004   argc_0	set	4
+    42             00000006   argv_0	set	6
+    43                        ;		
+    44                        ;	char rc;
+    45                        ;	struct stat st;
+    46                        ;	FILE *fin;
+    47                        ;	
+    48                        ;	unsigned int len;
+    49                        ;	
+    50                        ;	printf("stat \n");
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    51             00000000   rc_1	set	0
+    52             00000001   st_1	set	1
+    53             00000007   fin_1	set	7
+    54             0000000B   len_1	set	11
+    55 00:0008: F4 xx xx     	pea	#^L1
+    56 00:000B: F4 xx xx     	pea	#<L1
+    57 00:000E: F4 06 00     	pea	#6
+    58 00:0011: 22 xx xx xx  	jsl	~~printf
+    59                        ;
+    60                        ;	rc = stat(buffer, &st);
+    61 00:0015: F4 00 00     	pea	#0
+    62 00:0018: 18           	clc
+    63 00:0019: 7B           	tdc
+    64 00:001A: 69 06 00     	adc	#<L3+st_1
+    65 00:001D: 48           	pha
+    66 00:001E: A9 xx xx     	lda	#<~~buffer
+    67 00:0021: 85 01        	sta	<R0
+    68                        	xref	_BEG_DATA
+    69 00:0023: A9 xx xx     	lda	#_BEG_DATA>>16
+    70 00:0026: 48           	pha
+    71 00:0027: D4 01        	pei	<R0
+    72 00:0029: 22 xx xx xx  	jsl	~~stat
+    73 00:002D: E2 20        	sep	#$20
+    74                        	longa	off
+    75 00:002F: 85 05        	sta	<L3+rc_1
+    76 00:0031: C2 20        	rep	#$20
+    77                        	longa	on
+    78                        ;	
+    79                        ;//		dump((char *)0x20, 16, 0);
+    80                        ;//		dump(IOCBSTRT, 128, 0);
+    81                        ;//		dump((char *)0x500, 256, 0);
+    82                        ;	
+    83                        ;	//printf("stat rc: %d, len: %lu\n", rc, st.st_si
+                    ze);
+    84                        ;
+    85                        ;	return 0;
+    86 00:0033: A9 00 00     	lda	#$0
+    87 00:0036: A8           	tay
+    88 00:0037: A5 13        	lda	<L2+2
+    89 00:0039: 85 19        	sta	<L2+2+6
+    90 00:003B: A5 12        	lda	<L2+1
+    91 00:003D: 85 18        	sta	<L2+1+6
+    92 00:003F: 2B           	pld
+    93 00:0040: 3B           	tsc
+    94 00:0041: 18           	clc
+    95 00:0042: 69 17 00     	adc	#L2+6
+    96 00:0045: 1B           	tcs
+    97 00:0046: 98           	tya
+    98 00:0047: 6B           	rtl
+    99                        ;	fin = fopen(buffer, "rb");
+   100                        ;	fread(line, 100, 1, fin);
+   101                        ;	fseek(fin, 123, SEEK_SET);
+   102                        ;	
+   103                        ;	printf("line: %s\n", line);
+   104                        ;	fclose(fin);
+   105                        ;}
+   106             00000011   L2	equ	17
+   107             00000005   L3	equ	5
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   108                        	ends
+   109                        	efunc
+   110                        	data
+   111                        L1:
+   112 00:0020: 73 74 61 74  	db	$73,$74,$61,$74,$20,$0A,$00,$72,$62,$00,
+                    $6C,$69,$6E,$65,$3A
+       00:0024: 20 0A 00 72 
+       00:0028: 62 00 6C 69 
+       00:002C: 6E 65 3A 
+   113 00:002F: 20 25 73 0A  	db	$20,$25,$73,$0A,$00
+       00:0033: 00 
+   114 00:0034:              	ends
+   115                        ;
+   116                        	xref	~~stat
+   117                        	xref	~~fclose
+   118                        	xref	~~fread
+   119                        	xref	~~fseek
+   120                        	xref	~~printf
+   121                        	xref	~~fopen
+   122                        	udata
+   123                        ~~line
+   124 00:0000:              	ds	100
+   125 00:0064:              	ends
+
+
+      Lines assembled: 125
+      Errors: 0

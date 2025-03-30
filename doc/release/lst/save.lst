@@ -1,0 +1,277 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include "FreeRTOS.h"
+    11                        ;#include "task.h"
+    12                        ;#include <homebrew.h>
+    13                        ;
+    14                        ;#define	BUFLEN	32
+    15                        ;
+    16                        ;int main(int argc, char**argv) {
+    17                        	code
+    18                        	xdef	~~main
+    19                        	func
+    20                        ~~main:
+    21                        	longa	on
+    22                        	longi	on
+    23 00:0000: 3B           	tsc
+    24 00:0001: 38           	sec
+    25 00:0002: E9 3A 00     	sbc	#L2
+    26 00:0005: 1B           	tcs
+    27 00:0006: 0B           	phd
+    28 00:0007: 5B           	tcd
+    29             00000004   argc_0	set	4
+    30             00000006   argv_0	set	6
+    31                        ;	
+    32                        ;	char *pfrom, *pto, fname[BUFLEN];	
+    33                        ;	size_t len, slen;
+    34                        ;	FILE *f;
+    35                        ;	unsigned int i;
+    36                        ;	
+    37                        ;	printf("save from:");
+    38             00000000   pfrom_1	set	0
+    39             00000004   pto_1	set	4
+    40             00000008   fname_1	set	8
+    41             00000028   len_1	set	40
+    42             0000002C   slen_1	set	44
+    43             00000030   f_1	set	48
+    44             00000034   i_1	set	52
+    45 00:0008: F4 xx xx     	pea	#^L1
+    46 00:000B: F4 xx xx     	pea	#<L1
+    47 00:000E: F4 06 00     	pea	#6
+    48 00:0011: 22 xx xx xx  	jsl	~~printf
+    49                        ;	pfrom = (char *)getHex8();
+    50 00:0015: 22 xx xx xx  	jsl	~~getHex8
+    51 00:0019: 86 03        	stx	<R0+2
+    52 00:001B: 85 05        	sta	<L3+pfrom_1
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    53 00:001D: A5 03        	lda	<R0+2
+    54 00:001F: 85 07        	sta	<L3+pfrom_1+2
+    55                        ;	printf(" to:");
+    56 00:0021: F4 xx xx     	pea	#^L1+11
+    57 00:0024: F4 xx xx     	pea	#<L1+11
+    58 00:0027: F4 06 00     	pea	#6
+    59 00:002A: 22 xx xx xx  	jsl	~~printf
+    60                        ;	pto = (char *)getHex8();
+    61 00:002E: 22 xx xx xx  	jsl	~~getHex8
+    62 00:0032: 86 03        	stx	<R0+2
+    63 00:0034: 85 09        	sta	<L3+pto_1
+    64 00:0036: A5 03        	lda	<R0+2
+    65 00:0038: 85 0B        	sta	<L3+pto_1+2
+    66                        ;	
+    67                        ;	if (pfrom < pto) {
+    68 00:003A: A5 05        	lda	<L3+pfrom_1
+    69 00:003C: C5 09        	cmp	<L3+pto_1
+    70 00:003E: A5 07        	lda	<L3+pfrom_1+2
+    71 00:0040: E5 0B        	sbc	<L3+pto_1+2
+    72 00:0042: 90 03        	bcc	*+5
+    73 00:0044: 82 C4 00     	brl	L8
+    74                        ;		
+    75                        ;		printf(" filename>");	
+    76 00:0047: F4 xx xx     	pea	#^L1+16
+    77 00:004A: F4 xx xx     	pea	#<L1+16
+    78 00:004D: F4 06 00     	pea	#6
+    79 00:0050: 22 xx xx xx  	jsl	~~printf
+    80                        ;
+    81                        ;		input(fname, 16);	
+    82 00:0054: F4 10 00     	pea	#<$10
+    83 00:0057: F4 00 00     	pea	#0
+    84 00:005A: 18           	clc
+    85 00:005B: 7B           	tdc
+    86 00:005C: 69 0D 00     	adc	#<L3+fname_1
+    87 00:005F: 48           	pha
+    88 00:0060: 22 xx xx xx  	jsl	~~input
+    89                        ;		
+    90                        ;		len = (size_t)(pto - pfrom) + 1;
+    91 00:0064: 38           	sec
+    92 00:0065: A5 09        	lda	<L3+pto_1
+    93 00:0067: E5 05        	sbc	<L3+pfrom_1
+    94 00:0069: 85 01        	sta	<R0
+    95 00:006B: A5 0B        	lda	<L3+pto_1+2
+    96 00:006D: E5 07        	sbc	<L3+pfrom_1+2
+    97 00:006F: 85 03        	sta	<R0+2
+    98 00:0071: A9 01 00     	lda	#$1
+    99 00:0074: 18           	clc
+   100 00:0075: 65 01        	adc	<R0
+   101 00:0077: 85 2D        	sta	<L3+len_1
+   102 00:0079: A9 00 00     	lda	#$0
+   103 00:007C: 65 03        	adc	<R0+2
+   104 00:007E: 85 2F        	sta	<L3+len_1+2
+   105                        ;		
+   106                        ;		//printf("%p %p *%s*\n", pfrom, pto, fna
+                    me);
+   107                        ;		
+   108                        ;		f = fopen(fname, "w");
+   109 00:0080: F4 xx xx     	pea	#^L1+27
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   110 00:0083: F4 xx xx     	pea	#<L1+27
+   111 00:0086: F4 00 00     	pea	#0
+   112 00:0089: 18           	clc
+   113 00:008A: 7B           	tdc
+   114 00:008B: 69 0D 00     	adc	#<L3+fname_1
+   115 00:008E: 48           	pha
+   116 00:008F: 22 xx xx xx  	jsl	~~fopen
+   117 00:0093: 85 35        	sta	<L3+f_1
+   118 00:0095: 86 37        	stx	<L3+f_1+2
+   119                        ;		if (f) {
+   120 00:0097: 05 37        	ora	<L3+f_1+2
+   121 00:0099: F0 63        	beq	L10002
+   122                        ;			slen = fwrite(pfrom, 1, len, f);
+   123 00:009B: D4 37        	pei	<L3+f_1+2
+   124 00:009D: D4 35        	pei	<L3+f_1
+   125 00:009F: D4 2F        	pei	<L3+len_1+2
+   126 00:00A1: D4 2D        	pei	<L3+len_1
+   127 00:00A3: F4 00 00     	pea	#^$1
+   128 00:00A6: F4 01 00     	pea	#<$1
+   129 00:00A9: D4 07        	pei	<L3+pfrom_1+2
+   130 00:00AB: D4 05        	pei	<L3+pfrom_1
+   131 00:00AD: 22 xx xx xx  	jsl	~~fwrite
+   132 00:00B1: 85 31        	sta	<L3+slen_1
+   133 00:00B3: 86 33        	stx	<L3+slen_1+2
+   134                        ;			fclose(f);
+   135 00:00B5: D4 37        	pei	<L3+f_1+2
+   136 00:00B7: D4 35        	pei	<L3+f_1
+   137 00:00B9: 22 xx xx xx  	jsl	~~fclose
+   138                        ;			printf("\nsaved from:%p to:%p by
+                    tes:%lu file:%s\n", pfrom, pto, slen, fname);
+   139 00:00BD: F4 00 00     	pea	#0
+   140 00:00C0: 18           	clc
+   141 00:00C1: 7B           	tdc
+   142 00:00C2: 69 0D 00     	adc	#<L3+fname_1
+   143 00:00C5: 48           	pha
+   144 00:00C6: D4 33        	pei	<L3+slen_1+2
+   145 00:00C8: D4 31        	pei	<L3+slen_1
+   146 00:00CA: D4 0B        	pei	<L3+pto_1+2
+   147 00:00CC: D4 09        	pei	<L3+pto_1
+   148 00:00CE: D4 07        	pei	<L3+pfrom_1+2
+   149 00:00D0: D4 05        	pei	<L3+pfrom_1
+   150 00:00D2: F4 xx xx     	pea	#^L1+29
+   151 00:00D5: F4 xx xx     	pea	#<L1+29
+   152 00:00D8: F4 16 00     	pea	#22
+   153 00:00DB: 22 xx xx xx  	jsl	~~printf
+   154                        ;			if (slen != len) {
+   155 00:00DF: A5 31        	lda	<L3+slen_1
+   156 00:00E1: C5 2D        	cmp	<L3+len_1
+   157 00:00E3: D0 04        	bne	L6
+   158 00:00E5: A5 33        	lda	<L3+slen_1+2
+   159 00:00E7: C5 2F        	cmp	<L3+len_1+2
+   160                        L6:
+   161 00:00E9: F0 20        	beq	L8
+   162                        ;				printf("warning! %lu out
+                     of %lu bytes written!\n", slen, len);
+   163 00:00EB: D4 2F        	pei	<L3+len_1+2
+   164 00:00ED: D4 2D        	pei	<L3+len_1
+   165 00:00EF: D4 33        	pei	<L3+slen_1+2
+  Sun Jan  9 2022 20:37                                                Page 4
+
+
+   166 00:00F1: D4 31        	pei	<L3+slen_1
+   167 00:00F3: F4 xx xx     	pea	#^L1+69
+   168 00:00F6: F4 xx xx     	pea	#<L1+69
+   169 00:00F9: F4 0E 00     	pea	#14
+   170 00:00FC: 80 09        	bra	L20000
+   171                        ;			}
+   172                        ;		} else {
+   173                        L10002:
+   174                        ;			printf("error!\n");
+   175 00:00FE: F4 xx xx     	pea	#^L1+109
+   176 00:0101: F4 xx xx     	pea	#<L1+109
+   177 00:0104: F4 06 00     	pea	#6
+   178                        L20000:
+   179 00:0107: 22 xx xx xx  	jsl	~~printf
+   180                        ;		}
+   181                        ;	}
+   182                        ;}
+   183                        L8:
+   184 00:010B: A8           	tay
+   185 00:010C: A5 3C        	lda	<L2+2
+   186 00:010E: 85 42        	sta	<L2+2+6
+   187 00:0110: A5 3B        	lda	<L2+1
+   188 00:0112: 85 41        	sta	<L2+1+6
+   189 00:0114: 2B           	pld
+   190 00:0115: 3B           	tsc
+   191 00:0116: 18           	clc
+   192 00:0117: 69 40 00     	adc	#L2+6
+   193 00:011A: 1B           	tcs
+   194 00:011B: 98           	tya
+   195 00:011C: 6B           	rtl
+   196             0000003A   L2	equ	58
+   197             00000005   L3	equ	5
+   198                        	ends
+   199                        	efunc
+   200                        	data
+   201                        L1:
+   202 00:0000: 73 61 76 65  	db	$73,$61,$76,$65,$20,$66,$72,$6F,$6D,$3A,
+                    $00,$20,$74,$6F,$3A
+       00:0004: 20 66 72 6F 
+       00:0008: 6D 3A 00 20 
+       00:000C: 74 6F 3A 
+   203 00:000F: 00 20 66 69  	db	$00,$20,$66,$69,$6C,$65,$6E,$61,$6D,$65,
+                    $3E,$00,$77,$00,$0A
+       00:0013: 6C 65 6E 61 
+       00:0017: 6D 65 3E 00 
+       00:001B: 77 00 0A 
+   204 00:001E: 73 61 76 65  	db	$73,$61,$76,$65,$64,$20,$66,$72,$6F,$6D,
+                    $3A,$25,$70,$20,$74
+       00:0022: 64 20 66 72 
+       00:0026: 6F 6D 3A 25 
+       00:002A: 70 20 74 
+   205 00:002D: 6F 3A 25 70  	db	$6F,$3A,$25,$70,$20,$62,$79,$74,$65,$73,
+                    $3A,$25,$6C,$75,$20
+       00:0031: 20 62 79 74 
+       00:0035: 65 73 3A 25 
+       00:0039: 6C 75 20 
+   206 00:003C: 66 69 6C 65  	db	$66,$69,$6C,$65,$3A,$25,$73,$0A,$00,$77,
+                    $61,$72,$6E,$69,$6E
+  Sun Jan  9 2022 20:37                                                Page 5
+
+
+       00:0040: 3A 25 73 0A 
+       00:0044: 00 77 61 72 
+       00:0048: 6E 69 6E 
+   207 00:004B: 67 21 20 25  	db	$67,$21,$20,$25,$6C,$75,$20,$6F,$75,$74,
+                    $20,$6F,$66,$20,$25
+       00:004F: 6C 75 20 6F 
+       00:0053: 75 74 20 6F 
+       00:0057: 66 20 25 
+   208 00:005A: 6C 75 20 62  	db	$6C,$75,$20,$62,$79,$74,$65,$73,$20,$77,
+                    $72,$69,$74,$74,$65
+       00:005E: 79 74 65 73 
+       00:0062: 20 77 72 69 
+       00:0066: 74 74 65 
+   209 00:0069: 6E 21 0A 00  	db	$6E,$21,$0A,$00,$65,$72,$72,$6F,$72,$21,
+                    $0A,$00
+       00:006D: 65 72 72 6F 
+       00:0071: 72 21 0A 00 
+   210 00:0075:              	ends
+   211                        ;
+   212                        ;
+   213                        	xref	~~input
+   214                        	xref	~~getHex8
+   215                        	xref	~~fclose
+   216                        	xref	~~fwrite
+   217                        	xref	~~printf
+   218                        	xref	~~fopen
+
+
+      Lines assembled: 218
+      Errors: 0

@@ -1,0 +1,287 @@
+  Sun Jan  9 2022 20:37                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include "FreeRTOS.h"
+    11                        ;#include "task.h"
+    12                        ;#include <homebrew.h>
+    13                        ;
+    14                        ;
+    15                        ;int main(int argc, char **argv) {
+    16                        	code
+    17                        	xdef	~~main
+    18                        	func
+    19                        ~~main:
+    20                        	longa	on
+    21                        	longi	on
+    22 00:0000: 3B           	tsc
+    23 00:0001: 38           	sec
+    24 00:0002: E9 16 00     	sbc	#L2
+    25 00:0005: 1B           	tcs
+    26 00:0006: 0B           	phd
+    27 00:0007: 5B           	tcd
+    28             00000004   argc_0	set	4
+    29             00000006   argv_0	set	6
+    30                        ;	
+    31                        ;	UBaseType_t uxArraySize, x, taskNo;
+    32                        ;	TaskStatus_t *pxTaskStatusArray;	
+    33                        ;	
+    34                        ;	
+    35                        ;	uxArraySize = uxTaskGetNumberOfTasks();
+    36             00000000   uxArraySize_1	set	0
+    37             00000002   x_1	set	2
+    38             00000004   taskNo_1	set	4
+    39             00000006   pxTaskStatusArray_1	set	6
+    40 00:0008: 22 xx xx xx  	jsl	~~uxTaskGetNumberOfTasks
+    41 00:000C: 85 0D        	sta	<L3+uxArraySize_1
+    42                        ;	
+    43                        ;	//printf("number of tasks: %d\n", (long)uxArrayS
+                    ize);
+    44                        ;	
+    45                        ;	pxTaskStatusArray = malloc( uxArraySize * sizeof
+                    ( TaskStatus_t ) );
+    46 00:000E: 85 01        	sta	<R0
+    47 00:0010: 64 03        	stz	<R0+2
+    48 00:0012: F4 00 00     	pea	#^$1a
+    49 00:0015: F4 1A 00     	pea	#<$1a
+    50 00:0018: D4 03        	pei	<R0+2
+  Sun Jan  9 2022 20:37                                                Page 2
+
+
+    51 00:001A: D4 01        	pei	<R0
+    52                        	xref	~~~lmul
+    53 00:001C: 22 xx xx xx  	jsl	~~~lmul
+    54 00:0020: 85 01        	sta	<R0
+    55 00:0022: 86 03        	stx	<R0+2
+    56 00:0024: D4 03        	pei	<R0+2
+    57 00:0026: D4 01        	pei	<R0
+    58 00:0028: 22 xx xx xx  	jsl	~~malloc
+    59 00:002C: 85 13        	sta	<L3+pxTaskStatusArray_1
+    60 00:002E: 86 15        	stx	<L3+pxTaskStatusArray_1+2
+    61                        ;	
+    62                        ;	taskNo = 0;
+    63 00:0030: 64 11        	stz	<L3+taskNo_1
+    64                        ;	if (argc > 1) {
+    65 00:0032: 38           	sec
+    66 00:0033: A9 01 00     	lda	#$1
+    67 00:0036: E5 1A        	sbc	<L2+argc_0
+    68 00:0038: 70 03        	bvs	L4
+    69 00:003A: 49 00 80     	eor	#$8000
+    70                        L4:
+    71 00:003D: 30 11        	bmi	L10001
+    72                        ;		taskNo = atoi(argv[1]);
+    73 00:003F: A0 06 00     	ldy	#$6
+    74 00:0042: B7 1C        	lda	[<L2+argv_0],Y
+    75 00:0044: 48           	pha
+    76 00:0045: 88           	dey
+    77 00:0046: 88           	dey
+    78 00:0047: B7 1C        	lda	[<L2+argv_0],Y
+    79 00:0049: 48           	pha
+    80 00:004A: 22 xx xx xx  	jsl	~~atoi
+    81 00:004E: 85 11        	sta	<L3+taskNo_1
+    82                        ;	}
+    83                        ;	
+    84                        ;	if( pxTaskStatusArray != NULL && taskNo > 1)
+    85                        L10001:
+    86                        ;	{
+    87 00:0050: A5 13        	lda	<L3+pxTaskStatusArray_1
+    88 00:0052: 05 15        	ora	<L3+pxTaskStatusArray_1+2
+    89 00:0054: D0 03        	bne	*+5
+    90 00:0056: 82 F1 00     	brl	L10
+    91 00:0059: A9 01 00     	lda	#$1
+    92 00:005C: C5 11        	cmp	<L3+taskNo_1
+    93 00:005E: 90 03        	bcc	*+5
+    94 00:0060: 82 E7 00     	brl	L10
+    95                        ;		/* Generate raw status information about
+                     each task. */
+    96                        ;		uxArraySize = uxTaskGetSystemState( pxTa
+                    skStatusArray,
+    97                        ;							
+                    				uxArraySize,
+    98                        ;							
+                    				NULL );
+    99 00:0063: F4 00 00     	pea	#^$0
+   100 00:0066: F4 00 00     	pea	#<$0
+   101 00:0069: D4 0D        	pei	<L3+uxArraySize_1
+   102 00:006B: D4 15        	pei	<L3+pxTaskStatusArray_1+2
+   103 00:006D: D4 13        	pei	<L3+pxTaskStatusArray_1
+   104 00:006F: 22 xx xx xx  	jsl	~~uxTaskGetSystemState
+  Sun Jan  9 2022 20:37                                                Page 3
+
+
+   105 00:0073: 85 0D        	sta	<L3+uxArraySize_1
+   106                        ;							
+                    				
+   107                        ;		for( x = 0; x < uxArraySize; x++) {
+   108 00:0075: 64 0F        	stz	<L3+x_1
+   109 00:0077: 82 C7 00     	brl	L10006
+   110                        L10005:
+   111                        ;			if (taskNo == pxTaskStatusArray[
+                    x].xTaskNumber) {
+   112 00:007A: A5 0F        	lda	<L3+x_1
+   113 00:007C: 85 01        	sta	<R0
+   114 00:007E: 64 03        	stz	<R0+2
+   115 00:0080: F4 00 00     	pea	#^$1a
+   116 00:0083: F4 1A 00     	pea	#<$1a
+   117 00:0086: D4 03        	pei	<R0+2
+   118 00:0088: D4 01        	pei	<R0
+   119                        	xref	~~~lmul
+   120 00:008A: 22 xx xx xx  	jsl	~~~lmul
+   121 00:008E: 85 01        	sta	<R0
+   122 00:0090: 86 03        	stx	<R0+2
+   123 00:0092: A9 08 00     	lda	#$8
+   124 00:0095: 18           	clc
+   125 00:0096: 65 13        	adc	<L3+pxTaskStatusArray_1
+   126 00:0098: 85 05        	sta	<R1
+   127 00:009A: A9 00 00     	lda	#$0
+   128 00:009D: 65 15        	adc	<L3+pxTaskStatusArray_1+2
+   129 00:009F: 85 07        	sta	<R1+2
+   130 00:00A1: A5 05        	lda	<R1
+   131 00:00A3: 18           	clc
+   132 00:00A4: 65 01        	adc	<R0
+   133 00:00A6: 85 09        	sta	<R2
+   134 00:00A8: A5 07        	lda	<R1+2
+   135 00:00AA: 65 03        	adc	<R0+2
+   136 00:00AC: 85 0B        	sta	<R2+2
+   137 00:00AE: A7 09        	lda	[<R2]
+   138 00:00B0: C5 11        	cmp	<L3+taskNo_1
+   139 00:00B2: F0 03        	beq	*+5
+   140 00:00B4: 82 88 00     	brl	L10003
+   141                        ;				vTaskRemove(xTaskGetAppl
+                    icationTaskTag(pxTaskStatusArray[x].xHandle));
+   142 00:00B7: A5 0F        	lda	<L3+x_1
+   143 00:00B9: 85 01        	sta	<R0
+   144 00:00BB: 64 03        	stz	<R0+2
+   145 00:00BD: F4 00 00     	pea	#^$1a
+   146 00:00C0: F4 1A 00     	pea	#<$1a
+   147 00:00C3: D4 03        	pei	<R0+2
+   148 00:00C5: D4 01        	pei	<R0
+   149                        	xref	~~~lmul
+   150 00:00C7: 22 xx xx xx  	jsl	~~~lmul
+   151 00:00CB: 85 01        	sta	<R0
+   152 00:00CD: 86 03        	stx	<R0+2
+   153 00:00CF: A5 13        	lda	<L3+pxTaskStatusArray_1
+   154 00:00D1: 18           	clc
+   155 00:00D2: 65 01        	adc	<R0
+   156 00:00D4: 85 05        	sta	<R1
+   157 00:00D6: A5 15        	lda	<L3+pxTaskStatusArray_1+2
+   158 00:00D8: 65 03        	adc	<R0+2
+   159 00:00DA: 85 07        	sta	<R1+2
+  Sun Jan  9 2022 20:37                                                Page 4
+
+
+   160 00:00DC: A0 02 00     	ldy	#$2
+   161 00:00DF: B7 05        	lda	[<R1],Y
+   162 00:00E1: 48           	pha
+   163 00:00E2: A7 05        	lda	[<R1]
+   164 00:00E4: 48           	pha
+   165 00:00E5: 22 xx xx xx  	jsl	~~xTaskGetApplicationTaskTag
+   166 00:00E9: 85 01        	sta	<R0
+   167 00:00EB: 86 03        	stx	<R0+2
+   168 00:00ED: DA           	phx
+   169 00:00EE: 48           	pha
+   170 00:00EF: 22 xx xx xx  	jsl	~~vTaskRemove
+   171                        ;				printf("task #%d %s kill
+                    ed.\n", taskNo, pxTaskStatusArray[x].pcTaskName);
+   172 00:00F3: A5 0F        	lda	<L3+x_1
+   173 00:00F5: 85 01        	sta	<R0
+   174 00:00F7: 64 03        	stz	<R0+2
+   175 00:00F9: F4 00 00     	pea	#^$1a
+   176 00:00FC: F4 1A 00     	pea	#<$1a
+   177 00:00FF: D4 03        	pei	<R0+2
+   178 00:0101: D4 01        	pei	<R0
+   179                        	xref	~~~lmul
+   180 00:0103: 22 xx xx xx  	jsl	~~~lmul
+   181 00:0107: 85 01        	sta	<R0
+   182 00:0109: 86 03        	stx	<R0+2
+   183 00:010B: A9 04 00     	lda	#$4
+   184 00:010E: 18           	clc
+   185 00:010F: 65 13        	adc	<L3+pxTaskStatusArray_1
+   186 00:0111: 85 05        	sta	<R1
+   187 00:0113: A9 00 00     	lda	#$0
+   188 00:0116: 65 15        	adc	<L3+pxTaskStatusArray_1+2
+   189 00:0118: 85 07        	sta	<R1+2
+   190 00:011A: A5 05        	lda	<R1
+   191 00:011C: 18           	clc
+   192 00:011D: 65 01        	adc	<R0
+   193 00:011F: 85 09        	sta	<R2
+   194 00:0121: A5 07        	lda	<R1+2
+   195 00:0123: 65 03        	adc	<R0+2
+   196 00:0125: 85 0B        	sta	<R2+2
+   197 00:0127: A0 02 00     	ldy	#$2
+   198 00:012A: B7 09        	lda	[<R2],Y
+   199 00:012C: 48           	pha
+   200 00:012D: A7 09        	lda	[<R2]
+   201 00:012F: 48           	pha
+   202 00:0130: D4 11        	pei	<L3+taskNo_1
+   203 00:0132: F4 xx xx     	pea	#^L1
+   204 00:0135: F4 xx xx     	pea	#<L1
+   205 00:0138: F4 0C 00     	pea	#12
+   206 00:013B: 22 xx xx xx  	jsl	~~printf
+   207                        ;			}
+   208                        ;		}			
+   209                        L10003:
+   210 00:013F: E6 0F        	inc	<L3+x_1
+   211                        L10006:
+   212 00:0141: A5 0F        	lda	<L3+x_1
+   213 00:0143: C5 0D        	cmp	<L3+uxArraySize_1
+   214 00:0145: B0 03        	bcs	*+5
+   215 00:0147: 82 30 FF     	brl	L10005
+   216                        ;   }
+  Sun Jan  9 2022 20:37                                                Page 5
+
+
+   217                        ;}
+   218                        L10:
+   219 00:014A: A8           	tay
+   220 00:014B: A5 18        	lda	<L2+2
+   221 00:014D: 85 1E        	sta	<L2+2+6
+   222 00:014F: A5 17        	lda	<L2+1
+   223 00:0151: 85 1D        	sta	<L2+1+6
+   224 00:0153: 2B           	pld
+   225 00:0154: 3B           	tsc
+   226 00:0155: 18           	clc
+   227 00:0156: 69 1C 00     	adc	#L2+6
+   228 00:0159: 1B           	tcs
+   229 00:015A: 98           	tya
+   230 00:015B: 6B           	rtl
+   231             00000016   L2	equ	22
+   232             0000000D   L3	equ	13
+   233                        	ends
+   234                        	efunc
+   235                        	data
+   236                        L1:
+   237 00:0000: 74 61 73 6B  	db	$74,$61,$73,$6B,$20,$23,$25,$64,$20,$25,
+                    $73,$20,$6B,$69,$6C
+       00:0004: 20 23 25 64 
+       00:0008: 20 25 73 20 
+       00:000C: 6B 69 6C 
+   238 00:000F: 6C 65 64 2E  	db	$6C,$65,$64,$2E,$0A,$00
+       00:0013: 0A 00 
+   239 00:0015:              	ends
+   240                        ;
+   241                        	xref	~~vTaskRemove
+   242                        	xref	~~uxTaskGetSystemState
+   243                        	xref	~~xTaskGetApplicationTaskTag
+   244                        	xref	~~uxTaskGetNumberOfTasks
+   245                        	xref	~~atoi
+   246                        	xref	~~malloc
+   247                        	xref	~~printf
+
+
+      Lines assembled: 247
+      Errors: 0

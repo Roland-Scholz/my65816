@@ -1,0 +1,30 @@
+Detecting C compiler ABI info failed to compile with the following output:
+Change Dir: C:/github/my65816/emulation/src/out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_2b40a/fast && Das System kann die angegebene Datei nicht finden
+Generator: execution of make failed. Make command was: C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_2b40a/fast && 
+
+
+
+Determining if the C compiler works failed with the following output:
+Change Dir: C:/github/my65816/emulation/src/out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_07d95/fast && Das System kann die angegebene Datei nicht finden
+Generator: execution of make failed. Make command was: C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_07d95/fast && 
+
+
+Detecting C compiler ABI info failed to compile with the following output:
+Change Dir: C:/github/my65816/emulation/src/out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_8e6f0/fast && Das System kann die angegebene Datei nicht finden
+Generator: execution of make failed. Make command was: C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_8e6f0/fast && 
+
+
+
+Determining if the C compiler works failed with the following output:
+Change Dir: C:/github/my65816/emulation/src/out/build/GCC 14.2.0 x86_64-w64-mingw32 (ucrt64)/CMakeFiles/CMakeTmp
+
+Run Build Command(s):C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_3aa0b/fast && Das System kann die angegebene Datei nicht finden
+Generator: execution of make failed. Make command was: C:/msys64/ucrt64/bin/mingw32-make.exe -f Makefile cmTC_3aa0b/fast && 
+
+

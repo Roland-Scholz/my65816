@@ -9,6 +9,7 @@
 #include <lib65816/cpu.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ram.h"
 
@@ -20,51 +21,65 @@ static byte *memory = NULL;
  * chunks.  For now, however, ROM consumes a single 32K chunk of RAM.
  */
 
-#define MEMSIZE     (8*1024)
+#define MEMSIZE (8 * 1024)
+#define ROMFILESIZE (64 * 1024)
 
-int
-rom_initialize( void )
+int rom_initialize(void)
 {
     FILE *romfile;
+    char *romfilename = "C:/github/my65816/release/kernelWDC.bin";
+    byte *romfiledata = NULL;
 
-    if (memory == NULL) {
-    	memory = (byte *)( malloc( MEMSIZE ) );
-    	if( memory == 0 ) goto no_memory;
+    if (memory == NULL)
+    {
+        memory = (byte *)(malloc(MEMSIZE));
+        if (memory == 0)
+            goto no_memory;
     }
 
-    romfile = fopen( "kernelFPGA.dat", "rb" );
-    if( romfile == 0 ) goto no_file;
-    printf("kernelFPGA.dat read: %d\n", fread( memory, 1, MEMSIZE, romfile));
-    fclose( romfile );
+    if (romfiledata == NULL)
+    {
+        romfiledata = (byte *)(malloc(ROMFILESIZE));
+        if (romfiledata == 0)
+            goto no_memory;
+    }
+
+    romfile = fopen(romfilename, "rb");
+    if (romfile == 0)
+        goto no_file;
+
+    printf("%s read: %d\n", romfilename, fread(romfiledata, 1, ROMFILESIZE, romfile));
+
+    fclose(romfile);
+
+    memcpy(memory, romfiledata + (ROMFILESIZE - MEMSIZE), MEMSIZE);
+
     return 1;
 
 no_file:
-    fprintf( stderr, "Error trying to read ROMFILE\n" );
-    free( memory );
+    fprintf(stderr, "Error trying to read ROMFILE\n");
+    free(memory);
 
 no_memory:
-    fprintf( stderr, "Error initializing ROM\n" );
+    fprintf(stderr, "Error initializing ROM\n");
     return 0;
 }
 
-void
-rom_expunge( void )
+void rom_expunge(void)
 {
-    if( memory )    free( memory );
+    if (memory)
+        free(memory);
     memory = 0;
 }
 
-byte
-rom_read( word32 address, word32 unusedTimestamp )
+byte rom_read(word32 address, word32 unusedTimestamp)
 {
     address &= 0x00001FFF;
 
-    return (byte)( memory[ address ] );
+    return (byte)(memory[address]);
 }
 
-void
-rom_write( word32 address, byte b, word32 timestamp )
+void rom_write(word32 address, byte b, word32 timestamp)
 {
-    ram_write( address, b, timestamp );        /* RAM write-through */
+    ram_write(address, b, timestamp); /* RAM write-through */
 }
-

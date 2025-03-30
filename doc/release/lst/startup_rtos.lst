@@ -1,0 +1,442 @@
+  Thu Jan 13 2022 23:48                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        CALL	MACRO label
+     2                        	XREF label
+     3                        	jmp 	label
+     4                        	MACEND
+     5                        
+     6                        CALL_MAIN MACRO label
+     7                        	XREF label
+     8                        	jmp	label
+     9                        	MACEND
+    10                        	
+    11                        	
+    12             000001FF   STACK	EQU	$01FF			;CHANGE 
+                    THIS FOR YOUR SYSTEM
+    13             00000380   FNAME	EQU 	$0380
+    14             0000000A   EOL	EQU	$0A
+    15             0000033B   ARGC	EQU	$033b			;2-byte 
+                    number of args
+    16             0000033D   ARGV	EQU	$033d			;8*2-byt
+                    es pointer to arg strings
+    17                        
+    18                        
+    19                        	module	startup
+    20                        	
+    21             00000020   M	EQU	$20
+    22                        
+    23                        ;	include hombrewWDC.inc
+    24                        
+    25                        	code
+    26                        	xdef	startup_main
+    27                        	func
+    28                        	
+    29                        	xref	~~main
+    30                        	
+    31                        	CALL_MAIN	startup_main
++   31                        	XREF startup_main
++   31 00:0000: 4C xx xx     	jmp	startup_main
+    32                        
+    33                        	CALL	~~malloc
++   33                        	XREF ~~malloc
++   33 00:0003: 4C xx xx     	jmp 	~~malloc
+    34                        	CALL	~~free
++   34                        	XREF ~~free
++   34 00:0006: 4C xx xx     	jmp 	~~free
+    35                        	CALL	~~realloc
++   35                        	XREF ~~realloc
++   35 00:0009: 4C xx xx     	jmp 	~~realloc
+    36                        	CALL	~~memcpy
++   36                        	XREF ~~memcpy
++   36 00:000C: 4C xx xx     	jmp 	~~memcpy
+    37                        	CALL	~~memcmp
++   37                        	XREF ~~memcmp
++   37 00:000F: 4C xx xx     	jmp 	~~memcmp
+  Thu Jan 13 2022 23:48                                                Page 2
+
+
+    38                        	CALL	~~memset
++   38                        	XREF ~~memset
++   38 00:0012: 4C xx xx     	jmp 	~~memset
+    39                        	
+    40                        	CALL	~~pvPortMalloc
++   40                        	XREF ~~pvPortMalloc
++   40 00:0015: 4C xx xx     	jmp 	~~pvPortMalloc
+    41                        	CALL	~~vPortFree
++   41                        	XREF ~~vPortFree
++   41 00:0018: 4C xx xx     	jmp 	~~vPortFree
+    42                        
+    43                        	CALL	~~xTaskCreate
++   43                        	XREF ~~xTaskCreate
++   43 00:001B: 4C xx xx     	jmp 	~~xTaskCreate
+    44                        	CALL	~~vTaskDelete
++   44                        	XREF ~~vTaskDelete
++   44 00:001E: 4C xx xx     	jmp 	~~vTaskDelete
+    45                        	CALL	~~vTaskDelay
++   45                        	XREF ~~vTaskDelay
++   45 00:0021: 4C xx xx     	jmp 	~~vTaskDelay
+    46                        	CALL	~~vTaskDelayUntil
++   46                        	XREF ~~vTaskDelayUntil
++   46 00:0024: 4C xx xx     	jmp 	~~vTaskDelayUntil
+    47                        	CALL	~~uxTaskPriorityGet
++   47                        	XREF ~~uxTaskPriorityGet
++   47 00:0027: 4C xx xx     	jmp 	~~uxTaskPriorityGet
+    48                        	CALL	~~vTaskPrioritySet
++   48                        	XREF ~~vTaskPrioritySet
++   48 00:002A: 4C xx xx     	jmp 	~~vTaskPrioritySet
+    49                        	CALL	~~vTaskSuspend
++   49                        	XREF ~~vTaskSuspend
++   49 00:002D: 4C xx xx     	jmp 	~~vTaskSuspend
+    50                        	CALL	~~vTaskResume
++   50                        	XREF ~~vTaskResume
++   50 00:0030: 4C xx xx     	jmp 	~~vTaskResume
+    51                        	CALL	~~xTaskResumeFromISR
++   51                        	XREF ~~xTaskResumeFromISR
++   51 00:0033: 4C xx xx     	jmp 	~~xTaskResumeFromISR
+    52                        	CALL	~~xTaskAbortDelay
++   52                        	XREF ~~xTaskAbortDelay
++   52 00:0036: 4C xx xx     	jmp 	~~xTaskAbortDelay
+    53                        	CALL	~~uxTaskGetSystemState
++   53                        	XREF ~~uxTaskGetSystemState
++   53 00:0039: 4C xx xx     	jmp 	~~uxTaskGetSystemState
+    54                        	CALL	~~vTaskGetInfo
++   54                        	XREF ~~vTaskGetInfo
++   54 00:003C: 4C xx xx     	jmp 	~~vTaskGetInfo
+    55                        	CALL	~~xTaskGetCurrentTaskHandle
++   55                        	XREF ~~xTaskGetCurrentTaskHandle
++   55 00:003F: 4C xx xx     	jmp 	~~xTaskGetCurrentTaskHandle
+    56                        	CALL	~~xTaskGetIdleTaskHandle
++   56                        	XREF ~~xTaskGetIdleTaskHandle
++   56 00:0042: 4C xx xx     	jmp 	~~xTaskGetIdleTaskHandle
+    57                        	CALL	~~uxTaskGetStackHighWaterMark
++   57                        	XREF ~~uxTaskGetStackHighWaterMark
++   57 00:0045: 4C xx xx     	jmp 	~~uxTaskGetStackHighWaterMark
+    58                        	CALL	~~eTaskGetState
++   58                        	XREF ~~eTaskGetState
+  Thu Jan 13 2022 23:48                                                Page 3
+
+
++   58 00:0048: 4C xx xx     	jmp 	~~eTaskGetState
+    59                        	CALL	~~pcTaskGetName
++   59                        	XREF ~~pcTaskGetName
++   59 00:004B: 4C xx xx     	jmp 	~~pcTaskGetName
+    60                        	CALL	~~xTaskGetHandle
++   60                        	XREF ~~xTaskGetHandle
++   60 00:004E: 4C xx xx     	jmp 	~~xTaskGetHandle
+    61                        	CALL	~~xTaskGetTickCount
++   61                        	XREF ~~xTaskGetTickCount
++   61 00:0051: 4C xx xx     	jmp 	~~xTaskGetTickCount
+    62                        	CALL	~~xTaskGetTickCountFromISR
++   62                        	XREF ~~xTaskGetTickCountFromISR
++   62 00:0054: 4C xx xx     	jmp 	~~xTaskGetTickCountFromISR
+    63                        	CALL	~~xTaskGetSchedulerState
++   63                        	XREF ~~xTaskGetSchedulerState
++   63 00:0057: 4C xx xx     	jmp 	~~xTaskGetSchedulerState
+    64                        	CALL	~~uxTaskGetNumberOfTasks
++   64                        	XREF ~~uxTaskGetNumberOfTasks
++   64 00:005A: 4C xx xx     	jmp 	~~uxTaskGetNumberOfTasks
+    65                        	CALL	~~vTaskList
++   65                        	XREF ~~vTaskList
++   65 00:005D: 4C xx xx     	jmp 	~~vTaskList
+    66                        	CALL	~~vTaskSetApplicationTaskTag
++   66                        	XREF ~~vTaskSetApplicationTaskTag
++   66 00:0060: 4C xx xx     	jmp 	~~vTaskSetApplicationTaskTag
+    67                        	CALL	~~xTaskGetApplicationTaskTag
++   67                        	XREF ~~xTaskGetApplicationTaskTag
++   67 00:0063: 4C xx xx     	jmp 	~~xTaskGetApplicationTaskTag
+    68                        	CALL	~~xTaskCallApplicationTaskHook
++   68                        	XREF ~~xTaskCallApplicationTaskHook
++   68 00:0066: 4C xx xx     	jmp 	~~xTaskCallApplicationTaskHook
+    69                        	CALL	~~pvTaskGetThreadLocalStoragePointer
++   69                        	XREF ~~pvTaskGetThreadLocalStoragePointer
++   69 00:0069: 4C xx xx     	jmp 	~~pvTaskGetThreadLocalStoragePointer
+    70                        	CALL	~~vTaskSetThreadLocalStoragePointer
++   70                        	XREF ~~vTaskSetThreadLocalStoragePointer
++   70 00:006C: 4C xx xx     	jmp 	~~vTaskSetThreadLocalStoragePointer
+    71                        	CALL	~~vTaskSetTimeOutState
++   71                        	XREF ~~vTaskSetTimeOutState
++   71 00:006F: 4C xx xx     	jmp 	~~vTaskSetTimeOutState
+    72                        	CALL	~~xTaskCheckForTimeOut
++   72                        	XREF ~~xTaskCheckForTimeOut
++   72 00:0072: 4C xx xx     	jmp 	~~xTaskCheckForTimeOut
+    73                        	CALL	~~xTaskGenericNotify
++   73                        	XREF ~~xTaskGenericNotify
++   73 00:0075: 4C xx xx     	jmp 	~~xTaskGenericNotify
+    74                        	CALL	~~vTaskNotifyGiveFromISR
++   74                        	XREF ~~vTaskNotifyGiveFromISR
++   74 00:0078: 4C xx xx     	jmp 	~~vTaskNotifyGiveFromISR
+    75                        	CALL	~~ulTaskNotifyTake
++   75                        	XREF ~~ulTaskNotifyTake
++   75 00:007B: 4C xx xx     	jmp 	~~ulTaskNotifyTake
+    76                        	CALL	~~xTaskNotifyWait
++   76                        	XREF ~~xTaskNotifyWait
++   76 00:007E: 4C xx xx     	jmp 	~~xTaskNotifyWait
+    77                        	CALL	~~xTaskNotifyStateClear
++   77                        	XREF ~~xTaskNotifyStateClear
++   77 00:0081: 4C xx xx     	jmp 	~~xTaskNotifyStateClear
+  Thu Jan 13 2022 23:48                                                Page 4
+
+
+    78                        	
+    79                        	CALL	~~vQueueDelete
++   79                        	XREF ~~vQueueDelete
++   79 00:0084: 4C xx xx     	jmp 	~~vQueueDelete
+    80                        	CALL	~~xQueueReceive
++   80                        	XREF ~~xQueueReceive
++   80 00:0087: 4C xx xx     	jmp 	~~xQueueReceive
+    81                        	CALL	~~xQueueReceiveFromISR
++   81                        	XREF ~~xQueueReceiveFromISR
++   81 00:008A: 4C xx xx     	jmp 	~~xQueueReceiveFromISR
+    82                        	CALL	~~uxQueueMessagesWaiting
++   82                        	XREF ~~uxQueueMessagesWaiting
++   82 00:008D: 4C xx xx     	jmp 	~~uxQueueMessagesWaiting
+    83                        	CALL	~~uxQueueMessagesWaitingFromISR
++   83                        	XREF ~~uxQueueMessagesWaitingFromISR
++   83 00:0090: 4C xx xx     	jmp 	~~uxQueueMessagesWaitingFromISR
+    84                        	CALL	~~uxQueueSpacesAvailable
++   84                        	XREF ~~uxQueueSpacesAvailable
++   84 00:0093: 4C xx xx     	jmp 	~~uxQueueSpacesAvailable
+    85                        	CALL	~~xQueuePeek
++   85                        	XREF ~~xQueuePeek
++   85 00:0096: 4C xx xx     	jmp 	~~xQueuePeek
+    86                        	CALL	~~xQueuePeekFromISR
++   86                        	XREF ~~xQueuePeekFromISR
++   86 00:0099: 4C xx xx     	jmp 	~~xQueuePeekFromISR
+    87                        	CALL	~~vQueueAddToRegistry
++   87                        	XREF ~~vQueueAddToRegistry
++   87 00:009C: 4C xx xx     	jmp 	~~vQueueAddToRegistry
+    88                        	CALL	~~pcQueueGetName
++   88                        	XREF ~~pcQueueGetName
++   88 00:009F: 4C xx xx     	jmp 	~~pcQueueGetName
+    89                        	CALL	~~vQueueUnregisterQueue
++   89                        	XREF ~~vQueueUnregisterQueue
++   89 00:00A2: 4C xx xx     	jmp 	~~vQueueUnregisterQueue
+    90                        	CALL	~~xQueueIsQueueEmptyFromISR
++   90                        	XREF ~~xQueueIsQueueEmptyFromISR
++   90 00:00A5: 4C xx xx     	jmp 	~~xQueueIsQueueEmptyFromISR
+    91                        	CALL	~~xQueueIsQueueFullFromISR
++   91                        	XREF ~~xQueueIsQueueFullFromISR
++   91 00:00A8: 4C xx xx     	jmp 	~~xQueueIsQueueFullFromISR
+    92                        	CALL	~~xQueueGenericCreate
++   92                        	XREF ~~xQueueGenericCreate
++   92 00:00AB: 4C xx xx     	jmp 	~~xQueueGenericCreate
+    93                        	CALL	~~xQueueGenericSend
++   93                        	XREF ~~xQueueGenericSend
++   93 00:00AE: 4C xx xx     	jmp 	~~xQueueGenericSend
+    94                        	CALL	~~xQueueGenericSendFromISR
++   94                        	XREF ~~xQueueGenericSendFromISR
++   94 00:00B1: 4C xx xx     	jmp 	~~xQueueGenericSendFromISR
+    95                        	CALL	~~xQueueGenericReset
++   95                        	XREF ~~xQueueGenericReset
++   95 00:00B4: 4C xx xx     	jmp 	~~xQueueGenericReset
+    96                        	
+    97                        	CALL	~~xStreamBufferGenericCreate
++   97                        	XREF ~~xStreamBufferGenericCreate
++   97 00:00B7: 4C xx xx     	jmp 	~~xStreamBufferGenericCreate
+    98                        	CALL	~~xStreamBufferSend
++   98                        	XREF ~~xStreamBufferSend
+  Thu Jan 13 2022 23:48                                                Page 5
+
+
++   98 00:00BA: 4C xx xx     	jmp 	~~xStreamBufferSend
+    99                        	CALL	~~xStreamBufferSendFromISR
++   99                        	XREF ~~xStreamBufferSendFromISR
++   99 00:00BD: 4C xx xx     	jmp 	~~xStreamBufferSendFromISR
+   100                        	CALL	~~xStreamBufferReceive
++  100                        	XREF ~~xStreamBufferReceive
++  100 00:00C0: 4C xx xx     	jmp 	~~xStreamBufferReceive
+   101                        	CALL	~~xStreamBufferReceiveFromISR
++  101                        	XREF ~~xStreamBufferReceiveFromISR
++  101 00:00C3: 4C xx xx     	jmp 	~~xStreamBufferReceiveFromISR
+   102                        	CALL	~~vStreamBufferDelete
++  102                        	XREF ~~vStreamBufferDelete
++  102 00:00C6: 4C xx xx     	jmp 	~~vStreamBufferDelete
+   103                        	CALL	~~xStreamBufferBytesAvailable
++  103                        	XREF ~~xStreamBufferBytesAvailable
++  103 00:00C9: 4C xx xx     	jmp 	~~xStreamBufferBytesAvailable
+   104                        	CALL	~~xStreamBufferSpacesAvailable
++  104                        	XREF ~~xStreamBufferSpacesAvailable
++  104 00:00CC: 4C xx xx     	jmp 	~~xStreamBufferSpacesAvailable
+   105                        	CALL	~~xStreamBufferSetTriggerLevel
++  105                        	XREF ~~xStreamBufferSetTriggerLevel
++  105 00:00CF: 4C xx xx     	jmp 	~~xStreamBufferSetTriggerLevel
+   106                        	CALL	~~xStreamBufferReset
++  106                        	XREF ~~xStreamBufferReset
++  106 00:00D2: 4C xx xx     	jmp 	~~xStreamBufferReset
+   107                        	CALL	~~xStreamBufferIsEmpty
++  107                        	XREF ~~xStreamBufferIsEmpty
++  107 00:00D5: 4C xx xx     	jmp 	~~xStreamBufferIsEmpty
+   108                        	CALL	~~xStreamBufferIsFull
++  108                        	XREF ~~xStreamBufferIsFull
++  108 00:00D8: 4C xx xx     	jmp 	~~xStreamBufferIsFull
+   109                        	
+   110                        	CALL	~~printf
++  110                        	XREF ~~printf
++  110 00:00DB: 4C xx xx     	jmp 	~~printf
+   111                        	CALL	~~sprintf
++  111                        	XREF ~~sprintf
++  111 00:00DE: 4C xx xx     	jmp 	~~sprintf
+   112                        	CALL	~~fgetc
++  112                        	XREF ~~fgetc
++  112 00:00E1: 4C xx xx     	jmp 	~~fgetc
+   113                        	CALL	~~fread
++  113                        	XREF ~~fread
++  113 00:00E4: 4C xx xx     	jmp 	~~fread
+   114                        	CALL	~~fwrite
++  114                        	XREF ~~fwrite
++  114 00:00E7: 4C xx xx     	jmp 	~~fwrite
+   115                        	CALL	~~read
++  115                        	XREF ~~read
++  115 00:00EA: 4C xx xx     	jmp 	~~read
+   116                        	CALL	~~write
++  116                        	XREF ~~write
++  116 00:00ED: 4C xx xx     	jmp 	~~write
+   117                        	CALL	~~fopen
++  117                        	XREF ~~fopen
++  117 00:00F0: 4C xx xx     	jmp 	~~fopen
+   118                        	CALL	~~fclose
++  118                        	XREF ~~fclose
+  Thu Jan 13 2022 23:48                                                Page 6
+
+
++  118 00:00F3: 4C xx xx     	jmp 	~~fclose
+   119                        	CALL	~~getStdin
++  119                        	XREF ~~getStdin
++  119 00:00F6: 4C xx xx     	jmp 	~~getStdin
+   120                        	CALL	~~getStdout
++  120                        	XREF ~~getStdout
++  120 00:00F9: 4C xx xx     	jmp 	~~getStdout
+   121                        	CALL	~~getStderr
++  121                        	XREF ~~getStderr
++  121 00:00FC: 4C xx xx     	jmp 	~~getStderr
+   122                        	CALL	~~vsnprintf
++  122                        	XREF ~~vsnprintf
++  122 00:00FF: 4C xx xx     	jmp 	~~vsnprintf
+   123                        	CALL	~~calloc
++  123                        	XREF ~~calloc
++  123 00:0102: 4C xx xx     	jmp 	~~calloc
+   124                        	CALL	~~opendir
++  124                        	XREF ~~opendir
++  124 00:0105: 4C xx xx     	jmp 	~~opendir
+   125                        	CALL	~~readdir
++  125                        	XREF ~~readdir
++  125 00:0108: 4C xx xx     	jmp 	~~readdir
+   126                        	CALL	~~closedir
++  126                        	XREF ~~closedir
++  126 00:010B: 4C xx xx     	jmp 	~~closedir
+   127                        	CALL	~~fflush
++  127                        	XREF ~~fflush
++  127 00:010E: 4C xx xx     	jmp 	~~fflush
+   128                        	CALL	~~lseek
++  128                        	XREF ~~lseek
++  128 00:0111: 4C xx xx     	jmp 	~~lseek
+   129                        	CALL	~~chdir
++  129                        	XREF ~~chdir
++  129 00:0114: 4C xx xx     	jmp 	~~chdir
+   130                        	CALL	~~getShellpath
++  130                        	XREF ~~getShellpath
++  130 00:0117: 4C xx xx     	jmp 	~~getShellpath
+   131                        	CALL	~~freetaskControl
++  131                        	XREF ~~freetaskControl
++  131 00:011A: 4C xx xx     	jmp 	~~freetaskControl
+   132                        	CALL	~~vTaskRemove
++  132                        	XREF ~~vTaskRemove
++  132 00:011D: 4C xx xx     	jmp 	~~vTaskRemove
+   133                        	CALL	~~strdup
++  133                        	XREF ~~strdup
++  133 00:0120: 4C xx xx     	jmp 	~~strdup
+   134                        	CALL	~~strcpy
++  134                        	XREF ~~strcpy
++  134 00:0123: 4C xx xx     	jmp 	~~strcpy
+   135                        	CALL	~~strlen
++  135                        	XREF ~~strlen
++  135 00:0126: 4C xx xx     	jmp 	~~strlen
+   136                        	CALL	~~toupper
++  136                        	XREF ~~toupper
++  136 00:0129: 4C xx xx     	jmp 	~~toupper
+   137                        	CALL	~~setvbuf
++  137                        	XREF ~~setvbuf
++  137 00:012C: 4C xx xx     	jmp 	~~setvbuf
+  Thu Jan 13 2022 23:48                                                Page 7
+
+
+   138                        	CALL	~~memmove
++  138                        	XREF ~~memmove
++  138 00:012F: 4C xx xx     	jmp 	~~memmove
+   139                        	CALL	~~stat
++  139                        	XREF ~~stat
++  139 00:0132: 4C xx xx     	jmp 	~~stat
+   140                        	CALL	~~fstat
++  140                        	XREF ~~fstat
++  140 00:0135: 4C xx xx     	jmp 	~~fstat
+   141                        	CALL	~~fseek
++  141                        	XREF ~~fseek
++  141 00:0138: 4C xx xx     	jmp 	~~fseek
+   142                        	CALL	~~fgets
++  142                        	XREF ~~fgets
++  142 00:013B: 4C xx xx     	jmp 	~~fgets
+   143                        	CALL	~~fscanf
++  143                        	XREF ~~fscanf
++  143 00:013E: 4C xx xx     	jmp 	~~fscanf
+   144                        	CALL	~~fputc
++  144                        	XREF ~~fputc
++  144 00:0141: 4C xx xx     	jmp 	~~fputc
+   145                        	CALL	~~dump
++  145                        	XREF ~~dump
++  145 00:0144: 4C xx xx     	jmp 	~~dump
+   146                        	CALL	~~open
++  146                        	XREF ~~open
++  146 00:0147: 4C xx xx     	jmp 	~~open
+   147                        	CALL	~~close
++  147                        	XREF ~~close
++  147 00:014A: 4C xx xx     	jmp 	~~close
+   148                        	CALL	~~unlink
++  148                        	XREF ~~unlink
++  148 00:014D: 4C xx xx     	jmp 	~~unlink
+   149                        		
+   150                        startup_main:	
+   151 00:0150: 08           	php				;save processor 
+                    flags (M/X)
+   152 00:0151: 8B           	phb				;save data bank
+   153 00:0152: 0B           	phd				;save direct
+   154 00:0153: 4B           	phk				;save program ba
+                    nk
+   155                        	
+   156 00:0154: C2 30        	REP 	#$30			;16 bit register
+                    s
+   157                        	LONGI	ON
+   158                        	LONGA	ON
+   159                        
+   160 00:0156: AB           	plb				;get data bank =
+                     program-bank 
+   161                        	
+   162 00:0157: F4 00 00     	pea	#0
+   163 00:015A: F4 00 00     	pea	#0
+   164 00:015D: F4 00 00     	pea	#0
+   165 00:0160: 22 xx xx xx  	jsl	~~main			;long jump in ca
+                    se not bank 0
+   166                        		
+   167                        ENDE:
+   168 00:0164: 2B           	pld
+  Thu Jan 13 2022 23:48                                                Page 8
+
+
+   169 00:0165: AB           	plb
+   170 00:0166: 28           	plp
+   171 00:0167: 6B           	rtl
+   172                        
+   173                        	ends
+   174                        	efunc
+   175                        
+   176                        	endmod
+
+
+      Lines assembled: 400
+      Errors: 0

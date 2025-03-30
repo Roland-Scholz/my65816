@@ -1,0 +1,157 @@
+  Tue Jun 15 2021 10:27                                                Page 1
+
+
+                     ***************************************
+                     **      WDC 65C816 Macro Assembler   **
+                     **                                   **
+                     **     Version 3.49.1- Feb  6 2006    **
+                     ***************************************
+
+     1                        ;:ts=8
+     2             00000001   R0	equ	1
+     3             00000005   R1	equ	5
+     4             00000009   R2	equ	9
+     5             0000000D   R3	equ	13
+     6                        ;#include <stdio.h>
+     7                        ;#include <stdlib.h>
+     8                        ;#include <string.h>
+     9                        ;#include <stdbool.h>
+    10                        ;#include "FreeRTOS.h"
+    11                        ;#include "task.h"
+    12                        ;#include <homebrew.h>
+    13                        ;
+    14                        ;#define DISASS24	$E052
+    15                        ;#define	DISSADRLO	*((unsigned int *) 0x2)
+    16                        ;#define	DISSADRBANK	*((char *) 0x4)
+    17                        ;
+    18                        ;
+    19                        ;int main(int argc, char **argv) {
+    20                        	code
+    21                        	xdef	~~main
+    22                        	func
+    23                        ~~main:
+    24                        	longa	on
+    25                        	longi	on
+    26 00:0000: 3B           	tsc
+    27 00:0001: 38           	sec
+    28 00:0002: E9 10 00     	sbc	#L2
+    29 00:0005: 1B           	tcs
+    30 00:0006: 0B           	phd
+    31 00:0007: 5B           	tcd
+    32             00000004   argc_0	set	4
+    33             00000006   argv_0	set	6
+    34                        ;	
+    35                        ;	char *p, *ncode;
+    36                        ;	int x, y;
+    37                        ;
+    38                        ;	ncode = (char *)0x34d;
+    39             00000000   p_1	set	0
+    40             00000004   ncode_1	set	4
+    41             00000008   x_1	set	8
+    42             0000000A   y_1	set	10
+    43 00:0008: A9 4D 03     	lda	#$34d
+    44 00:000B: 85 09        	sta	<L3+ncode_1
+    45 00:000D: A9 00 00     	lda	#$0
+    46 00:0010: 85 0B        	sta	<L3+ncode_1+2
+    47                        ;	for (;;) {
+    48                        L10003:
+    49                        ;		printf("break address>");
+    50 00:0012: F4 xx xx     	pea	#^L1
+    51 00:0015: F4 xx xx     	pea	#<L1
+    52 00:0018: F4 06 00     	pea	#6
+  Tue Jun 15 2021 10:27                                                Page 2
+
+
+    53 00:001B: 22 xx xx xx  	jsl	~~printf
+    54                        ;		
+    55                        ;		if (argc >= 2) {
+    56 00:001F: 38           	sec
+    57 00:0020: A5 14        	lda	<L2+argc_0
+    58 00:0022: E9 02 00     	sbc	#<$2
+    59 00:0025: 70 03        	bvs	L4
+    60 00:0027: 49 00 80     	eor	#$8000
+    61                        L4:
+    62 00:002A: 10 36        	bpl	L10004
+    63                        ;			p = (char *)str2hex(argv[1]);
+    64 00:002C: A0 06 00     	ldy	#$6
+    65 00:002F: B7 16        	lda	[<L2+argv_0],Y
+    66 00:0031: 48           	pha
+    67 00:0032: 88           	dey
+    68 00:0033: 88           	dey
+    69 00:0034: B7 16        	lda	[<L2+argv_0],Y
+    70 00:0036: 48           	pha
+    71 00:0037: 22 xx xx xx  	jsl	~~str2hex
+    72 00:003B: 86 03        	stx	<R0+2
+    73 00:003D: 85 05        	sta	<L3+p_1
+    74 00:003F: A5 03        	lda	<R0+2
+    75 00:0041: 85 07        	sta	<L3+p_1+2
+    76                        ;			printf("%s",argv[1]);
+    77 00:0043: A0 06 00     	ldy	#$6
+    78 00:0046: B7 16        	lda	[<L2+argv_0],Y
+    79 00:0048: 48           	pha
+    80 00:0049: 88           	dey
+    81 00:004A: 88           	dey
+    82 00:004B: B7 16        	lda	[<L2+argv_0],Y
+    83 00:004D: 48           	pha
+    84 00:004E: F4 xx xx     	pea	#^L1+15
+    85 00:0051: F4 xx xx     	pea	#<L1+15
+    86 00:0054: F4 0A 00     	pea	#10
+    87 00:0057: 22 xx xx xx  	jsl	~~printf
+    88                        ;			argc = 1;
+    89 00:005B: A9 01 00     	lda	#$1
+    90 00:005E: 85 14        	sta	<L2+argc_0
+    91                        ;		} else {	
+    92 00:0060: 80 0C        	bra	L10005
+    93                        L10004:
+    94                        ;			p = (char *)getHex8();
+    95 00:0062: 22 xx xx xx  	jsl	~~getHex8
+    96 00:0066: 86 03        	stx	<R0+2
+    97 00:0068: 85 05        	sta	<L3+p_1
+    98 00:006A: A5 03        	lda	<R0+2
+    99 00:006C: 85 07        	sta	<L3+p_1+2
+   100                        ;		}
+   101                        L10005:
+   102                        ;		
+   103                        ;		printf("\n");	
+   104 00:006E: F4 xx xx     	pea	#^L1+18
+   105 00:0071: F4 xx xx     	pea	#<L1+18
+   106 00:0074: F4 06 00     	pea	#6
+   107 00:0077: 22 xx xx xx  	jsl	~~printf
+   108                        ;		*ncode = *p;
+   109 00:007B: E2 20        	sep	#$20
+   110                        	longa	off
+  Tue Jun 15 2021 10:27                                                Page 3
+
+
+   111 00:007D: A7 05        	lda	[<L3+p_1]
+   112 00:007F: 87 09        	sta	[<L3+ncode_1]
+   113                        ;		*p = 0;
+   114 00:0081: A9 00        	lda	#$0
+   115 00:0083: 87 05        	sta	[<L3+p_1]
+   116 00:0085: C2 20        	rep	#$20
+   117                        	longa	on
+   118                        ;	}
+   119 00:0087: 80 89        	bra	L10003
+   120                        ;}
+   121             00000010   L2	equ	16
+   122             00000005   L3	equ	5
+   123                        	ends
+   124                        	efunc
+   125                        	data
+   126                        L1:
+   127 00:0000: 62 72 65 61  	db	$62,$72,$65,$61,$6B,$20,$61,$64,$64,$72,
+                    $65,$73,$73,$3E,$00
+       00:0004: 6B 20 61 64 
+       00:0008: 64 72 65 73 
+       00:000C: 73 3E 00 
+   128 00:000F: 25 73 00 0A  	db	$25,$73,$00,$0A,$00
+       00:0013: 00 
+   129 00:0014:              	ends
+   130                        ;
+   131                        	xref	~~str2hex
+   132                        	xref	~~getHex8
+   133                        	xref	~~printf
+
+
+      Lines assembled: 133
+      Errors: 0

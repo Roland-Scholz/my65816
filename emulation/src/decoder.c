@@ -71,7 +71,7 @@ MEM_initialize( void )
  */
 }
 
-#define IS_IO(a)  (((a) & 0xFFF000)==0xFFF000)
+#define IS_IO(a)  (((a) & 0xFFF800)==0x00D800)
 #define IS_ROM(a) (((a) & 0xFFE000)==0x00E000)
 
 byte
