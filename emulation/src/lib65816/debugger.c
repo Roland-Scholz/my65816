@@ -131,7 +131,7 @@ void CPU_debug(void) {
     //int ea;
     //char operands[40];
 
-    if (debug_cnt++ > 50) exit (0);
+    if (debug_cnt++ > 150) exit (0);
 
 	opcode = M_READ(PC.A);
 	//mode = addrmodes[opcode];

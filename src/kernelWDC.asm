@@ -199,10 +199,11 @@ changemem:	lda	[memptr]
 ;
 ;
 ;
-hexdownload:	I8
+hexdownload:	;WDM	7	
 		ldx	#MSGDOWNL
 		jsr	print
-	
+		
+		I8
 download:	jsr	chrin		; wait for leading ":"
 		cmp	#':'
 		bne	download
@@ -230,8 +231,9 @@ download2:	jsr	gethex		; read byte
 		jmp	download	; read next line
 	
 download1:	;jsr	time		; read last checksum and return
-		ldx	#MSGFINISH
-		jsr	chrin
+;		ldx	#MSGFINISH
+		jsr	gethex
+;		jsr	printhex
 		jmp	kernel
 	
 debug:		lda	<ptr+1
@@ -244,8 +246,8 @@ debug:		lda	<ptr+1
 		jmp	newline
 		I16
 		
-MSGDOWNL:	.byte	"downloading...",EOL ,0
-MSGFINISH:	.byte	"... finished.", EOL ,0
+MSGDOWNL:	.byte	"downloading...",EOL,0
+MSGFINISH:	.byte	"... finished.",EOL,0
 ;
 ; Routine to fill memory with prior user interaction
 ; fills from: memptr to: ptr

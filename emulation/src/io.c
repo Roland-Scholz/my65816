@@ -15,7 +15,7 @@
 #include <conio.h>
 
 
-#define DEFAULT_BUFLEN 8
+#define DEFAULT_BUFLEN 1
 #define DEFAULT_PORT "816"
 #define DEFAULT_PORT_NR 816
 
@@ -24,6 +24,7 @@ SOCKET ClientSocket = INVALID_SOCKET;
 int write_socket(char c) {
 	int iSendResult;
 
+	//printf("%c", c);
 	// Echo the buffer back to the sender
 	iSendResult = send(ClientSocket, &c, 1, 0);
 
@@ -47,6 +48,8 @@ char read_socket() {
     int recvbuflen = DEFAULT_BUFLEN;
 
 	iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+	printf("recv: %d bytes: %c\n", iResult, *recvbuf);
+
 	if (iResult <= 0) {
 		printf("recv failed with error: %d\n", WSAGetLastError());
 		closesocket(ClientSocket);
@@ -68,7 +71,11 @@ int initialize_socket() {
     struct addrinfo *result = NULL;
     struct addrinfo hints;
 
- 
+	char* cmd="C:\\github\\my65816\\build\\ttermpro.cmd";
+	printf("%s\n", cmd);
+
+	system (cmd);
+
     printf("sizeof int: %d\n", sizeof(int));
 
     printf("Initialising Winsock...\n");
