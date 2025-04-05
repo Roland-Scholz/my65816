@@ -1,4 +1,7 @@
 		org	$300
 
-		lda	#1
-		rts
+		longa	off
+		longi	on
+test		lda	#1
+		jmp	test
+		rtl

@@ -9,7 +9,8 @@
 
 		EXTERNS ON
 		
-		org $FFE4
+		
+STARTUP 	SECTION OFFSET $FFE4		
 
 ;		.word jcopn	;00FFE4		COP
 ;		.word jbrk      ;00FFE6		BRK

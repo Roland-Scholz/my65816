@@ -20,6 +20,9 @@ set RES=..\res
 call :compile_module startWDC
 if NOT %result%==0 goto error
 
+call :compile_module debug16
+if NOT %result%==0 goto error
+
 call :compile_module kernelWDC
 if NOT %result%==0 goto error
 
@@ -30,8 +33,8 @@ mkdir lst > nul 2> nul
 move %SRC%\*.lst lst > nul
 move %SRC%\*.obj obj > nul
 
-%WDC%\wdcln -O kernelWDC.hex -HI obj\startWDC obj\kernelWDC
-%WDC%\wdcln -O kernelWDC.bin -HB obj\startWDC obj\kernelWDC
+%WDC%\wdcln -CE000 -O kernelWDC.hex -HI obj\startWDC obj\kernelWDC obj\debug16
+%WDC%\wdcln -CE000 -O kernelWDC.bin -HB obj\startWDC obj\kernelWDC obj\debug16
 
 popd
 
@@ -59,6 +62,10 @@ rem ------------------------------------------------------------
 rem
 rem ------------------------------------------------------------
 :compile_module
+
+echo ***
+echo *** assembling %1.asm
+echo ***
 
 %WDC%\wdc816as -DTARGET=2 -W -L %SRC%\%1.asm
 

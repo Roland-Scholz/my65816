@@ -1,80 +1,16 @@
-		org	$E000
+		INCLUDE ..\src\equations.asm
 
-		XDEF kernel
+		XDEF 	kernel
+		XDEF	space
+		XDEF	chrout
+		XDEF	printhex
+		XDEF	chrin
+		XDEF	newline
+			
+		XREF	disass8
+		XREF	disass16
 
-;----------------------------------------------------------------------------
-; Equations
-;----------------------------------------------------------------------------
-NEGATIVE	equ	$80
-OVERFLOW	equ	$40		; 
-ACC		equ	$20		; Accu 8/16-bit
-IX		equ	$10		; Index 8/16-bit
-DECIMAL_FLAG	equ	$08		; Decimal Flag
-INTDIS		equ	$04		; IRQ disable
-ZERO		equ	$02		; zero flag
-CARRY		equ	$01		; Carry
-
-
-ioout		equ	$D800
-ioin		equ	$D900
-
-EOL		equ	$0d
-chrin		equ	serin
-chrout		equ	serout
-
-
-;----------------------------------------------------------------------------
-; Direct-page definitions
-;----------------------------------------------------------------------------
-serbyte		equ	$00				;1-byte serin accumulator
-ptr		equ	$01				;2-byte general pointer
-memptr		equ	$03				;3-byte memory pointer
-gethex_A	equ	$06
-chksum		equ	$07
-
-MOVENEG		equ	$0200				;4-byte MVP + operands + RTS
-MOVEBNK		equ	$0201
-MOVERTS		equ	$0203				;RTS
-ADRCNT		equ	$0204
-JSLOP		equ	$0205				;1-byte JSL-opcode
-JSLADR		equ	$0206				;3-byte JSL address
-JSLRTS		equ	$0209				;1-byte RTS-opcode
-
-
-;----------------------------------------------------------------------------
-; Macro definitions
-;----------------------------------------------------------------------------
-A8I8		MACRO
-		sep	#ACC+IX
-		longa	off
-		longi	off
-		ENDM
-		
-A8		MACRO
-		sep	#ACC
-		longa	off
-		ENDM
-
-I8		MACRO
-		sep	#IX
-		longi	off
-		ENDM
-
-A16I16		MACRO
-		rep	#ACC+IX
-		longa	on
-		longi	on
-		ENDM
-		
-A16		MACRO
-		rep	#ACC
-		longa	on
-		ENDM
-
-I16		MACRO
-		rep	#IX
-		longi	on
-		ENDM
+		CODE
 		
 ;----------------------------------------------------------------------------
 ; Start of Kernel
@@ -199,25 +135,24 @@ changemem:	lda	[memptr]
 ;
 ;
 ;
-hexdownload:	;WDM	7	
-		ldx	#MSGDOWNL
+hexdownload:	ldx	#MSGDOWNL
 		jsr	print
 		
-		I8
-download:	jsr	chrin		; wait for leading ":"
+download:	I8
+		jsr	chrin		; wait for leading ":"
 		cmp	#':'
 		bne	download
 	
 		lda	#0
 		sta	<chksum
-	
+
 		jsr	gethex		; number of bytes in line
 		tax	
 		jsr	getadr		; addess in ptr
 		jsr	gethex		; record-type 0=data record
 		bne	download1
 			
-		tay			; A = 0!
+		tay			; Acc zero
 download2:	jsr	gethex		; read byte
 		sta	(ptr),y		; store at address
 		iny	
@@ -230,10 +165,7 @@ download2:	jsr	gethex		; read byte
 		jsr	debug		; print debug
 		jmp	download	; read next line
 	
-download1:	;jsr	time		; read last checksum and return
-;		ldx	#MSGFINISH
-		jsr	gethex
-;		jsr	printhex
+download1:	jsr	gethex
 		jmp	kernel
 	
 debug:		lda	<ptr+1
@@ -244,10 +176,54 @@ debug:		lda	<ptr+1
 		lda	<chksum
 		jsr	printhex
 		jmp	newline
-		I16
+
+		longi	on
 		
 MSGDOWNL:	.byte	"downloading...",EOL,0
-MSGFINISH:	.byte	"... finished.",EOL,0
+;
+;
+;
+copymem:	ldx	#msgcopy1
+		jsr	print
+	
+		jsr	enteradr
+		cmp	#'x'
+		beq	copyend
+		
+		ldx	#msgfill2
+		jsr	print
+	
+		jsr	inputhex
+		sta	ptr+1
+		jsr	inputhex
+		sta	ptr
+		
+		ldx	#msgcopy2
+		jsr	print
+
+		jsr	inputhex
+		sta	TEMP+1
+		jsr	inputhex
+		sta	TEMP
+		
+		lda	memptr+2
+		sta	MOVEBNK
+		sta	MOVEBNK+1
+		
+		A16
+		sec
+		lda	ptr
+		sbc	memptr
+		bcc	copymem2
+			
+		ldx	memptr
+		ldy	TEMP	
+		phb	
+		jsr	MOVENEG
+		plb	
+			
+copymem2:	A8		
+copyend:	rts
 ;
 ; Routine to fill memory with prior user interaction
 ; fills from: memptr to: ptr
@@ -358,6 +334,7 @@ memdump7:	lda	[memptr],y
 	
 		ldy	#0
 memdump5:	lda	[memptr],y
+		bmi	memdump4
 ;		cmp	#TABU		; if >= TABU
 ;		bcs	memdump4	; print space
 		cmp	#32		; if < space, print space
@@ -557,31 +534,31 @@ getnibble:	jsr	getupper
 getnibble1:	rts	
 
 ;----------------------------------------------------------------------------
-; reads a byte from serin in ACC and serbyte
+; reads a byte from chrin in ACC and serbyte
 ;----------------------------------------------------------------------------
 	IF TARGET=1
-serin		phx
+chrin		phx
 		phy
 		php
 		A8I8
 		
-serin2		lda	ioin				;wait for startbit (=0)
+chrin2		lda	ioin				;wait for startbit (=0)
 		lsr
-		bcs	serin2
+		bcs	chrin2
 
 		jsr	rs232baud2			; 6 wait 1 1/2 baudrate
 
 		ldx	#8				; 2
-serin1		jsr	rs232baud			; 6	297 + 3+2+5+2+3 = 312
+chrin1		jsr	rs232baud			; 6	297 + 3+2+5+2+3 = 312
 		lda	ioin				; 3
 		lsr					; 2
 		ror	<serbyte			; 5
 		dex					; 2 
-		bne	serin1				; 3
+		bne	chrin1				; 3
 		
-serin3		lda	ioin				;wait until ioin = 1
+chrin3		lda	ioin				;wait until ioin = 1
 		lsr
-		bcc	serin3
+		bcc	chrin3
 		
 		lda	<serbyte
 		
@@ -592,17 +569,17 @@ serin3		lda	ioin				;wait until ioin = 1
 	ENDIF
 
 	IF TARGET=2
-serin		lda	ioin
+chrin		lda	ioin
 		sta	<serbyte
 		rts
 	ENDIF
 	
 	
 ;----------------------------------------------------------------------------
-; writes acc to serout
+; writes acc to chrout
 ;----------------------------------------------------------------------------	
 	IF	TARGET=1 
-serout		phx
+chrout		phx
 		phy
 		php
 		A8I8		
@@ -612,11 +589,11 @@ serout		phx
 		jsr	rs232baud
 
 		ldx	#8
-serout1		sta	ioout
+chrout1		sta	ioout
 		jsr	rs232baud
 		ror
 		dex
-		bne	serout1
+		bne	chrout1
 		
 		ldx	#1
 		stx	ioout
@@ -630,7 +607,7 @@ serout1		sta	ioout
 	ENDIF
 	
 	IF	TARGET=2
-serout		sta	ioout
+chrout		sta	ioout
 		rts
 	ENDIF
 		
@@ -655,12 +632,12 @@ menuvec:	.word	prthelp
 		.word	hexdownload
 		.word	fillmem
 		.word	gotoadr
-		.word	prthelp		;disass16
-		.word	prthelp		;disass8
+		.word	disass16	;disass16
+		.word	disass8		;disass8
 		.word	memdump
 		.word	setaddress
 		.word	prthelp		;setbreak
-		.word	prthelp		;copymem
+		.word	copymem		;copymem
 
 MSGSTART:	.byte	EOL, EOL
 		.byte	"*** 65816 - 6Mhz Homebrew by R. Scholz", EOL, EOL

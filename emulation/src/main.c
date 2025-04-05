@@ -17,6 +17,8 @@
 #include "ram.h"
 #include "rom.h"
 #include "io.h"
+#include <windows.h>
+#include <winuser.h>
 
 
 FILE *hardfile; /* Used in serbus.c */
@@ -108,8 +110,9 @@ void myHandler(word32 timestamp) {
 }
 
 void EMUL_hardwareUpdate(word32 timestamp) {
-	printf("EMUL_hardwareUpdate: %u\n", (unsigned int) timestamp);
-	fflush(stdout);
+	//printf("EMUL_hardwareUpdate: %u\n", (unsigned int) timestamp);
+	//fflush(stdout);
+	if (GetAsyncKeyState(VK_F1) < 0) CPU_reset();
 }
 
 
@@ -132,6 +135,7 @@ int main(int argc, char *argv[]) {
 	fflush(stdout);
 
 	CPUEvent_initialize();
+	CPU_setUpdatePeriod(1000);
 
 	//CPUEvent_schedule(&myEvent, 1000, &myHandler);
 

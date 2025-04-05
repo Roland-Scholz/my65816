@@ -14,7 +14,6 @@
 #include <ws2tcpip.h>
 #include <conio.h>
 
-
 #define DEFAULT_BUFLEN 1
 #define DEFAULT_PORT "816"
 #define DEFAULT_PORT_NR 816
@@ -48,7 +47,7 @@ char read_socket() {
     int recvbuflen = DEFAULT_BUFLEN;
 
 	iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-	printf("recv: %d bytes: %c\n", iResult, *recvbuf);
+	//printf("recv: %d bytes: %c\n", iResult, *recvbuf);
 
 	if (iResult <= 0) {
 		printf("recv failed with error: %d\n", WSAGetLastError());
