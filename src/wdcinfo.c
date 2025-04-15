@@ -2,6 +2,8 @@
 
 void *heap_start = (void * )0x010000, *heap_end = (void * )0x01ffff;
 
+unsigned int stackp;
+
 int close(int fd) {
     return 0;
 }
@@ -21,6 +23,7 @@ void writec(char c) {
 
 size_t write(int fd, void* buf, size_t len) {
 	char *b = (char *)buf;
+	
 	for(;len > 0; len--) {
 		writec(*b);
 		b++;
@@ -47,7 +50,36 @@ long lseek(int fd, long offset, int whence) {
 	return 0;
 }
 
+void *get_beg_data() {
+#asm
+	xref _BEG_DATA
+	ldx _BEG_DATA
+	lda _BEG_DATA+2
+#endasm
+}
+
+void *get_ptr() {
+	return (void *)0xcafebabe;
+}
+
+void do_main() {
+		printf("Hallo Welt!\n");	
+//	printf("Begin Code : %p\n", BEG_CODE);
+	printf("Begin Data : %p\n", get_beg_data());
+//	printf("Begin UData: %p\n", _BEG_UDATA);
+
+}
 
 void main() {
-    printf("Hallo Welt!\n");
+#asm
+	php
+	rep #$30
+#endasm
+
+	do_main();
+	
+#asm
+	plp
+#endasm
+
 }

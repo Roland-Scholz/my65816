@@ -31,7 +31,7 @@ mkdir lst > nul 2> nul
 move *.lst lst > nul 2> nul
 move *.o obj > nul 2> nul
 
-%CC65%\WDCLN.exe -V -C0400 -HI -O %REL%\wdcinfo.hex %OBJ%\wdcinfo.o -LCC
+%CC65%\WDCLN.exe -V -C0400 -HI -O %REL%\wdcinfo.hex %OBJ%\wdcinfo.o -LCL
 
 
 
@@ -66,7 +66,7 @@ rem ------------------------------------------------------------
   echo *** compiling %1.c
   echo ***
 
-  %CC65%\WDC816CC.exe -D__65816__ -D__STRICT_ANSI__ -SO0S -MC -A -O %REL%\%1.s %SRC%\%1.c
+  %CC65%\WDC816CC.exe -D__65816__ -D__STRICT_ANSI__ -SO0S -ML -A -O %REL%\%1.s %SRC%\%1.c
  	%CC65%\WDC816OP.exe %REL%\%1.s
   move .opt %REL%\%1.s
  	%CC65%\WDC816AS.exe -O %REL%\%1.o -L %REL%\%1.s
