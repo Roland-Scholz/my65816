@@ -1,1 +1,4 @@
 /Debug/
+**/CMakeFiles
+**/Testing
+**/.cmake
