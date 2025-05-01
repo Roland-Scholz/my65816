@@ -24,6 +24,9 @@ byte *ram = NULL;
 
 int ram_initialize(void)
 {
+	char *filename = "C:/github/my65816/release/wdcinfo.bin";
+	FILE *f;
+
 	if (ram == NULL)
 	{
 		ram = (byte *)(malloc(MEMSIZE));
@@ -37,13 +40,14 @@ int ram_initialize(void)
 
 	memset(ram, 0x00, MEMSIZE);
 
-	/*
-	f = fopen(filename, "rb");
+	
+	f = fopen(filename, "rb");	
 	if (f != NULL) {
 		printf("%s read: %d\n", filename, fread(&(ram[0x0000]), 1, 128*1024, f));
 		fclose(f);
 	}
 
+	/*
 	f = fopen("myos.a", "rb");
 	if (f != NULL) {
 		printf("myos read: %d\n", fread(&(ram[0xC000]), 1, 8*1024, f));

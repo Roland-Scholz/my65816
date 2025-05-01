@@ -138,8 +138,8 @@ changemem:	lda	[memptr]
 hexdownload:	ldx	#MSGDOWNL
 		jsr	print
 		
-download:	I8
-		jsr	chrin		; wait for leading ":"
+		I8
+download:	jsr	chrin		; wait for leading ":"
 		cmp	#':'
 		bne	download
 	
@@ -168,14 +168,17 @@ download2:	jsr	gethex		; read byte
 download1:	jsr	gethex
 		jmp	kernel
 	
-debug:		lda	<ptr+1
-		jsr	printhex
-		lda	<ptr
-		jsr	printhex
-		jsr	space
-		lda	<chksum
-		jsr	printhex
-		jmp	newline
+debug:		wdm	7
+		jmp	debug
+		
+;		lda	<ptr+1
+;		jsr	printhex
+;		lda	<ptr
+;		jsr	printhex
+;		jsr	space
+;		lda	<chksum
+;		jsr	printhex
+;		jmp	newline
 
 		longi	on
 		

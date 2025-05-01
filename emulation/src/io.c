@@ -14,9 +14,13 @@
 #include <ws2tcpip.h>
 #include <conio.h>
 
-#define DEFAULT_BUFLEN 1
 #define DEFAULT_PORT "816"
 #define DEFAULT_PORT_NR 816
+
+#define DEFAULT_BUFLEN (1024*64)
+char recvbuf[DEFAULT_BUFLEN];
+int rbufcnt = 0;
+int rbufidx = 0;
 
 SOCKET ClientSocket = INVALID_SOCKET;
 
@@ -43,21 +47,27 @@ int write_socket(char c) {
 
 char read_socket() {
 	int iResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
+	char c;
 
-	iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-	//printf("recv: %d bytes: %c\n", iResult, *recvbuf);
-
-	if (iResult <= 0) {
-		printf("recv failed with error: %d\n", WSAGetLastError());
-		closesocket(ClientSocket);
-		WSACleanup();
-		exit(0);
+	if (rbufcnt == 0) {
+		iResult = recv(ClientSocket, recvbuf, DEFAULT_BUFLEN, 0);
+		rbufcnt = iResult;
+		rbufidx = 0;
+		//printf("recv: %d\n", iResult);	
+		if (iResult <= 0) {
+			printf("recv failed with error: %d\n", WSAGetLastError());
+			closesocket(ClientSocket);
+			WSACleanup();
+			exit(0);
+		}
 	}
 	
-	//printf("%c", recvbuf[0]);
-	return (char) (recvbuf[0]);
+	c = (char) (recvbuf[rbufidx]);
+	rbufidx++;
+	rbufcnt--;
+	//printf("%c", c);
+	return c;
+	
 }
 
 

@@ -23,6 +23,7 @@
 
 FILE *hardfile; /* Used in serbus.c */
 static CPUEvent myEvent;
+static int f1pressed = 0;
 
 static int k2_initialize(void) {
 	if (!ram_initialize())
@@ -112,7 +113,14 @@ void myHandler(word32 timestamp) {
 void EMUL_hardwareUpdate(word32 timestamp) {
 	//printf("EMUL_hardwareUpdate: %u\n", (unsigned int) timestamp);
 	//fflush(stdout);
-	if (GetAsyncKeyState(VK_F1) < 0) CPU_reset();
+	if (GetAsyncKeyState(VK_F1) < 0) {
+		ram_initialize();
+		CPU_reset();
+		for(;;) {
+			if (GetAsyncKeyState(VK_F1) >= 0) break;	
+		}
+	}
+
 }
 
 
