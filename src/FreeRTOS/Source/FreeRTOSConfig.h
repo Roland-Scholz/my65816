@@ -280,7 +280,7 @@
  * or heap_4.c are included in the build.  This value is defaulted to 4096 bytes but
  * it must be tailored to each application.  Note the heap will appear in the .bss
  * section.  See https://www.freertos.org/a00111.html. */
-#define configTOTAL_HEAP_SIZE                        (10 * 65536)
+#define configTOTAL_HEAP_SIZE                       (128 * 1024l)
 
 /* Set configAPPLICATION_ALLOCATED_HEAP to 1 to have the application allocate
  * the array used as the FreeRTOS heap.  Set to 0 to have the linker allocate the
@@ -406,15 +406,18 @@
  * number of the failing assert (for example, "vAssertCalled( __FILE__, __LINE__ )"
  * or it can simple disable interrupts and sit in a loop to halt all execution
  * on the failing line for viewing in a debugger. */
-#define configASSERT( x )         
-/*
+#define configASSERT( x )         /* \
     if( ( x ) == 0 )              \
     {                             \
+        printf("x\n");            \
+    }
+*/
+/*
         taskDISABLE_INTERRUPTS(); \
         for( ; ; )                \
         ;                         \
-    }
 */
+    
 /******************************************************************************/
 /* FreeRTOS MPU specific definitions. *****************************************/
 /******************************************************************************/

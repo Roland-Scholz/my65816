@@ -28,9 +28,10 @@ void main() {
 }
 
 void xTaskResumeAll( ) {
-};
+}
+
 void vTaskSuspendAll( ) {
-};
+}
 
 /*
 void *malloc (uint32_t size) {
@@ -53,6 +54,31 @@ void writec(char c) {
 	sta $d800
 	rep #$20 
 #endasm
+}
+
+void nibble(char c) {
+	c += '0';
+	if (c > '9') c += 7;
+	writec(c);
+}
+
+void byte2hex(char c) {
+	nibble(c >> 4);
+	nibble(c & 15);
+
+}
+
+void debug(void *p) {
+
+	char *p0 = (char *)&p;
+	uint16_t i;
+
+	p0 +=3;
+	for (i = 0; i < 4; i++) {
+		byte2hex(*p0);
+		p0--;
+	}
+	writec('\n');
 }
 
 /*
@@ -168,17 +194,20 @@ void printHeapStats() {
 }
 
 void do_main() {
-	void *ptr;
+	char *ptr;
 	char c;
 	FILE *f;
 
 	
 	setvbuf(stdin, NULL, _IONBF, 0);
 	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
 
 	
 	printf("\n");
 	printf("Hallo Welt!\n");	
+//printf(stderr, "Hallo Welt!\n");	
+
 	printf("Begin Code : %p\n", get_beg_code());
 	printf("Begin Data : %p\n", get_beg_data());
 	printf("Begin UData: %p\n", get_beg_udata());
@@ -187,9 +216,13 @@ void do_main() {
 	printf("configTOTAL_HEAP_SIZE %p\n", (void *)configTOTAL_HEAP_SIZE);
 	printf("length BlockLink_t %d\n", sizeof(BlockLink_t));
 	printf("length uint32_t %d\n", sizeof(uint32_t));
+	printf("length ptr      %d\n", sizeof(ptr));
 
+	ptr = (void *) 0xcafebabe;
+	debug(ptr);
 
-
+	heapInit();
+/*	
 	for(;;) {
 //		c = getchar();
 //		ptr = malloc(4*1024);
@@ -197,10 +230,13 @@ void do_main() {
 		ptr = malloc(4*1024);
 		printf("ptr        : %p\n", ptr);
 		printHeapStats();
-		//break;
+		ptr = malloc(4*1024);
+		printf("ptr        : %p\n", ptr);
+		printHeapStats();
+		break;
 		if (ptr == NULL) break;
 	}
-
+*/
 //	print_iobs();
 
 }

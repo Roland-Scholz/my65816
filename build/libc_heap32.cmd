@@ -27,9 +27,9 @@ rem mkdir lst > nul 2> nul
 rem mkdir asm > nul 2> nul
 rem mkdir lib > nul 2> nul
 
-del %LIB%\libc.lib
+rem del %LIB%\libc.lib
 
-for %%i in (%SRC%\*.c) do (
+for %%i in (%SRC%\heap*.c) do (
 	call :compile_module %%~ni
 rem	if NOT %result%==0 goto error
 )
@@ -75,6 +75,8 @@ rem ------------------------------------------------------------
   echo *** compiling %1.c
   echo *********************************************************
 
+  rem @echo on
+
   %CC65%\WDC816CC.exe %OPTS% -M%MODEL%  -O %ASM%\%1.s %SRC%\%1.c
   set RESULT=%ERRORLEVEL%
 
@@ -85,5 +87,8 @@ rem ------------------------------------------------------------
   move .opt %ASM%\%1.opt.s > nul 2> nul
   
   %CC65%\WDC816AS.exe -O %OBJ%\%1.o -LW %ASM%\%1.opt.s
+
+  %CC65%\WDCLIB.exe -D %LIB%\libc.lib %OBJ%\%1.o
   %CC65%\WDCLIB.exe -A %LIB%\libc.lib %OBJ%\%1.o
 
+  rem @echo off

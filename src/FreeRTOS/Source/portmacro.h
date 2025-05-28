@@ -22,17 +22,17 @@
 #define portDOUBLE               double
 #define portLONG                 long
 #define portSHORT                short
-#define portSTACK_TYPE           uint8_t
-#define portBASE_TYPE            uint16_t
+#define portSTACK_TYPE           char
+#define portBASE_TYPE            int
 
 #define portSTACK_GROWTH         ( -1 )
 #define portBYTE_ALIGNMENT       2
 
-#define portPOINTER_SIZE_TYPE    size_t
+#define portPOINTER_SIZE_TYPE    uint32_t
 
-typedef portSTACK_TYPE   StackType_t;
-typedef signed int      BaseType_t;
-typedef unsigned int    UBaseType_t;
+typedef portSTACK_TYPE          StackType_t;
+typedef signed int              BaseType_t;
+typedef unsigned int            UBaseType_t;
 
 #if ( configTICK_TYPE_WIDTH_IN_BITS == TICK_TYPE_WIDTH_16_BITS )
     typedef uint16_t     TickType_t;

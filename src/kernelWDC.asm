@@ -20,7 +20,7 @@ kernel		sei
 		xce					;switch to native mode
 
 		A16
-		lda	#$01ff				;stack to $1ff
+		lda	#$cfff				;stack to $1ff
 		tcs	
 		lda	#0
 		tcd					;direct to 0

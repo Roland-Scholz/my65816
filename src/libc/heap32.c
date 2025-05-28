@@ -1,3 +1,5 @@
+void debug(void *p);
+
 /*
  * FreeRTOS Kernel V11.1.0
  * Copyright (C) 2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -170,6 +172,8 @@ PRIVILEGED_DATA static uint32_t xNumberOfSuccessfulAllocations = ( uint32_t ) 0U
 PRIVILEGED_DATA static uint32_t xNumberOfSuccessfulFrees = ( uint32_t ) 0U;
 
 /*-----------------------------------------------------------*/
+/*--- malloc                                              ---*/
+/*-----------------------------------------------------------*/
 void * malloc( size_t xWantedSize)
 {
     return pvPortMalloc( xWantedSize );
@@ -182,7 +186,7 @@ void * pvPortMalloc( uint32_t xWantedSize )
     BlockLink_t * pxNewBlockLink;
     void * pvReturn = NULL;
     uint32_t xAdditionalRequiredSize;
-
+    
     if( xWantedSize > 0 )
     {
         /* The wanted size must be increased so it can contain a BlockLink_t
@@ -241,6 +245,8 @@ void * pvPortMalloc( uint32_t xWantedSize )
          * the kernel, so it must be free. */
         if( heapBLOCK_SIZE_IS_VALID( xWantedSize ) != 0 )
         {
+            //printf("wanted size:%lu\n", xWantedSize);
+
             if( ( xWantedSize > 0 ) && ( xWantedSize <= xFreeBytesRemaining ) )
             {
                 /* Traverse the list from the start (lowest address) block until
@@ -254,12 +260,16 @@ void * pvPortMalloc( uint32_t xWantedSize )
                     pxPreviousBlock = pxBlock;
                     pxBlock = heapPROTECT_BLOCK_POINTER( pxBlock->pxNextFreeBlock );
                     heapVALIDATE_BLOCK_POINTER( pxBlock );
+                    //printf("pxPreviousBlock: %p\n", pxPreviousBlock);
+                    //printf("pxBlock: %p\n", pxBlock);    
+
                 }
 
                 /* If the end marker was reached then a block of adequate size
                  * was not found. */
                 if( pxBlock != pxEnd )
                 {
+
                     /* Return the memory space pointed to - jumping over the
                      * BlockLink_t structure at its start. */
                     pvReturn = ( void * ) ( ( ( uint8_t * ) heapPROTECT_BLOCK_POINTER( pxPreviousBlock->pxNextFreeBlock ) ) + xHeapStructSize );
@@ -450,11 +460,15 @@ void * pvPortCalloc( uint32_t xNum,
 }
 /*-----------------------------------------------------------*/
 
+void heapInit() {
+    prvHeapInit();
+}
 static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
 {
     BlockLink_t * pxFirstFreeBlock;
     portPOINTER_SIZE_TYPE uxStartAddress, uxEndAddress;
     uint32_t xTotalHeapSize = configTOTAL_HEAP_SIZE;
+
 
     /* Ensure the heap starts on a correctly aligned boundary. */
     uxStartAddress = ( portPOINTER_SIZE_TYPE ) ucHeap;
@@ -483,6 +497,7 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
     uxEndAddress -= ( portPOINTER_SIZE_TYPE ) xHeapStructSize;
     uxEndAddress &= ~( ( portPOINTER_SIZE_TYPE ) portBYTE_ALIGNMENT_MASK );
     pxEnd = ( BlockLink_t * ) uxEndAddress;
+
     pxEnd->xBlockSize = 0;
     pxEnd->pxNextFreeBlock = heapPROTECT_BLOCK_POINTER( NULL );
 
@@ -495,6 +510,11 @@ static void prvHeapInit( void ) /* PRIVILEGED_FUNCTION */
     /* Only one block exists - and it covers the entire usable heap space. */
     xMinimumEverFreeBytesRemaining = pxFirstFreeBlock->xBlockSize;
     xFreeBytesRemaining = pxFirstFreeBlock->xBlockSize;
+
+    debug(pxFirstFreeBlock);
+    debug((void *)pxFirstFreeBlock->xBlockSize);
+    debug((void *)pxFirstFreeBlock->pxNextFreeBlock);
+   
 }
 /*-----------------------------------------------------------*/
 

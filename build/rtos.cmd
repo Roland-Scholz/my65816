@@ -20,7 +20,8 @@ set REL=..\release
 set RES=..\res
 set OBJ=%REL%\obj
 
-set WDC_INC_65816=%SRC%;%SRC%\include;%CC65%\..\include
+set WDC_INC_65816=%SRC%;%SRC%\include;%SRC%\..\..\libc\include;%CC65%\..\include
+set OPTS=-D__STRICT_ANSI__ -D__65816__ -SO0S -A -LT
 
 call :compile_module tasks
 call :compile_module heap32
@@ -72,7 +73,7 @@ rem ------------------------------------------------------------
   echo *** compiling %1.c
   echo ***
 
-  %CC65%\WDC816CC.exe -SO0S -M%MODEL% -A -O %REL%\%1.s %SRC%\%1.c
+  %CC65%\WDC816CC.exe %OPTS% -M%MODEL% -O %REL%\%1.s %SRC%\%1.c
   set result=%ERRORLEVEL%
   
   %CC65%\WDC816OP.exe %REL%\%1.s

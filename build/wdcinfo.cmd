@@ -28,8 +28,8 @@ if NOT %result%==0 goto error
 
 pushd %REL%
 
-mkdir obj > nul 2> nul
-mkdir lst > nul 2> nul
+rem mkdir obj > nul 2> nul
+rem mkdir lst > nul 2> nul
 
 move *.lst lst > nul 2> nul
 move *.o obj > nul 2> nul
